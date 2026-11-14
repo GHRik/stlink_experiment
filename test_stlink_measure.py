@@ -35,6 +35,14 @@ class FakeDevice:
 
 
 class Tests(unittest.TestCase):
+    def test_temperature_command_ignores_late_stop_ack(self):
+        device = app.Device.__new__(app.Device)
+        device.events = []
+        lines = iter([b"ack stop\r\n", b"ack temp degc refresh 35.0\r\n"])
+        device.line = lambda: next(lines)
+        with patch.object(device, "send"):
+            self.assertEqual(app.read_temperature(device), 35.0)
+
     def test_capture_reports_only_its_named_run(self):
         with tempfile.TemporaryDirectory() as temporary:
             args = argparse.Namespace(seconds=0.1, hz=100, name="modem", voltage=3.3,

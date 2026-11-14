@@ -53,6 +53,7 @@ class Device:
 
     def command(self, text, timeout=5):
         self.send(text)
+        expected = "STLINK-V3PWR" if text.split()[0] == "whoami" else text.split()[0]
         deadline = time.monotonic() + timeout
         received = []
         while time.monotonic() < deadline:
@@ -65,7 +66,7 @@ class Device:
                 self.events.append({"rx": line})
             if line.lower().startswith("err"):
                 raise RuntimeError(f"{text}: {line}")
-            if line.lower().startswith("ack"):
+            if re.match(r"^ack\s+" + re.escape(expected) + r"(?:\s|:|$)", line, re.I):
                 return line
         raise RuntimeError(f"Brak ACK dla {text!r}. Odpowiedzi: {received[-8:]}")
 
