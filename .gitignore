@@ -218,3 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local IDE state and generated measurement data (keep raw data backed up).
+.idea/
+.vscode/
+/results/
+/test_results/
+/demo_results/
