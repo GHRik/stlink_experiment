@@ -1,0 +1,107 @@
+[
+  {
+    "host_monotonic_s": 17587.4291893,
+    "tx": "pwr off"
+  },
+  {
+    "rx": "ack pwr off"
+  },
+  {
+    "host_monotonic_s": 17587.4302369,
+    "tx": "temp degc refresh"
+  },
+  {
+    "rx": "ack temp degc refresh 35.5"
+  },
+  {
+    "host_monotonic_s": 17587.4512579,
+    "tx": "pwr vout on"
+  },
+  {
+    "rx": "ack pwr vout on"
+  },
+  {
+    "host_monotonic_s": 17588.4525415,
+    "tx": "calib"
+  },
+  {
+    "rx": "ack calib"
+  },
+  {
+    "host_monotonic_s": 17590.3573676,
+    "tx": "status"
+  },
+  {
+    "rx": "ack status ok"
+  },
+  {
+    "host_monotonic_s": 17590.3579746,
+    "tx": "temp degc refresh"
+  },
+  {
+    "rx": "ack temp degc refresh 35.5"
+  },
+  {
+    "host_monotonic_s": 17590.3786073,
+    "tx": "pwr off"
+  },
+  {
+    "rx": "ack pwr off"
+  },
+  {
+    "host_monotonic_s": 17591.380234,
+    "tx": "pwr vout auto"
+  },
+  {
+    "rx": "ack pwr vout auto"
+  },
+  {
+    "host_monotonic_s": 17591.3806191,
+    "tx": "pwrend off"
+  },
+  {
+    "rx": "ack pwrend off"
+  },
+  {
+    "host_monotonic_s": 17591.6033358,
+    "tx": "start"
+  },
+  {
+    "host_monotonic_s": 17691.6038779,
+    "tx": "stop"
+  },
+  {
+    "host_monotonic_s": 17691.6049374,
+    "tx": "temp degc refresh"
+  },
+  {
+    "rx": "summary beg"
+  },
+  {
+    "rx": "Acquisition mode:   CURRENT"
+  },
+  {
+    "rx": "Sampling frequency: 1000 Hz"
+  },
+  {
+    "rx": "Acquisition time:   100000 ms"
+  },
+  {
+    "rx": "Number of samples:  100000 samples"
+  },
+  {
+    "rx": "Current min:        7.63 mA"
+  },
+  {
+    "rx": "Current max:        157 mA"
+  },
+  {
+    "rx": "summary end"
+  },
+  {
+    "rx": "ack stop"
+  },
+  {
+    "rx": "ack temp degc refresh 35.7"
+  }
+]

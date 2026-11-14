@@ -1,0 +1,17 @@
+{
+  "configuration": "modem",
+  "run": "repeat_005",
+  "directory": "C:\\Users\\P50\\Downloads\\stlink_experiment\\results\\modem_20261114_202635_901512\\repeat_005",
+  "voltage_V": 3.3,
+  "sampling_Hz": 1000,
+  "begin_s": 0,
+  "end_s": 100.0,
+  "duration_s": 100.0,
+  "samples": 100000,
+  "mean_current_mA": 20.87420164,
+  "min_current_mA": 7.627,
+  "max_current_mA": 152.9,
+  "within_run_sd_mA": 1.8725756600835486,
+  "mean_power_mW": 68.884865412,
+  "energy_estimate_J": 6.888486541199998
+}

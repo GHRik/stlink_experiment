@@ -3,6 +3,10 @@
 ###############################################################################
 * text=auto
 
+# Preserve raw device bytes and original measurement CSV exports.
+stream.bin binary
+/results/**/samples.csv -text
+
 ###############################################################################
 # Set default behavior for command prompt diff.
 #
