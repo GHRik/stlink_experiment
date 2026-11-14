@@ -151,10 +151,17 @@ def capture_one(device, directory, args, identity, repeat):
                         device.send("stop")
                         stop_sent = True
                         stop_clock = time.monotonic()
-                elif line.startswith("RecID "):
+                elif re.match(r"^RecID(?:\s|:)", line, re.I):
                     # Conservative: do not fabricate a gap-free time axis.
                     if count < n_target:
-                        metadata["issues"].append(f"Timestamp/resynchronizacja po utracie danych lub kalibracji: {line}")
+                        metadata["issues"].append(
+                            f"Sample resynchronization after calibration or data loss: {line}. "
+                            "The continuous sample time axis cannot be guaranteed; repeat this measurement.")
+                elif line.lower().startswith("warning:") and "calibration" in line.lower():
+                    if count < n_target:
+                        metadata["issues"].append(
+                            f"Device calibration warning: {line}. "
+                            "Acquisition continuity must be verified; repeat this measurement.")
                 elif line.lower().startswith("err"):
                     raise RuntimeError(f"Urzadzenie: {line}")
                 elif line.lower().startswith("ack"):

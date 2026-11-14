@@ -194,6 +194,21 @@ class Tests(unittest.TestCase):
                 self.capture(path, [b"ack start\r\n", b"1000-05\r\n", b"end\r\n"])
             self.assertEqual(json.loads((path / "metadata.json").read_text())["status"], "invalid")
 
+    def test_real_calibration_messages_excluded(self):
+        for messages in ([b"RecID: 57777 after Calib\r\n"],
+                         [b"warning: An automatic calibration has been done\r\n"],
+                         [b"RecID: 57777 after Calib\r\n",
+                          b"warning: An automatic calibration has been done\r\n"]):
+            with self.subTest(messages=messages), tempfile.TemporaryDirectory() as temporary:
+                path = Path(temporary) / "repeat"
+                with self.assertRaises(RuntimeError):
+                    self.capture(path, [b"ack start\r\n", b"1000-05\r\n"] +
+                                 messages + [b"1000-05\r\n"] * 9 + [b"end\r\n"])
+                meta = json.loads((path / "metadata.json").read_text())
+                self.assertEqual(meta["status"], "invalid")
+                self.assertTrue(all("repeat this measurement" in issue for issue in meta["issues"]))
+                self.assertTrue((path / "stream.bin").exists())
+
     def test_between_run_sd_not_within_run_sd(self):
         rows = []
         for value in (1, 2, 3):
