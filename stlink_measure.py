@@ -15,7 +15,7 @@ from results import analyze_run, report, demo
 from storage import save_json
 from stlink_protocol import (
     Device, validate_settings, create_session, identify_device,
-    configure_device, save_session_settings, capture_one,
+    configure_device, save_session_settings, capture_one, warm_up,
 )
 
 
@@ -29,6 +29,7 @@ def run_experiment(settings):
         identity = identify_device(meter)
         configure_device(meter, settings)
         save_session_settings(session, meter, settings, identity)
+        save_json(session / "warmup.json", warm_up(meter, getattr(settings, "warmup_seconds", 180)))
 
         for number in range(1, settings.repeats + 1):
             print(f"Pomiar {number}/{settings.repeats}: {settings.name}", flush=True)
@@ -42,8 +43,10 @@ def run_experiment(settings):
 
     finally:
         # Rowniez po bledzie lub Ctrl+C: zachowaj log i probuj wylaczyc OUT.
-        save_json(session / "last_commands.json", meter.events)
-        meter.close()
+        try:
+            save_json(session / "last_commands.json", meter.events)
+        finally:
+            meter.close()
 
     # Po serii porownaj zebrane konfiguracje i policz rozrzut powtorzen.
     report(session, begin=0, end=None)

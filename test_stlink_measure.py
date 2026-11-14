@@ -16,8 +16,12 @@ class FakeDevice:
         self.lines = iter(lines)
         self.events = []
 
-    def command(self, command):
+    def command(self, command, timeout=5):
         self.events.append({"tx": command})
+        if command == "temp degc refresh":
+            return "ack temp degc refresh: 27.5"
+        if command == "status":
+            return "ack status ok"
         return "ack " + command
 
     def send(self, command):
@@ -40,6 +44,7 @@ class Tests(unittest.TestCase):
                  patch.object(stlink_measure, "identify_device", return_value={}), \
                  patch.object(stlink_measure, "configure_device"), \
                  patch.object(stlink_measure, "save_session_settings"), \
+                 patch.object(stlink_measure, "warm_up", return_value={}), \
                  patch.object(stlink_measure, "capture_one") as capture, \
                  patch.object(stlink_measure, "analyze_run"), \
                  patch.object(stlink_measure, "report") as report:
@@ -51,6 +56,40 @@ class Tests(unittest.TestCase):
             report.assert_called_once_with(folders[0], begin=0, end=None)
             self.assertEqual([call.args[1].name for call in capture.call_args_list],
                              ["repeat_001", "repeat_002"])
+
+    def test_warmup_turns_power_off_on_interruption(self):
+        device = FakeDevice([])
+        with patch.object(app.time, "sleep", side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                app.warm_up(device, 180)
+        self.assertEqual(device.events[-1]["tx"], "pwr off")
+
+    def test_temperature_and_calibration_before_capture(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "repeat"
+            device = self.capture(path, [b"ack start\r\n"] +
+                                  [b"1000-05\r\n"] * 10 + [b"end\r\n"])
+            commands = [event["tx"] for event in device.events]
+            self.assertLess(commands.index("calib"), commands.index("status"))
+            self.assertLess(commands.index("status"), commands.index("start"))
+            self.assertEqual(commands[-1], "temp degc refresh")
+            meta = json.loads((path / "metadata.json").read_text())
+            self.assertEqual(meta["temperature_before_C"], 27.5)
+            self.assertEqual(meta["temperature_after_C"], 27.5)
+            self.assertEqual(meta["calibration"]["status"], "acknowledged")
+
+    def test_calibration_failure_prevents_acquisition(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            device = FakeDevice([])
+            original = device.command
+            device.command = lambda command, **kw: "ack status error" if command == "status" else original(command, **kw)
+            args = argparse.Namespace(seconds=0.1, hz=100, name="test", voltage=3.3,
+                                      off_seconds=1, notes="fake")
+            path = Path(temporary) / "repeat"
+            with self.assertRaises(RuntimeError):
+                app.capture_one(device, path, args, {}, 1)
+            self.assertNotIn("start", [event["tx"] for event in device.events])
+            self.assertEqual(json.loads((path / "metadata.json").read_text())["status"], "invalid")
 
     def test_bilingual_reports(self):
         with tempfile.TemporaryDirectory() as temporary:

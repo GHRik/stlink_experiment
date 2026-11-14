@@ -50,6 +50,12 @@ Both `--name` and `--notes` are required and must not be blank:
 
 One invocation of `capture` is one run. `--name` is required; use a descriptive configuration name. The date and time are appended automatically. All reports belong to that run; separate invocations do not share reports. Each repeat starts by cycling the board's power.
 
+Before the series, the meter warms up for **180 seconds with OUT enabled**; the target runs during this time. Change this with `--warmup-seconds`, or use `0` when the setup is already warm. The script then powers the target off. Warm-up temperatures are recorded in `warmup.json`.
+
+Before each repeat, the script requests `calib` with a 30-second response timeout, drains trailing messages for one second, checks `status`, and reads fresh temperature using `temp degc refresh`. It then waits the configured power-off interval and starts acquisition with automatic power-on. Meter temperatures before calibration, before acquisition, and after acquisition are saved in `metadata.json`, together with the calibration acknowledgement. This is the meter's temperature, not the target's.
+
+Warm-up and manual calibration reduce the risk of calibration during acquisition but do not disable automatic calibration or guarantee thermal stability. A calibration/resynchronization during the captured window still invalidates the repeat; its raw data remain available. The new sequence must be checked on physical hardware before a full series.
+
 ```text
 results/
   modem_20261114_183000_123456/

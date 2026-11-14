@@ -84,6 +84,33 @@ class Device:
                 pass
         self.serial.close()
 
+def read_temperature(device):
+    reply = device.command("temp degc refresh")
+    match = re.search(r"\btemp\b.*?([-+]?\d+(?:\.\d+)?)\s*(?:°?\s*[Cc]|degc)?\s*$", reply, re.I)
+    if not match:
+        raise RuntimeError(f"Cannot decode fresh meter temperature: {reply}")
+    return float(match.group(1))
+
+
+def warm_up(device, seconds):
+    """Warm up once per series, without acquiring samples; AUX stays off."""
+    before = read_temperature(device)
+    if seconds > 0:
+        print(f"Warming up for {seconds:g} s with OUT enabled (target is running).", flush=True)
+        device.command("pwr vout on")
+        try:
+            remaining = seconds
+            while remaining > 0:
+                step = min(10, remaining)
+                time.sleep(step)
+                remaining -= step
+                print(f"  Warm-up: {seconds - remaining:g}/{seconds:g} s", flush=True)
+        finally:
+            device.command("pwr off")
+    return {"requested_seconds": seconds, "temperature_before_C": before,
+            "temperature_after_C": read_temperature(device)}
+
+
 def capture_one(device, directory, args, identity, repeat):
     directory.mkdir()
     n_target = round(args.seconds * args.hz)
@@ -112,6 +139,19 @@ def capture_one(device, directory, args, identity, repeat):
     try:
         # A full power cycle before EVERY repeat. AUX remains disabled.
         device.command("pwr off")
+        metadata["temperature_before_calibration_C"] = read_temperature(device)
+        metadata["calibration"] = {"status": "started", "utc": datetime.now(timezone.utc).isoformat()}
+        print(f"  Calibrating before repeat {repeat}...", flush=True)
+        reply = device.command("calib", timeout=30)
+        if not re.match(r"^ack\s+calib\b", reply, re.I):
+            raise RuntimeError(f"Unexpected calibration acknowledgement: {reply}")
+        # Allow trailing firmware messages to settle, then check device readiness.
+        device.drain(1)
+        status = device.command("status")
+        if not re.search(r"\bstatus\s*:?\s*ok\s*$", status, re.I):
+            raise RuntimeError(f"Meter not ready after calibration: {status}")
+        metadata["calibration"].update(status="acknowledged", response=reply, device_status=status)
+        metadata["temperature_before_C"] = read_temperature(device)
         time.sleep(args.off_seconds)
         device.command("pwr vout auto")
         device.command("pwrend off")
@@ -180,9 +220,12 @@ def capture_one(device, directory, args, identity, repeat):
             metadata["issues"].append(f"Niepelna rejestracja: {count}/{n_target} probek.")
         if not started_ack:
             metadata["issues"].append("Brak rozpoznanego ACK start; sprawdz stream.bin.")
+        metadata["temperature_after_C"] = read_temperature(device)
     except BaseException as exc:
         fatal = exc
         metadata["issues"].append(str(exc) or type(exc).__name__)
+        if metadata.get("calibration", {}).get("status") == "started":
+            metadata["calibration"]["status"] = "failed"
     finally:
         metadata["samples"] = count
         metadata["status"] = "valid" if ended and not metadata["issues"] else "invalid"
@@ -195,6 +238,9 @@ def capture_one(device, directory, args, identity, repeat):
     return directory
 
 def validate_settings(args):
+    warmup = getattr(args, "warmup_seconds", 180)
+    if not math.isfinite(warmup) or not 0 <= warmup <= 3600:
+        raise ValueError("--warmup-seconds must be between 0 and 3600.")
     if not re.fullmatch(r"[A-Za-z0-9_-]+", args.name):
         raise ValueError("--name: uzyj liter ASCII, cyfr, '-' lub '_'.")
     if not 1.6 <= args.voltage <= 3.6 or not math.isclose(args.voltage * 10, round(args.voltage * 10)):

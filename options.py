@@ -34,6 +34,8 @@ def read_options():
     capture.add_argument("--hz", type=int, choices=RATES, default=1000)
     capture.add_argument("--voltage", type=float, default=3.3)
     capture.add_argument("--off-seconds", type=float, default=1)
+    capture.add_argument("--warmup-seconds", type=float, default=180,
+                         help="Warm up with OUT enabled before the series (default: 180 s; 0 skips). The target runs during warm-up.")
     capture.add_argument("--out", default="results")
     capture.add_argument("--notes", required=True, type=nonempty_text,
                          help=REQUIRED_REASONS["--notes"])
