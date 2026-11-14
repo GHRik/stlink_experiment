@@ -95,10 +95,10 @@ Once before each series:
 
 Before each repeat:
 
-1. Keep target power off and read meter temperature.
-2. Send `calib`, allowing up to 30 seconds for acknowledgement.
+1. Read meter temperature, enable OUT (AUX stays off), and wait one second. The target runs during calibration preparation.
+2. Send `calib` with OUT enabled, allowing up to 30 seconds for acknowledgement. On tested firmware V4.J7.B3.P6, requesting calibration with OUT off returns `error calib`.
 3. Drain trailing firmware messages for one second, check `status`, and read fresh temperature using `temp degc refresh`.
-4. Wait `--off-seconds` (default: 1), then start acquisition with automatic OUT power-on.
+4. Turn OUT off and wait `--off-seconds` (default: 1), then start acquisition with automatic OUT power-on.
 5. Capture the requested samples, stop acquisition, and read fresh temperature again.
 
 Only the target's OUT supply is switched off; the STLINK remains powered over USB. The recorded window **includes target startup after power-on**, including startup current peaks, as well as subsequent deep-sleep wakeups. The target must not receive power from its own USB connection or another source.

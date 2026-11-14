@@ -142,6 +142,10 @@ def capture_one(device, directory, args, identity, repeat):
         metadata["temperature_before_calibration_C"] = read_temperature(device)
         metadata["calibration"] = {"status": "started", "utc": datetime.now(timezone.utc).isoformat()}
         print(f"  Calibrating before repeat {repeat}...", flush=True)
+        # Verified on V4.J7.B3.P6: calib returns "error calib" with OUT off.
+        # Keep AUX off; power-cycle the target AFTER calibration for the capture.
+        device.command("pwr vout on")
+        time.sleep(1)
         reply = device.command("calib", timeout=30)
         if not re.match(r"^ack\s+calib\b", reply, re.I):
             raise RuntimeError(f"Unexpected calibration acknowledgement: {reply}")
@@ -152,6 +156,7 @@ def capture_one(device, directory, args, identity, repeat):
             raise RuntimeError(f"Meter not ready after calibration: {status}")
         metadata["calibration"].update(status="acknowledged", response=reply, device_status=status)
         metadata["temperature_before_C"] = read_temperature(device)
+        device.command("pwr off")
         time.sleep(args.off_seconds)
         device.command("pwr vout auto")
         device.command("pwrend off")
@@ -227,6 +232,11 @@ def capture_one(device, directory, args, identity, repeat):
         if metadata.get("calibration", {}).get("status") == "started":
             metadata["calibration"]["status"] = "failed"
     finally:
+        if fatal:
+            try:
+                device.command("pwr off")
+            except Exception:
+                pass
         metadata["samples"] = count
         metadata["status"] = "valid" if ended and not metadata["issues"] else "invalid"
         save_json(directory / "metadata.json", metadata)

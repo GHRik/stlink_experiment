@@ -71,6 +71,8 @@ class Tests(unittest.TestCase):
                                   [b"1000-05\r\n"] * 10 + [b"end\r\n"])
             commands = [event["tx"] for event in device.events]
             self.assertLess(commands.index("calib"), commands.index("status"))
+            self.assertLess(commands.index("pwr vout on"), commands.index("calib"))
+            self.assertIn("pwr off", commands[commands.index("calib") + 1:commands.index("start")])
             self.assertLess(commands.index("status"), commands.index("start"))
             self.assertEqual(commands[-1], "temp degc refresh")
             meta = json.loads((path / "metadata.json").read_text())
