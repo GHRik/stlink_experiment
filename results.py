@@ -2,6 +2,7 @@
 from pathlib import Path
 import json
 import math
+import textwrap
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
@@ -29,6 +30,33 @@ def plot_save(fig, base, bottom=0):
     for ext in ("png", "svg"):
         fig.savefig(base.with_suffix("." + ext), dpi=160)
     plt.close(fig)
+
+
+def save_report_plot(fig, base, footer, handles):
+    """Reserve measured space below the axes for a wrapped footer and legend."""
+    width, height = fig.get_size_inches()
+    wrapped = "\n".join(textwrap.fill(line, width=max(40, int(width * 12)))
+                        for line in footer.splitlines())
+    text = fig.text(0.5, 0, wrapped, ha="center", va="bottom", fontsize=9,
+                    linespacing=1.6)
+    columns = min(5, len(handles))
+    while True:
+        legend = fig.legend(handles=handles, loc="lower center", ncol=columns,
+                            bbox_to_anchor=(0.5, 0), frameon=False, fontsize=9)
+        fig.canvas.draw()
+        renderer = fig.canvas.get_renderer()
+        if legend.get_window_extent(renderer).width <= (width - 0.5) * fig.dpi or columns == 1:
+            break
+        legend.remove()
+        columns -= 1
+    footer_height = text.get_window_extent(renderer).height / fig.dpi
+    legend_height = legend.get_window_extent(renderer).height / fig.dpi
+    reserved = footer_height + legend_height + 0.65
+    total_height = height + reserved
+    fig.set_size_inches(width, total_height)
+    text.set_position((0.5, 0.15 / total_height))
+    legend.set_bbox_to_anchor((0.5, (footer_height + 0.3) / total_height))
+    plot_save(fig, base, bottom=reserved / total_height)
 
 def load_run(directory):
     meta = json.loads((directory / "metadata.json").read_text(encoding="utf-8"))
@@ -177,10 +205,9 @@ def plot_report(root, rows, traces, stats, language):
     if all(row["begin_s"] == 0 for row in rows):
         footer += ("\nPomiar obejmuje rozruch po włączeniu zasilania." if language == "pl"
                    else "\nMeasurement includes startup after power-on.")
-    extra_height = 0.3 * len(summary_lines) + 0.8
-    comparison_height = 5 + extra_height
-    fig, axes = plt.subplots(1, len(traces), figsize=(max(10, 5 * len(traces)), comparison_height),
+    fig, axes = plt.subplots(1, len(traces), figsize=(max(10, 5 * len(traces)), 5),
                              squeeze=False, sharex=True, sharey=True)
+    trace_handles = []
     for k, (ax, runs) in enumerate(zip(axes[0], traces.values()), 1):
         colors = plt.get_cmap("tab20", max(20, len(runs)))
         for number, (row, data) in enumerate(runs):
@@ -188,14 +215,13 @@ def plot_report(root, rows, traces, stats, language):
                      label=f'{repeat_label} {number + 1}', color=colors(number))
         ax.set(xlabel=time_label,
                title=f'{row["configuration"]} | {row["voltage_V"]} V | n={len(runs)}')
-        ax.legend(fontsize=8, loc="upper right")
+        if len(ax.lines) > len(trace_handles):
+            trace_handles = list(ax.lines)
         ax.grid(alpha=0.25)
     axes[0, 0].set_ylabel(current_label)
     fig.suptitle(f"{root.name}\n{comparison_title}")
-    fig.text(0.5, 0.02, footer, ha="center", va="bottom", fontsize=9, linespacing=1.6)
-    plot_save(fig, root / f"comparison_{language}", bottom=extra_height / comparison_height)
-    statistics_height = 5.5 + extra_height
-    fig, axes = plt.subplots(1, 2, figsize=(12, statistics_height))
+    save_report_plot(fig, root / f"comparison_{language}", footer, trace_handles)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     repeat_handles = {}
     for ax, field, ylabel in zip(axes, ("mean_current_mA", "energy_estimate_J"),
                                  (mean_label, energy_label)):
@@ -219,10 +245,8 @@ def plot_report(root, rows, traces, stats, language):
         ax.set_ylabel(ylabel)
         ax.grid(axis="y", alpha=0.25)
     fig.suptitle(f"{root.name}\n{stats_title}")
-    fig.legend(handles=[*repeat_handles.values(), mean], loc="lower center", ncol=6,
-               bbox_to_anchor=(0.5, (extra_height + 0.1) / statistics_height), frameon=False)
-    fig.text(0.5, 0.02, footer, ha="center", va="bottom", fontsize=9, linespacing=1.6)
-    plot_save(fig, root / f"statistics_{language}", bottom=(extra_height + 0.65) / statistics_height)
+    save_report_plot(fig, root / f"statistics_{language}", footer,
+                     [*repeat_handles.values(), mean])
 
 def demo(out):
     """Synthetic inputs only; exercise reports without hardware."""

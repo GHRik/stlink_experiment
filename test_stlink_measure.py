@@ -58,12 +58,46 @@ class Tests(unittest.TestCase):
             self.capture(root / "repeat_001", [b"ack start\r\n"] +
                          [b"1000-05\r\n"] * 10 + [b"end\r\n"])
             results.report(root, 0, None)
-            for language, phrase in (("pl", "Pojedyncze powtórzenie"),
-                                     ("eng", "Individual repeat")):
+            for language, phrase in (("pl", "Powtórzenie 1"),
+                                     ("eng", "Repeat 1")):
                 for base in ("comparison", "statistics"):
                     for extension in ("png", "svg"):
                         self.assertTrue((root / f"{base}_{language}.{extension}").exists())
                 self.assertIn(phrase, (root / f"statistics_{language}.svg").read_text(encoding="utf-8"))
+
+    def test_report_layout_for_long_captures(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for count in (5, 10):
+                rows, runs = [], []
+                for number in range(count):
+                    data = np.zeros(1001, dtype=[("time_s", float), ("current_uA", float)])
+                    data["time_s"] = np.linspace(0, 1000, len(data))
+                    data["current_uA"] = 20000 + number * 100
+                    row = dict(configuration="modem", voltage_V=3.3, sampling_Hz=1,
+                               begin_s=0, end_s=1000, conditions="same",
+                               mean_current_mA=20 + number * 0.1,
+                               energy_estimate_J=(20 + number * 0.1) * 3.3)
+                    rows.append(row)
+                    runs.append((row, data))
+                def check_layout(fig, base, bottom=0):
+                    fig.tight_layout(rect=(0, bottom, 1, 1))
+                    fig.canvas.draw()
+                    renderer = fig.canvas.get_renderer()
+                    legend = fig.legends[0].get_window_extent(renderer)
+                    footer = fig.texts[-1].get_window_extent(renderer)
+                    self.assertLess(footer.y1, legend.y0)
+                    self.assertLess(legend.y1, min(ax.get_tightbbox(renderer).y0 for ax in fig.axes))
+                    for box in (legend, footer):
+                        self.assertGreaterEqual(box.x0, 0)
+                        self.assertLessEqual(box.x1, fig.bbox.width)
+                    if base.name.startswith("comparison"):
+                        self.assertGreater(fig.axes[0].get_xlim()[1], 1000)
+                    results.plt.close(fig)
+                for language in ("pl", "eng"):
+                    with patch.object(results, "plot_save", side_effect=check_layout) as save:
+                        results.plot_report(root, rows, {"modem": runs}, results.aggregate(rows), language)
+                    self.assertEqual(save.call_count, 2)
 
     def test_real_firmware_prompt_before_ack(self):
         class Serial:
