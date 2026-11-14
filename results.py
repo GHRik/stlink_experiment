@@ -61,22 +61,22 @@ def save_report_plot(fig, base, footer, handles):
 def load_run(directory):
     meta = json.loads((directory / "metadata.json").read_text(encoding="utf-8"))
     if meta["status"] != "valid":
-        raise ValueError(f"Nieprawidlowy pomiar: {directory}")
+        raise ValueError(f"Invalid measurement: {directory}")
     data = np.genfromtxt(directory / "samples.csv", delimiter=";", names=True, encoding="utf-8-sig")
     data = np.atleast_1d(data)
     hz = meta["sampling_Hz"]
     if len(data) != meta["samples"] or not np.array_equal(data["sample_index"], np.arange(len(data))):
-        raise ValueError(f"Brakujace/powtorzone rekordy CSV: {directory}")
+        raise ValueError(f"Missing or duplicate CSV records: {directory}")
     return meta, data, hz
 
 def analyze_run(directory, begin, end):
     meta, data, hz = load_run(directory)
     end = meta["requested_duration_s"] if end is None else end
     if begin < 0 or end <= begin or end > meta["requested_duration_s"] + 1e-8:
-        raise ValueError(f"Zakres {begin}..{end} poza pomiarem: {directory}")
+        raise ValueError(f"Analysis window {begin}..{end} is outside the measurement: {directory}")
     a, b = round(begin * hz), round(end * hz)
     if not math.isclose(begin * hz, a) or not math.isclose(end * hz, b):
-        raise ValueError("Granice analizy musza trafiac w siatke probek.")
+        raise ValueError("Analysis window boundaries must align with sample intervals.")
     current = data["current_uA"][a:b] / 1000
     duration = len(current) / hz
     row = {
@@ -138,7 +138,7 @@ def report(root, begin, end):
                row["begin_s"], row["end_s"], row["conditions"])
         traces.setdefault(key, []).append((row, data))
     if not rows:
-        raise ValueError("Brak poprawnych pomiarow do analizy.")
+        raise ValueError("No valid measurements to analyze.")
     # Prevent confusing comparisons across different time windows or voltage.
     write_csv(root / "runs_summary.csv", rows)
     stats = aggregate(rows)
@@ -150,8 +150,8 @@ def report(root, begin, end):
                      "statistics_pl", "statistics_eng"):
             for ext in ("png", "svg"):
                 (root / f"{base}.{ext}").unlink(missing_ok=True)
-        print("Zapisano CSV. Pominieto wspolne wykresy: rozne napiecia, Hz lub przedzialy czasu. "
-              "Analizuj osobny katalog albo wybierz wspolny zakres --from-s/--to-s.")
+        print("CSV reports saved. Combined plots skipped: different voltages, sampling rates, or time windows. "
+              "Analyze a separate directory or select a common window with --from-s/--to-s.")
         return
     for language in ("pl", "eng"):
         plot_report(root, rows, traces, stats, language)
@@ -159,7 +159,7 @@ def report(root, begin, end):
     for base in ("comparison", "statistics"):
         for ext in ("png", "svg"):
             (root / f"{base}.{ext}").unlink(missing_ok=True)
-    print(f"Analiza: {len(rows)} poprawnych pomiarow; wykluczono {len(errors)}.")
+    print(f"Analysis: {len(rows)} valid measurements; {len(errors)} excluded.")
 
 
 def plot_report(root, rows, traces, stats, language):

@@ -49,7 +49,7 @@ class Device:
                 return None
             self.pending.extend(chunk)
             if len(self.pending) > 100000:
-                raise RuntimeError("Brak koncow linii CRLF; sprawdz port SMU i format firmware.")
+                raise RuntimeError("Missing CRLF line endings; check the SMU port and firmware data format.")
 
     def command(self, text, timeout=5):
         self.send(text)
@@ -68,7 +68,7 @@ class Device:
                 raise RuntimeError(f"{text}: {line}")
             if re.match(r"^ack\s+" + re.escape(expected) + r"(?:\s|:|$)", line, re.I):
                 return line
-        raise RuntimeError(f"Brak ACK dla {text!r}. Odpowiedzi: {received[-8:]}")
+        raise RuntimeError(f"No acknowledgement for {text!r}. Responses: {received[-8:]}")
 
     def drain(self, seconds=0.5):
         deadline = time.monotonic() + seconds
@@ -174,9 +174,9 @@ def capture_one(device, directory, args, identity, repeat):
             while True:
                 now = time.monotonic()
                 if now > start_clock + args.seconds + 30:
-                    raise RuntimeError("Timeout: nie otrzymano wymaganej liczby probek i znacznika end.")
+                    raise RuntimeError("Timeout: the required sample count and end marker were not received.")
                 if stop_sent and now > stop_clock + 10:
-                    raise RuntimeError("Timeout po stop: brak znacznika end.")
+                    raise RuntimeError("Timeout after stop: missing end marker.")
                 raw = device.line()
                 if raw is None:
                     continue
@@ -186,7 +186,7 @@ def capture_one(device, directory, args, identity, repeat):
                 if value is not None:
                     if count < n_target:
                         if not 0 <= value <= 0.6:
-                            raise RuntimeError(f"Nieoczekiwana wartosc pradu: {value} A")
+                            raise RuntimeError(f"Unexpected current value: {value} A")
                         energy += value * args.voltage / args.hz
                         writer.writerow([count, f"{count / args.hz:.9f}",
                                          f"{value * 1e6:.9g}", args.voltage,
@@ -209,7 +209,7 @@ def capture_one(device, directory, args, identity, repeat):
                             f"Device calibration warning: {line}. "
                             "Acquisition continuity must be verified; repeat this measurement.")
                 elif line.lower().startswith("err"):
-                    raise RuntimeError(f"Urzadzenie: {line}")
+                    raise RuntimeError(f"Device error: {line}")
                 elif line.lower().startswith("ack"):
                     if "start" in line.lower():
                         started_ack = True
@@ -218,14 +218,14 @@ def capture_one(device, directory, args, identity, repeat):
                     break
                 elif line and not (line.startswith("pwr ") or line.startswith("summary")):
                     # Unknown metadata is retained; do not silently parse as current.
-                    metadata["issues"].append(f"Nieznana linia protokolu: {line[:160]}")
+                    metadata["issues"].append(f"Unknown protocol line: {line[:160]}")
                 if now >= next_progress:
                     print(f"  {args.name} #{repeat}: {count / args.hz:.1f}/{args.seconds:g} s", flush=True)
                     next_progress = now + 5
         if not ended or count != n_target:
-            metadata["issues"].append(f"Niepelna rejestracja: {count}/{n_target} probek.")
+            metadata["issues"].append(f"Incomplete capture: {count}/{n_target} samples.")
         if not started_ack:
-            metadata["issues"].append("Brak rozpoznanego ACK start; sprawdz stream.bin.")
+            metadata["issues"].append("Missing start acknowledgement; check stream.bin.")
         metadata["temperature_after_C"] = read_temperature(device)
     except BaseException as exc:
         fatal = exc
@@ -245,7 +245,7 @@ def capture_one(device, directory, args, identity, repeat):
     if fatal:
         raise fatal
     if metadata["status"] != "valid":
-        raise RuntimeError(f"Pomiar oznaczony invalid: {directory}. Dane zachowane; sprawdz metadata.json.")
+        raise RuntimeError(f"Measurement marked invalid: {directory}. Data preserved; check metadata.json.")
     return directory
 
 def validate_settings(args):
@@ -253,13 +253,13 @@ def validate_settings(args):
     if not math.isfinite(warmup) or not 0 <= warmup <= 3600:
         raise ValueError("--warmup-seconds must be between 0 and 3600.")
     if not re.fullmatch(r"[A-Za-z0-9_-]+", args.name):
-        raise ValueError("--name: uzyj liter ASCII, cyfr, '-' lub '_'.")
+        raise ValueError("--name: use ASCII letters, digits, '-' or '_'.")
     if not 1.6 <= args.voltage <= 3.6 or not math.isclose(args.voltage * 10, round(args.voltage * 10)):
-        raise ValueError("Napiecie 1.6..3.6 V, krok 0.1 V.")
+        raise ValueError("Voltage must be between 1.6 and 3.6 V in 0.1 V increments.")
     if args.repeats < 1 or args.seconds <= 0 or args.seconds > 3600 or args.off_seconds < 0.1:
-        raise ValueError("Powtorzenia >=1, czas 0..3600 s, czas odciecia >=0.1 s.")
+        raise ValueError("Repeats must be >= 1, duration > 0 and <= 3600 s, and power-off time >= 0.1 s.")
     if not math.isclose(args.seconds * args.hz, round(args.seconds * args.hz)):
-        raise ValueError("Czas * Hz musi byc calkowita liczba probek.")
+        raise ValueError("Duration multiplied by sampling rate must be a whole number of samples.")
 
 
 def create_session(args):
@@ -274,9 +274,9 @@ def identify_device(device):
     device.command("status")
     identity = {key: device.command(key) for key in ("whoami", "version", "apiver")}
     if "STLINK-V3PWR" not in identity["whoami"]:
-        raise RuntimeError("To nie jest port pomiarowy STLINK-V3PWR.")
+        raise RuntimeError("This is not an STLINK-V3PWR measurement port.")
     if not re.search(r"apiver\s*:?\s*1\s*$", identity["apiver"], re.I):
-        raise RuntimeError("Ten skrypt obsluguje tylko API 1.")
+        raise RuntimeError("This script supports only API version 1.")
     return identity
 
 
@@ -292,7 +292,7 @@ def configure_device(device, args):
     device.command("trigdelay 0")
     status = device.command("status")
     if "error" in status.lower():
-        raise RuntimeError(f"STLINK nie jest gotowy: {status}")
+        raise RuntimeError(f"STLINK is not ready: {status}")
 
 
 def save_session_settings(session, device, args, identity):

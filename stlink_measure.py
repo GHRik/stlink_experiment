@@ -32,7 +32,7 @@ def run_experiment(settings):
         save_json(session / "warmup.json", warm_up(meter, getattr(settings, "warmup_seconds", 180)))
 
         for number in range(1, settings.repeats + 1):
-            print(f"Pomiar {number}/{settings.repeats}: {settings.name}", flush=True)
+            print(f"Repeat {number}/{settings.repeats}: {settings.name}", flush=True)
             run_folder = session / f"repeat_{number:03d}"
 
             # Odetnij zasilanie, zacznij od nowa i zapisz wszystkie probki.
@@ -50,7 +50,7 @@ def run_experiment(settings):
 
     # Po serii porownaj zebrane konfiguracje i policz rozrzut powtorzen.
     report(session, begin=0, end=None)
-    print(f"Zapisano: {session.resolve()}")
+    print(f"Saved to: {session.resolve()}")
 
 
 def analyze_saved_measurements(settings):
@@ -77,10 +77,10 @@ def main():
         elif settings.action == "demo":
             demo(settings.out)
     except KeyboardInterrupt:
-        print("Przerwano. Niepelne pomiary sa oznaczone invalid.", file=sys.stderr)
+        print("Interrupted. Incomplete measurements are marked invalid.", file=sys.stderr)
         return 130
     except Exception as error:
-        print(f"BLAD: {error}", file=sys.stderr)
+        print(f"ERROR: {error}", file=sys.stderr)
         return 1
     return 0
 

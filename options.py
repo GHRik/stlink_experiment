@@ -24,8 +24,8 @@ def nonempty_text(value):
 def read_options():
     parser = MeasurementParser(description="STLINK-V3PWR measurements, CSV exports, and plots")
     sub = parser.add_subparsers(dest="action", required=True)
-    sub.add_parser("ports", help="Lista portow; wybierz STLINK SMU, nie UART debug.")
-    capture = sub.add_parser("capture", help="Automatyczna seria pomiarow.")
+    sub.add_parser("ports", help="List serial ports; select STLINK SMU, not the debug UART.")
+    capture = sub.add_parser("capture", help="Capture an automated series of measurements.")
     capture.add_argument("--port", required=True)
     capture.add_argument("--name", required=True, type=nonempty_text,
                          help=REQUIRED_REASONS["--name"])
@@ -39,11 +39,11 @@ def read_options():
     capture.add_argument("--out", default="results")
     capture.add_argument("--notes", required=True, type=nonempty_text,
                          help=REQUIRED_REASONS["--notes"])
-    analysis = sub.add_parser("analyze", help="Ponowna analiza CSV, bez polaczenia z urzadzeniem.")
+    analysis = sub.add_parser("analyze", help="Reanalyze saved CSV data without connecting to the device.")
     analysis.add_argument("--root", default="results")
     analysis.add_argument("--from-s", type=float, default=0)
     analysis.add_argument("--to-s", type=float)
-    simulation = sub.add_parser("demo", help="Wygeneruj wyraznie oznaczone dane syntetyczne.")
+    simulation = sub.add_parser("demo", help="Generate clearly labeled synthetic data.")
     simulation.add_argument("--out", default="demo_results")
     return parser.parse_args()
 
