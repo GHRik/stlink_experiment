@@ -193,14 +193,20 @@ def plot_report(root, rows, traces, stats, language):
     plot_save(fig, root / f"comparison_{language}", bottom=extra_height / comparison_height)
     statistics_height = 5.5 + extra_height
     fig, axes = plt.subplots(1, 2, figsize=(12, statistics_height))
+    repeat_handles = {}
     for ax, field, ylabel in zip(axes, ("mean_current_mA", "energy_estimate_J"),
                                  (mean_label, energy_label)):
         for i, group in enumerate(stats):
             matches = [r for r in rows if all(r[k] == group[k] for k in
                        ("configuration", "voltage_V", "sampling_Hz", "begin_s", "end_s", "conditions"))]
             values = [r[field] for r in matches]
-            points = ax.scatter(np.full(len(values), i), values, color="tab:blue", s=20,
-                                alpha=0.6, label=point_label)
+            colors = plt.get_cmap("tab20", max(20, len(matches)))
+            # Spread repeats horizontally so near-identical results remain visible.
+            offsets = np.linspace(-0.15, 0.15, len(matches)) if len(matches) > 1 else [0]
+            for number, (value, offset) in enumerate(zip(values, offsets)):
+                point = ax.scatter(i + offset, value, color=colors(number), s=28,
+                                   alpha=0.85, label=f"{repeat_label} {number + 1}")
+                repeat_handles.setdefault(number, point)
             sd = group[field + "_between_run_sd"]
             mean = ax.errorbar(i, group[field + "_mean"], yerr=sd if sd is not None else 0,
                                fmt="o", color="black", capsize=5,
@@ -210,7 +216,7 @@ def plot_report(root, rows, traces, stats, language):
         ax.set_ylabel(ylabel)
         ax.grid(axis="y", alpha=0.25)
     fig.suptitle(f"{root.name}\n{stats_title}")
-    fig.legend(handles=[points, mean], loc="lower center", ncol=2,
+    fig.legend(handles=[*repeat_handles.values(), mean], loc="lower center", ncol=6,
                bbox_to_anchor=(0.5, (extra_height + 0.1) / statistics_height), frameon=False)
     fig.text(0.5, 0.02, footer, ha="center", va="bottom", fontsize=9, linespacing=1.6)
     plot_save(fig, root / f"statistics_{language}", bottom=(extra_height + 0.65) / statistics_height)
