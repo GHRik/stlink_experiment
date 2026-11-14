@@ -15,7 +15,7 @@ py -m venv .venv
 
 Flash one sketch from `nodemcu_led_cycles/` using the Arduino IDE. Select **NodeMCU 1.0 (ESP-12E Module)**, ESP8266 Arduino Core **3.1.2**, and **80 MHz** CPU frequency. Sketches 01–03 turn the built-in LED on for 2 seconds, then wait for approximately 8 seconds. The [00_no_code baseline](nodemcu_led_cycles/00_no_code/00_no_code.ino) disables the LED, Wi-Fi/radio, and serial interfaces, then runs an empty loop.
 
-Disconnect STLINK output wiring while flashing over USB. For measurement, disconnect NodeMCU USB and connect **STLINK OUT → 3V3** and **GND → GND**. The script defaults to **3.3 V**. Deep sleep also requires **D0 → RST**. See [sketch notes](nodemcu_led_cycles/README.txt) for details.
+Disconnect STLINK output wiring while flashing over USB. For measurement, disconnect NodeMCU USB and connect **STLINK OUT → 3V3** and **GND → GND**. The script defaults to **3.3 V**. Deep sleep also requires **D0 → RST**. See the [NodeMCU documentation](nodemcu_led_cycles/README.md) for firmware behavior, methodology, and recorded results.
 
 ### 2. Find the measurement port
 
@@ -109,16 +109,6 @@ Override warm-up with `--warmup-seconds 300`, for example. Use `--warmup-seconds
 
 Warm-up and manual calibration do not disable automatic calibration. Calibration/resynchronization inside the captured window still invalidates the repeat because this script does not reconstruct missing samples. Raw data remain available. Verify the sequence on physical hardware with a short capture before a full series.
 
-## Recorded no-code baseline
-
-[Measurement data and reports](results/modem_20261114_202635_901512) from 10 independent 100-second captures at 3.3 V and 1000 Hz. The session was recorded with `--name modem`, but its board notes identify it as a **zero-code test**, corresponding to the `00_no_code` baseline, rather than the LED-cycling modem sketch. The original session name and metadata are preserved.
-
-The mean current across repeats is **20.859 mA**, with a between-repeat standard deviation of **0.017 mA**. Mean estimated energy per 100-second capture is **6.884 J**. Measurements include power-on startup and the whole powered NodeMCU board. Firmware was supplied by the experiment author; the sketch added here has not been compiled or flashed by this repository's tooling.
-
-![Current traces for all ten no-code baseline repeats](results/modem_20261114_202635_901512/comparison_eng.png)
-
-![Mean current and estimated energy with between-repeat standard deviation](results/modem_20261114_202635_901512/statistics_eng.png)
-
 ## Run without hardware
 
 ```powershell
@@ -128,6 +118,6 @@ The mean current across repeats is **20.859 mA**, with a between-repeat standard
 
 Demo output is synthetic data, saved in `demo_results/`.
 
-New sessions under `results/`, along with `test_results/` and `demo_results/`, are ignored by Git. The baseline session linked above is explicitly included, with its raw samples and reports. Back up measurement data separately.
+New sessions under `results/`, along with `test_results/` and `demo_results/`, are ignored by Git. The baseline session documented in the [NodeMCU README](nodemcu_led_cycles/README.md#recorded-baseline-results) is explicitly included, with its raw samples and reports. Back up measurement data separately.
 
 License: [MIT](LICENSE.txt).
