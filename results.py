@@ -146,7 +146,24 @@ def plot_report(root, rows, traces, stats, language):
                "Podsumowanie niezależnych powtórzeń"),
     }[language]
     time_label, current_label, repeat_label, group_label, comparison_title, mean_label, energy_label, point_label, sd_label, stats_title = labels
-    fig, axes = plt.subplots(1, len(traces), figsize=(max(8, 5 * len(traces)), 5),
+    summary_lines = []
+    for k, runs in enumerate(traces.values(), 1):
+        currents = [data["current_uA"] / 1000 for _, data in runs]
+        average = sum(float(np.sum(values)) for values in currents) / sum(len(values) for values in currents)
+        minimum = min(float(np.min(values)) for values in currents)
+        maximum = max(float(np.max(values)) for values in currents)
+        if language == "pl":
+            values_text = f"Średni pobór: {average:.3f} mA | Maksymalny: {maximum:.3f} mA | Minimalny: {minimum:.3f} mA"
+            values_text = values_text.replace(".", ",")
+        else:
+            values_text = f"Mean current: {average:.3f} mA | Maximum: {maximum:.3f} mA | Minimum: {minimum:.3f} mA"
+        summary_lines.append(f'{runs[0][0]["configuration"]} ({group_label} {k}): {values_text}')
+    scope = ("Prąd ze wszystkich próbek w analizowanym przedziale, ze wszystkich powtórzeń."
+             if language == "pl" else "Current across all samples in the analysis window, across all repeats.")
+    footer = "\n".join(summary_lines + [scope])
+    extra_height = 0.3 * len(summary_lines) + 0.5
+    comparison_height = 5 + extra_height
+    fig, axes = plt.subplots(1, len(traces), figsize=(max(10, 5 * len(traces)), comparison_height),
                              squeeze=False, sharex=True, sharey=True)
     for k, (ax, runs) in enumerate(zip(axes[0], traces.values()), 1):
         colors = plt.get_cmap("tab20", max(20, len(runs)))
@@ -159,8 +176,10 @@ def plot_report(root, rows, traces, stats, language):
         ax.grid(alpha=0.25)
     axes[0, 0].set_ylabel(current_label)
     fig.suptitle(f"{root.name}\n{comparison_title}")
-    plot_save(fig, root / f"comparison_{language}")
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    fig.text(0.5, 0.02, footer, ha="center", va="bottom", fontsize=9, linespacing=1.6)
+    plot_save(fig, root / f"comparison_{language}", bottom=extra_height / comparison_height)
+    statistics_height = 5.5 + extra_height
+    fig, axes = plt.subplots(1, 2, figsize=(12, statistics_height))
     for ax, field, ylabel in zip(axes, ("mean_current_mA", "energy_estimate_J"),
                                  (mean_label, energy_label)):
         for i, group in enumerate(stats):
@@ -179,8 +198,9 @@ def plot_report(root, rows, traces, stats, language):
         ax.grid(axis="y", alpha=0.25)
     fig.suptitle(f"{root.name}\n{stats_title}")
     fig.legend(handles=[points, mean], loc="lower center", ncol=2,
-               bbox_to_anchor=(0.5, 0.01), frameon=False)
-    plot_save(fig, root / f"statistics_{language}", bottom=0.1)
+               bbox_to_anchor=(0.5, (extra_height + 0.1) / statistics_height), frameon=False)
+    fig.text(0.5, 0.02, footer, ha="center", va="bottom", fontsize=9, linespacing=1.6)
+    plot_save(fig, root / f"statistics_{language}", bottom=(extra_height + 0.65) / statistics_height)
 
 def demo(out):
     """Synthetic inputs only; exercise reports without hardware."""
