@@ -43,13 +43,32 @@ Then record a series:
 
 For the other sketches, flash the corresponding firmware and use `--name light` or `--name deep`. Keep voltage and sampling frequency identical across comparisons. Use `--notes "board, firmware, and measurement conditions"` to record your setup.
 
-Each repeat starts by cycling the board's power. Results are saved under a timestamped session in `results/`, including raw samples (`samples.csv`), the received stream (`stream.bin`), metadata, command logs, and PNG/SVG plots. CSV files use a semicolon separator and a decimal point.
+One invocation of `capture` is one run. `--name` is required; use a descriptive configuration name. The date and time are appended automatically. All reports belong to that run; separate invocations do not share reports. Each repeat starts by cycling the board's power.
+
+```text
+results/
+  modem_20261114_183000_123456/
+    session_config.json
+    repeat_001/  # samples.csv, stream.bin, metadata.json, commands.json, analysis.json, current.png/svg
+    repeat_002/
+    ...
+    repeat_010/
+    runs_summary.csv
+    statistics.csv
+    excluded_runs.json
+    comparison_pl.png / comparison_pl.svg
+    comparison_eng.png / comparison_eng.svg
+    statistics_pl.png / statistics_pl.svg
+    statistics_eng.png / statistics_eng.svg
+```
+
+`comparison` overlays all repeats. `statistics` shows individual repeat results and their mean ± SD, with a legend below. Both include the run directory name and are generated in Polish (`_pl`) and English (`_eng`). CSV files use a semicolon separator and a decimal point.
 
 ### 4. Analyze saved data
 
 ```powershell
-.\.venv\Scripts\python.exe stlink_measure.py analyze --root results
-.\.venv\Scripts\python.exe stlink_measure.py analyze --root results --from-s 4 --to-s 8
+.\.venv\Scripts\python.exe stlink_measure.py analyze --root results/modem_20261114_183000_123456
+.\.venv\Scripts\python.exe stlink_measure.py analyze --root results/modem_20261114_183000_123456 --from-s 4 --to-s 8
 ```
 
 Analysis regenerates reports and plots without changing sample CSV files. Select time windows after inspecting the traces; the tool does not detect complete LED cycles automatically. Energy is estimated from current samples and the configured voltage, and includes the whole powered board.

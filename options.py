@@ -10,7 +10,8 @@ def read_options():
     sub.add_parser("ports", help="Lista portow; wybierz STLINK SMU, nie UART debug.")
     capture = sub.add_parser("capture", help="Automatyczna seria pomiarow.")
     capture.add_argument("--port", required=True)
-    capture.add_argument("--name", required=True)
+    capture.add_argument("--name", required=True,
+                         help="Required run/configuration name; date and time are appended automatically.")
     capture.add_argument("--repeats", type=int, default=10)
     capture.add_argument("--seconds", type=float, default=120)
     capture.add_argument("--hz", type=int, choices=RATES, default=1000)

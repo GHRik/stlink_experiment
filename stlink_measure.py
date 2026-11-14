@@ -32,7 +32,7 @@ def run_experiment(settings):
 
         for number in range(1, settings.repeats + 1):
             print(f"Pomiar {number}/{settings.repeats}: {settings.name}", flush=True)
-            run_folder = session / f"run_{number:03d}"
+            run_folder = session / f"repeat_{number:03d}"
 
             # Odetnij zasilanie, zacznij od nowa i zapisz wszystkie probki.
             capture_one(meter, run_folder, settings, identity, number)
@@ -46,7 +46,7 @@ def run_experiment(settings):
         meter.close()
 
     # Po serii porownaj zebrane konfiguracje i policz rozrzut powtorzen.
-    report(Path(settings.out), begin=0, end=None)
+    report(session, begin=0, end=None)
     print(f"Zapisano: {session.resolve()}")
 
 

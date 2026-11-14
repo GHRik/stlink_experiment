@@ -118,47 +118,69 @@ def report(root, begin, end):
     save_json(root / "excluded_runs.json", errors)
     settings = {tuple(r[k] for k in ("voltage_V", "sampling_Hz", "begin_s", "end_s")) for r in rows}
     if len(settings) > 1:
-        for filename in ("comparison.png", "comparison.svg", "statistics.png", "statistics.svg"):
-            (root / filename).unlink(missing_ok=True)
+        for base in ("comparison", "statistics", "comparison_pl", "comparison_eng",
+                     "statistics_pl", "statistics_eng"):
+            for ext in ("png", "svg"):
+                (root / f"{base}.{ext}").unlink(missing_ok=True)
         print("Zapisano CSV. Pominieto wspolne wykresy: rozne napiecia, Hz lub przedzialy czasu. "
               "Analizuj osobny katalog albo wybierz wspolny zakres --from-s/--to-s.")
         return
+    for language in ("pl", "eng"):
+        plot_report(root, rows, traces, stats, language)
+    # Remove obsolete plots so they cannot be confused with the current reports.
+    for base in ("comparison", "statistics"):
+        for ext in ("png", "svg"):
+            (root / f"{base}.{ext}").unlink(missing_ok=True)
+    print(f"Analiza: {len(rows)} poprawnych pomiarow; wykluczono {len(errors)}.")
+
+
+def plot_report(root, rows, traces, stats, language):
+    labels = {
+        "eng": ("Time from acquisition start [s]", "Current [mA]", "Repeat",
+                "group", "All repeats (individual traces)", "Mean current [mA]",
+                "Estimated energy [J]", "Individual repeat", "Mean ± SD across repeats",
+                "Summary across independent repeats"),
+        "pl": ("Czas od rozpoczęcia pomiaru [s]", "Prąd [mA]", "Powtórzenie",
+               "grupa", "Wszystkie powtórzenia (osobne przebiegi)", "Średni prąd [mA]",
+               "Szacowana energia [J]", "Pojedyncze powtórzenie", "Średnia ± SD między powtórzeniami",
+               "Podsumowanie niezależnych powtórzeń"),
+    }[language]
+    time_label, current_label, repeat_label, group_label, comparison_title, mean_label, energy_label, point_label, sd_label, stats_title = labels
     fig, axes = plt.subplots(1, len(traces), figsize=(max(8, 5 * len(traces)), 5),
                              squeeze=False, sharex=True, sharey=True)
     for k, (ax, runs) in enumerate(zip(axes[0], traces.values()), 1):
         colors = plt.get_cmap("tab20", max(20, len(runs)))
         for number, (row, data) in enumerate(runs):
             envelope(ax, data["time_s"], data["current_uA"] / 1000,
-                     label=f'Run {number + 1}', color=colors(number))
-        ax.set(xlabel="Time from acquisition start [s]",
-               title=f'{row["configuration"]} | group {k} | {row["voltage_V"]} V')
+                     label=f'{repeat_label} {number + 1}', color=colors(number))
+        ax.set(xlabel=time_label,
+               title=f'{row["configuration"]} | {group_label} {k} | {row["voltage_V"]} V')
         ax.legend(fontsize=8, loc="upper right")
         ax.grid(alpha=0.25)
-    axes[0, 0].set_ylabel("Current [mA]")
-    fig.suptitle("All repeats (individual traces)")
-    plot_save(fig, root / "comparison")
+    axes[0, 0].set_ylabel(current_label)
+    fig.suptitle(f"{root.name}\n{comparison_title}")
+    plot_save(fig, root / f"comparison_{language}")
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     for ax, field, ylabel in zip(axes, ("mean_current_mA", "energy_estimate_J"),
-                                 ("Mean current [mA]", "Estimated energy [J]")):
+                                 (mean_label, energy_label)):
         for i, group in enumerate(stats):
             matches = [r for r in rows if all(r[k] == group[k] for k in
                        ("configuration", "voltage_V", "sampling_Hz", "begin_s", "end_s", "conditions"))]
             values = [r[field] for r in matches]
             points = ax.scatter(np.full(len(values), i), values, color="tab:blue", s=20,
-                                alpha=0.6, label="Individual run")
+                                alpha=0.6, label=point_label)
             sd = group[field + "_between_run_sd"]
             mean = ax.errorbar(i, group[field + "_mean"], yerr=sd if sd is not None else 0,
                                fmt="o", color="black", capsize=5,
-                               label="Mean ± SD across runs")
-        ax.set_xticks(range(len(stats)), [f'{s["configuration"]}\ngroup {i+1} (n={s["n_runs"]})'
+                               label=sd_label)
+        ax.set_xticks(range(len(stats)), [f'{s["configuration"]}\n{group_label} {i+1} (n={s["n_runs"]})'
                                          for i, s in enumerate(stats)])
         ax.set_ylabel(ylabel)
         ax.grid(axis="y", alpha=0.25)
-    fig.suptitle("Summary across independent runs")
+    fig.suptitle(f"{root.name}\n{stats_title}")
     fig.legend(handles=[points, mean], loc="lower center", ncol=2,
                bbox_to_anchor=(0.5, 0.01), frameon=False)
-    plot_save(fig, root / "statistics", bottom=0.1)
-    print(f"Analiza: {len(rows)} poprawnych pomiarow; wykluczono {len(errors)}.")
+    plot_save(fig, root / f"statistics_{language}", bottom=0.1)
 
 def demo(out):
     """Synthetic inputs only; exercise reports without hardware."""

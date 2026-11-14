@@ -8,6 +8,7 @@ from unittest.mock import patch
 import numpy as np
 import stlink_protocol as app
 import results
+import stlink_measure
 
 
 class FakeDevice:
@@ -30,6 +31,40 @@ class FakeDevice:
 
 
 class Tests(unittest.TestCase):
+    def test_capture_reports_only_its_named_run(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            args = argparse.Namespace(seconds=0.1, hz=100, name="modem", voltage=3.3,
+                                      off_seconds=1, notes="test", repeats=2,
+                                      out=temporary, port="FAKE")
+            with patch.object(stlink_measure, "Device") as device, \
+                 patch.object(stlink_measure, "identify_device", return_value={}), \
+                 patch.object(stlink_measure, "configure_device"), \
+                 patch.object(stlink_measure, "save_session_settings"), \
+                 patch.object(stlink_measure, "capture_one") as capture, \
+                 patch.object(stlink_measure, "analyze_run"), \
+                 patch.object(stlink_measure, "report") as report:
+                device.return_value.events = []
+                stlink_measure.run_experiment(args)
+            folders = list(Path(temporary).iterdir())
+            self.assertEqual(len(folders), 1)
+            self.assertRegex(folders[0].name, r"^modem_\d{8}_\d{6}_\d{6}$")
+            report.assert_called_once_with(folders[0], begin=0, end=None)
+            self.assertEqual([call.args[1].name for call in capture.call_args_list],
+                             ["repeat_001", "repeat_002"])
+
+    def test_bilingual_reports(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.capture(root / "repeat_001", [b"ack start\r\n"] +
+                         [b"1000-05\r\n"] * 10 + [b"end\r\n"])
+            results.report(root, 0, None)
+            for language, phrase in (("pl", "Pojedyncze powtórzenie"),
+                                     ("eng", "Individual repeat")):
+                for base in ("comparison", "statistics"):
+                    for extension in ("png", "svg"):
+                        self.assertTrue((root / f"{base}_{language}.{extension}").exists())
+                self.assertIn(phrase, (root / f"statistics_{language}.svg").read_text(encoding="utf-8"))
+
     def test_real_firmware_prompt_before_ack(self):
         class Serial:
             def write(self, data):
