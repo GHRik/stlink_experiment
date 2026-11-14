@@ -24,8 +24,8 @@ def envelope(ax, x, y, label=None, color=None):
     line, = ax.plot(centers, means, label=label, color=color, linewidth=0.8)
     ax.fill_between(centers, mins, maxs, color=line.get_color(), alpha=0.25, linewidth=0)
 
-def plot_save(fig, base):
-    fig.tight_layout()
+def plot_save(fig, base, bottom=0):
+    fig.tight_layout(rect=(0, bottom, 1, 1))
     for ext in ("png", "svg"):
         fig.savefig(base.with_suffix("." + ext), dpi=160)
     plt.close(fig)
@@ -66,7 +66,7 @@ def analyze_run(directory, begin, end):
     save_json(directory / "analysis.json", row)
     fig, ax = plt.subplots(figsize=(11, 4))
     envelope(ax, data["time_s"][a:b], current)
-    ax.set(xlabel="Czas od startu rejestracji [s]", ylabel="Prad [mA]",
+    ax.set(xlabel="Time from acquisition start [s]", ylabel="Current [mA]",
            title=f'{meta["configuration"]} | {directory.name}')
     ax.grid(alpha=0.25)
     plot_save(fig, directory / "current")
@@ -95,7 +95,7 @@ def aggregate(rows):
     return result
 
 def report(root, begin, end):
-    rows, first_traces = [], {}
+    rows, traces = [], {}
     errors = []
     for file in sorted(root.rglob("metadata.json")):
         meta = json.loads(file.read_text(encoding="utf-8"))
@@ -108,7 +108,7 @@ def report(root, begin, end):
         rows.append(row)
         key = (row["configuration"], row["voltage_V"], row["sampling_Hz"],
                row["begin_s"], row["end_s"], row["conditions"])
-        first_traces.setdefault(key, (row, data))
+        traces.setdefault(key, []).append((row, data))
     if not rows:
         raise ValueError("Brak poprawnych pomiarow do analizy.")
     # Prevent confusing comparisons across different time windows or voltage.
@@ -123,31 +123,41 @@ def report(root, begin, end):
         print("Zapisano CSV. Pominieto wspolne wykresy: rozne napiecia, Hz lub przedzialy czasu. "
               "Analizuj osobny katalog albo wybierz wspolny zakres --from-s/--to-s.")
         return
-    fig, ax = plt.subplots(figsize=(11, 5))
-    for k, (row, data) in enumerate(first_traces.values(), 1):
-        envelope(ax, data["time_s"], data["current_uA"] / 1000,
-                 label=f'{row["configuration"]} | seria {k} | {row["voltage_V"]} V')
-    ax.set(xlabel="Czas od startu rejestracji [s]", ylabel="Prad [mA]",
-           title="Pierwszy poprawny przebieg kazdej serii (bez usredniania faz)")
-    ax.legend(fontsize=8)
-    ax.grid(alpha=0.25)
+    fig, axes = plt.subplots(1, len(traces), figsize=(max(8, 5 * len(traces)), 5),
+                             squeeze=False, sharex=True, sharey=True)
+    for k, (ax, runs) in enumerate(zip(axes[0], traces.values()), 1):
+        colors = plt.get_cmap("tab20", max(20, len(runs)))
+        for number, (row, data) in enumerate(runs):
+            envelope(ax, data["time_s"], data["current_uA"] / 1000,
+                     label=f'Run {number + 1}', color=colors(number))
+        ax.set(xlabel="Time from acquisition start [s]",
+               title=f'{row["configuration"]} | group {k} | {row["voltage_V"]} V')
+        ax.legend(fontsize=8, loc="upper right")
+        ax.grid(alpha=0.25)
+    axes[0, 0].set_ylabel("Current [mA]")
+    fig.suptitle("All repeats (individual traces)")
     plot_save(fig, root / "comparison")
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     for ax, field, ylabel in zip(axes, ("mean_current_mA", "energy_estimate_J"),
-                                 ("Sredni prad [mA]", "Szacowana energia [J]")):
+                                 ("Mean current [mA]", "Estimated energy [J]")):
         for i, group in enumerate(stats):
             matches = [r for r in rows if all(r[k] == group[k] for k in
                        ("configuration", "voltage_V", "sampling_Hz", "begin_s", "end_s", "conditions"))]
             values = [r[field] for r in matches]
-            ax.scatter(np.full(len(values), i), values, color="tab:blue", s=20, alpha=0.6)
+            points = ax.scatter(np.full(len(values), i), values, color="tab:blue", s=20,
+                                alpha=0.6, label="Individual run")
             sd = group[field + "_between_run_sd"]
-            ax.errorbar(i, group[field + "_mean"], yerr=sd if sd is not None else 0,
-                        fmt="o", color="black", capsize=5)
-        ax.set_xticks(range(len(stats)), [f'{s["configuration"]}\nseria {i+1}' for i, s in enumerate(stats)])
+            mean = ax.errorbar(i, group[field + "_mean"], yerr=sd if sd is not None else 0,
+                               fmt="o", color="black", capsize=5,
+                               label="Mean ± SD across runs")
+        ax.set_xticks(range(len(stats)), [f'{s["configuration"]}\ngroup {i+1} (n={s["n_runs"]})'
+                                         for i, s in enumerate(stats)])
         ax.set_ylabel(ylabel)
         ax.grid(axis="y", alpha=0.25)
-    fig.suptitle("Punkty: osobne pomiary. Czarne: srednia +/- SD miedzy pomiarami")
-    plot_save(fig, root / "statistics")
+    fig.suptitle("Summary across independent runs")
+    fig.legend(handles=[points, mean], loc="lower center", ncol=2,
+               bbox_to_anchor=(0.5, 0.01), frameon=False)
+    plot_save(fig, root / "statistics", bottom=0.1)
     print(f"Analiza: {len(rows)} poprawnych pomiarow; wykluczono {len(errors)}.")
 
 def demo(out):
