@@ -38,7 +38,7 @@ Start with a short communication check:
 Then record a series:
 
 ```powershell
-.\.venv\Scripts\python.exe stlink_measure.py capture --port COM18 --name modem --notes "NodeMCU V3; ESP8266 Core 3.1.2; CPU 80 MHz; modem sketch; USB disconnected" --repeats 10 --seconds 120 --hz 1000
+.\.venv\Scripts\python.exe stlink_measure.py capture --port COM18 --name modem --notes "NodeMCU V3; ESP8266 Core 3.1.2; CPU 80 MHz; modem sketch; USB disconnected" --repeats 10 --seconds 100 --hz 1000
 ```
 
 For the other sketches, flash the corresponding firmware and use `--name light` or `--name deep`. Keep voltage and sampling frequency identical across comparisons. Use `--notes "board, firmware, and measurement conditions"` to record your setup.

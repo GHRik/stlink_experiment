@@ -4,7 +4,7 @@
 Przyklad:
     py stlink_measure.py capture --port COM18 --name modem --repeats 10
 
-Domyslnie: 3.3 V, 1000 Hz, 120 s na pomiar, 10 powtorzen.
+Domyslnie: 3.3 V, 1000 Hz, 100 s na pomiar, 10 powtorzen.
 Wgraj odpowiedni program NodeMCU przed uruchomieniem skryptu.
 """
 from pathlib import Path

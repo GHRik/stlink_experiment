@@ -174,7 +174,10 @@ def plot_report(root, rows, traces, stats, language):
     scope = ("Prąd ze wszystkich próbek w analizowanym przedziale, ze wszystkich powtórzeń."
              if language == "pl" else "Current across all samples in the analysis window, across all repeats.")
     footer = "\n".join(summary_lines + [scope])
-    extra_height = 0.3 * len(summary_lines) + 0.5
+    if all(row["begin_s"] == 0 for row in rows):
+        footer += ("\nPomiar obejmuje rozruch po włączeniu zasilania." if language == "pl"
+                   else "\nMeasurement includes startup after power-on.")
+    extra_height = 0.3 * len(summary_lines) + 0.8
     comparison_height = 5 + extra_height
     fig, axes = plt.subplots(1, len(traces), figsize=(max(10, 5 * len(traces)), comparison_height),
                              squeeze=False, sharex=True, sharey=True)
