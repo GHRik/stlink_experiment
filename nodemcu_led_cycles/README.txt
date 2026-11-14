@@ -1,6 +1,8 @@
 NodeMCU 1.0 (ESP-12E Module), ESP8266 Arduino Core 3.1.2, CPU 80 MHz.
-Three separate sketches. Flash each separately.
-Each repeats LED ON for 2 s, LED OFF/wait for approximately 8 s.
+Four separate sketches. Flash each separately.
+00: no-code baseline; LED, Wi-Fi/radio and serial interfaces disabled;
+    empty loop. Does not explicitly put the CPU into deep sleep.
+Sketches 01-03 repeat LED ON for 2 s, LED OFF/wait for approximately 8 s.
 Runs continuously: select 10 full cycles in recorded data.
 01: forced modem sleep; CPU remains active during wait.
 02: timed forced light sleep; resumes without reset.

@@ -222,6 +222,7 @@ __marimo__/
 # Local IDE state and generated measurement data (keep raw data backed up).
 .idea/
 .vscode/
-/results/
+/results/*
+!/results/modem_20261114_202635_901512/
 /test_results/
 /demo_results/
