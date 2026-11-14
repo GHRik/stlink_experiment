@@ -1,25 +1,28 @@
 #include <ESP8266WiFi.h>
 
+constexpr uint8_t LED_PIN = 2; // GPIO2 / D4, active-low built-in LED.
+
 constexpr uint32_t LED_ON_MS = 2000;
 constexpr uint32_t WAIT_MS = 8000;
 
 void prepareBoard()
 {
-  digitalWrite(LED_BUILTIN, HIGH);
-  pinMode(LED_BUILTIN, OUTPUT);
   WiFi.persistent(false);
   WiFi.mode(WIFI_OFF);
   WiFi.forceSleepBegin();
   delay(1);
   Serial.end();
   Serial1.end();
+  // Configure GPIO2 after UART1 releases its TX pin.
+  digitalWrite(LED_PIN, HIGH);
+  pinMode(LED_PIN, OUTPUT);
 }
 
 void ledTask()
 {
-  digitalWrite(LED_BUILTIN, LOW);
+  digitalWrite(LED_PIN, LOW);
   delay(LED_ON_MS);
-  digitalWrite(LED_BUILTIN, HIGH);
+  digitalWrite(LED_PIN, HIGH);
 }
 
 #include <coredecls.h>

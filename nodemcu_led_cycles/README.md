@@ -13,7 +13,7 @@ Flash one sketch at a time. The directory and `.ino` filename must match in the 
 | [02_light_cycle](02_light_cycle/02_light_cycle.ino) | Timed forced light sleep between LED tasks | On for 2 s, off for approximately 8 s |
 | [03_deep_cycle](03_deep_cycle/03_deep_cycle.ino) | Deep sleep followed by restart of `setup()` | On for 2 s; sleep for approximately 8 s plus startup overhead |
 
-The baseline contains no application task in `loop()`. The ESP8266 Arduino runtime still runs; an empty loop does not mean zero current or explicit deep sleep. `LED_BUILTIN` is active-low in these sketches: `HIGH` turns it off.
+The baseline contains no application task in `loop()`. The ESP8266 Arduino runtime still runs; an empty loop does not mean zero current or explicit deep sleep. All sketches explicitly use **GPIO2 / D4** for the built-in LED, verified on this board. The LED is active-low: `HIGH` turns it off. GPIO2 is configured after `Serial1.end()` because it also serves as UART1 TX. D0 / GPIO16 remains available for deep-sleep wakeup through RST.
 
 ## Hardware and software setup
 
