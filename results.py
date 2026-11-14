@@ -137,15 +137,15 @@ def report(root, begin, end):
 def plot_report(root, rows, traces, stats, language):
     labels = {
         "eng": ("Time from acquisition start [s]", "Current [mA]", "Repeat",
-                "group", "All repeats (individual traces)", "Mean current [mA]",
+                "All repeats (individual traces)", "Mean current [mA]",
                 "Estimated energy [J]", "Individual repeat", "Mean ± SD across repeats",
                 "Summary across independent repeats"),
         "pl": ("Czas od rozpoczęcia pomiaru [s]", "Prąd [mA]", "Powtórzenie",
-               "grupa", "Wszystkie powtórzenia (osobne przebiegi)", "Średni prąd [mA]",
+               "Wszystkie powtórzenia (osobne przebiegi)", "Średni prąd [mA]",
                "Szacowana energia [J]", "Pojedyncze powtórzenie", "Średnia ± SD między powtórzeniami",
                "Podsumowanie niezależnych powtórzeń"),
     }[language]
-    time_label, current_label, repeat_label, group_label, comparison_title, mean_label, energy_label, point_label, sd_label, stats_title = labels
+    time_label, current_label, repeat_label, comparison_title, mean_label, energy_label, point_label, sd_label, stats_title = labels
     summary_lines = []
     for k, runs in enumerate(traces.values(), 1):
         currents = [data["current_uA"] / 1000 for _, data in runs]
@@ -157,7 +157,7 @@ def plot_report(root, rows, traces, stats, language):
             values_text = values_text.replace(".", ",")
         else:
             values_text = f"Mean current: {average:.3f} mA | Maximum: {maximum:.3f} mA | Minimum: {minimum:.3f} mA"
-        summary_lines.append(f'{runs[0][0]["configuration"]} ({group_label} {k}): {values_text}')
+        summary_lines.append(f'{runs[0][0]["configuration"]}: {values_text}')
     scope = ("Prąd ze wszystkich próbek w analizowanym przedziale, ze wszystkich powtórzeń."
              if language == "pl" else "Current across all samples in the analysis window, across all repeats.")
     footer = "\n".join(summary_lines + [scope])
@@ -171,7 +171,7 @@ def plot_report(root, rows, traces, stats, language):
             envelope(ax, data["time_s"], data["current_uA"] / 1000,
                      label=f'{repeat_label} {number + 1}', color=colors(number))
         ax.set(xlabel=time_label,
-               title=f'{row["configuration"]} | {group_label} {k} | {row["voltage_V"]} V')
+               title=f'{row["configuration"]} | {row["voltage_V"]} V | n={len(runs)}')
         ax.legend(fontsize=8, loc="upper right")
         ax.grid(alpha=0.25)
     axes[0, 0].set_ylabel(current_label)
@@ -192,7 +192,7 @@ def plot_report(root, rows, traces, stats, language):
             mean = ax.errorbar(i, group[field + "_mean"], yerr=sd if sd is not None else 0,
                                fmt="o", color="black", capsize=5,
                                label=sd_label)
-        ax.set_xticks(range(len(stats)), [f'{s["configuration"]}\n{group_label} {i+1} (n={s["n_runs"]})'
+        ax.set_xticks(range(len(stats)), [f'{s["configuration"]}\n(n={s["n_runs"]})'
                                          for i, s in enumerate(stats)])
         ax.set_ylabel(ylabel)
         ax.grid(axis="y", alpha=0.25)
