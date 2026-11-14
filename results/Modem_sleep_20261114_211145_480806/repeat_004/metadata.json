@@ -1,0 +1,30 @@
+{
+  "configuration": "Modem_sleep",
+  "repeat": 4,
+  "utc": "2026-11-14T20:20:01.896045+00:00",
+  "voltage_V": 3.3,
+  "sampling_Hz": 1000,
+  "requested_duration_s": 100.0,
+  "power_off_s": 1,
+  "identity": {
+    "whoami": "ack STLINK-V3PWR 003B003D3533511639383331",
+    "version": "ack version: V3PWR V4.J7.B3.P6",
+    "apiver": "ack apiver: 1"
+  },
+  "board_notes": "NodeMCU V3; ESP8266 Core 3.1.2; CPU 80 MHz; used only delay",
+  "protocol": "UM3291 API 1, ascii_dec, current",
+  "time_origin": "First acquired sample interval; automatic OUT power-on at acquisition start. Not an independently measured voltage edge.",
+  "energy_method": "Sum(current_A * nominal_voltage_V / sampling_Hz). Rectangular numerical estimate.",
+  "status": "valid",
+  "issues": [],
+  "temperature_before_calibration_C": 33.2,
+  "calibration": {
+    "status": "acknowledged",
+    "utc": "2026-11-14T20:20:01.918639+00:00",
+    "response": "ack calib",
+    "device_status": "ack status ok"
+  },
+  "temperature_before_C": 33.5,
+  "temperature_after_C": 33.7,
+  "samples": 100000
+}

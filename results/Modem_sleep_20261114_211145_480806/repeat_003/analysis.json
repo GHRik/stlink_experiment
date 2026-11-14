@@ -1,0 +1,17 @@
+{
+  "configuration": "Modem_sleep",
+  "run": "repeat_003",
+  "directory": "C:\\Users\\P50\\Downloads\\stlink_experiment\\results\\Modem_sleep_20261114_211145_480806\\repeat_003",
+  "voltage_V": 3.3,
+  "sampling_Hz": 1000,
+  "begin_s": 0,
+  "end_s": 100.0,
+  "duration_s": 100.0,
+  "samples": 100000,
+  "mean_current_mA": 17.09687244,
+  "min_current_mA": 7.659,
+  "max_current_mA": 152.1,
+  "within_run_sd_mA": 2.00508740422542,
+  "mean_power_mW": 56.41967905199999,
+  "energy_estimate_J": 5.6419679052
+}

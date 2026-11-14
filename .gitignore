@@ -224,5 +224,6 @@ __marimo__/
 .vscode/
 /results/*
 !/results/modem_20261114_202635_901512/
+!/results/Modem_sleep_20261114_211145_480806/
 /test_results/
 /demo_results/
