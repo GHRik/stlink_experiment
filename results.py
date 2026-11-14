@@ -138,11 +138,11 @@ def plot_report(root, rows, traces, stats, language):
     labels = {
         "eng": ("Time from acquisition start [s]", "Current [mA]", "Repeat",
                 "All repeats (individual traces)", "Mean current [mA]",
-                "Estimated energy [J]", "Individual repeat", "Mean ± SD across repeats",
+                "Estimated energy [J]", "Individual repeat", "Mean ± 1 SD (vertical bars)",
                 "Summary across independent repeats"),
         "pl": ("Czas od rozpoczęcia pomiaru [s]", "Prąd [mA]", "Powtórzenie",
                "Wszystkie powtórzenia (osobne przebiegi)", "Średni prąd [mA]",
-               "Szacowana energia [J]", "Pojedyncze powtórzenie", "Średnia ± SD między powtórzeniami",
+               "Szacowana energia [J]", "Pojedyncze powtórzenie", "Średnia ± 1 SD (pionowe kreski)",
                "Podsumowanie niezależnych powtórzeń"),
     }[language]
     time_label, current_label, repeat_label, comparison_title, mean_label, energy_label, point_label, sd_label, stats_title = labels
@@ -158,6 +158,19 @@ def plot_report(root, rows, traces, stats, language):
         else:
             values_text = f"Mean current: {average:.3f} mA | Maximum: {maximum:.3f} mA | Minimum: {minimum:.3f} mA"
         summary_lines.append(f'{runs[0][0]["configuration"]}: {values_text}')
+        # Match the sample SD used by the statistics error bars, not within-trace fluctuations.
+        current_sd = float(np.std([row["mean_current_mA"] for row, _ in runs], ddof=1)) if len(runs) > 1 else None
+        energy_sd = float(np.std([row["energy_estimate_J"] for row, _ in runs], ddof=1)) if len(runs) > 1 else None
+        if current_sd is None:
+            sd_text = ("SD: nieokreślone (potrzeba co najmniej 2 powtórzeń)" if language == "pl"
+                       else "SD: undefined (at least 2 repeats required)")
+        elif language == "pl":
+            sd_text = (f"Odchylenie standardowe między powtórzeniami (SD): "
+                       f"średni prąd {current_sd:.3f} mA | energia {energy_sd:.6f} J").replace(".", ",")
+        else:
+            sd_text = (f"Standard deviation across repeats (SD): "
+                       f"mean current {current_sd:.3f} mA | energy {energy_sd:.6f} J")
+        summary_lines.append(sd_text)
     scope = ("Prąd ze wszystkich próbek w analizowanym przedziale, ze wszystkich powtórzeń."
              if language == "pl" else "Current across all samples in the analysis window, across all repeats.")
     footer = "\n".join(summary_lines + [scope])
