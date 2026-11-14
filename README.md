@@ -32,16 +32,21 @@ Select the STLINK **SMU** port, rather than the debug UART port. Replace `COM18`
 Start with a short communication check:
 
 ```powershell
-.\.venv\Scripts\python.exe stlink_measure.py capture --port COM18 --name modem --repeats 1 --seconds 15 --out test_results
+.\.venv\Scripts\python.exe stlink_measure.py capture --port COM18 --name modem --notes "NodeMCU V3; ESP8266 Core 3.1.2; CPU 80 MHz; modem sketch; USB disconnected" --repeats 1 --seconds 15 --out test_results
 ```
 
 Then record a series:
 
 ```powershell
-.\.venv\Scripts\python.exe stlink_measure.py capture --port COM18 --name modem --repeats 10 --seconds 120 --hz 1000
+.\.venv\Scripts\python.exe stlink_measure.py capture --port COM18 --name modem --notes "NodeMCU V3; ESP8266 Core 3.1.2; CPU 80 MHz; modem sketch; USB disconnected" --repeats 10 --seconds 120 --hz 1000
 ```
 
 For the other sketches, flash the corresponding firmware and use `--name light` or `--name deep`. Keep voltage and sampling frequency identical across comparisons. Use `--notes "board, firmware, and measurement conditions"` to record your setup.
+
+Both `--name` and `--notes` are required and must not be blank:
+
+- `--name` identifies the tested configuration and names its results directory, with date and time appended automatically.
+- `--notes` documents the board, firmware, and measurement conditions so results can be interpreted and reproduced. The meter cannot infer these details. Notes are saved in the session configuration and each repeat's metadata.
 
 One invocation of `capture` is one run. `--name` is required; use a descriptive configuration name. The date and time are appended automatically. All reports belong to that run; separate invocations do not share reports. Each repeat starts by cycling the board's power.
 
