@@ -8,7 +8,17 @@ These variants are independent, not cumulative. Unmentioned peripherals and GPIO
 
 [Sketch](01_empty/01_empty.ino): empty `setup()` and empty `loop()`. The Arduino runtime still executes; this is not CPU sleep.
 
-**Results: Ongoing.**
+**Measured: 10 captures × 100 seconds**, at 3.3 V and 1000 Hz, including power-on startup. The sketch was uploaded with **Erase Flash → All Flash Contents** on NodeMCU V3, ESP8266 Core 3.1.2, CPU 80 MHz.
+
+### Results
+
+Mean current: **75.695 mA**, SD across captures: **0.391 mA**. Mean estimated energy per capture: **24.979 J**.
+
+| Current traces | Summary statistics |
+| --- | --- |
+| [![Empty sketch current traces](../results/empty_code_flash_all_20261115_205305_543823/comparison_eng.png)](../results/empty_code_flash_all_20261115_205305_543823/comparison_eng.png) | [![Empty sketch summary statistics](../results/empty_code_flash_all_20261115_205305_543823/statistics_eng.png)](../results/empty_code_flash_all_20261115_205305_543823/statistics_eng.png) |
+
+[Raw data and reports](../results/empty_code_flash_all_20261115_205305_543823). This scenario has no explicit Wi-Fi, radio, UART, or LED shutdown code; it differs from the initialized no-code baseline in [NodeMCU measurements](../nodemcu_led_cycles/README.md#00--no-code).
 
 ## 02 — Wi-Fi off
 
@@ -40,4 +50,4 @@ Reference: [ESP8266 Arduino Core 3.1.2 implementation](https://github.com/esp826
 
 Use a distinct `--name` for each sketch, such as `nocode_empty`, `nocode_wifi_off`, `nocode_serial_off`, `nocode_radio_off`, and `nocode_all_off`. Record the actual sketch, board, Core version, clock, and wiring in `--notes`. Keep all other measurement conditions identical.
 
-No compilation, flashing, or hardware measurements have been performed for these new sketches.
+Results are available for scenario 01. Measurements for scenarios 02–05 are ongoing.

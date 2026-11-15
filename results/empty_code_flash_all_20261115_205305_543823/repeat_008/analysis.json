@@ -1,0 +1,17 @@
+{
+  "configuration": "empty_code_flash_all",
+  "run": "repeat_008",
+  "directory": "C:\\Users\\P50\\Downloads\\stlink_experiment\\results\\empty_code_flash_all_20261115_205305_543823\\repeat_008",
+  "voltage_V": 3.3,
+  "sampling_Hz": 1000,
+  "begin_s": 0,
+  "end_s": 100.0,
+  "duration_s": 100.0,
+  "samples": 100000,
+  "mean_current_mA": 76.15026759,
+  "min_current_mA": 7.739,
+  "max_current_mA": 155.4,
+  "within_run_sd_mA": 3.089752745409553,
+  "mean_power_mW": 251.295883047,
+  "energy_estimate_J": 25.129588304699997
+}
