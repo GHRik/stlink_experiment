@@ -225,5 +225,6 @@ __marimo__/
 /results/*
 !/results/modem_20261114_202635_901512/
 !/results/Modem_sleep_20261114_211145_480806/
+!/results/no_code_in_loop_20261114_214557_320334/
 /test_results/
 /demo_results/

@@ -1,0 +1,17 @@
+{
+  "configuration": "no_code_in_loop",
+  "run": "repeat_007",
+  "directory": "C:\\Users\\P50\\Downloads\\stlink_experiment\\results\\no_code_in_loop_20261114_214557_320334\\repeat_007",
+  "voltage_V": 3.3,
+  "sampling_Hz": 1000,
+  "begin_s": 0,
+  "end_s": 100.0,
+  "duration_s": 100.0,
+  "samples": 100000,
+  "mean_current_mA": 20.887326239999993,
+  "min_current_mA": 7.656,
+  "max_current_mA": 155.1,
+  "within_run_sd_mA": 1.9033484598099888,
+  "mean_power_mW": 68.92817659199997,
+  "energy_estimate_J": 6.892817659199998
+}
