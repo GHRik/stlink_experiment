@@ -1,8 +1,8 @@
 # NodeMCU empty-loop measurements
 
-Nine independent sketches to compare initialization choices and idle behavior. Flash one at a time using **NodeMCU 1.0 (ESP-12E Module)**, ESP8266 Arduino Core **3.1.2**, and **80 MHz**. See the main [quick start](../README.md) for measurement instructions.
+Ten independent sketches to compare initialization choices and idle behavior. Flash one at a time using **NodeMCU 1.0 (ESP-12E Module)**, ESP8266 Arduino Core **3.1.2**, and **80 MHz**. See the main [quick start](../README.md) for measurement instructions.
 
-These variants are independent, not cumulative. Unmentioned peripherals and GPIOs are left at their runtime defaults. None of these sketches explicitly configures the LED. Scenarios 01–06 have an empty `loop()`; scenario 07 waits five seconds on each iteration; scenarios 08–09 enter CPU deep sleep from `setup()`.
+These variants are independent, not cumulative. Unmentioned peripherals and GPIOs are left at their runtime defaults. None of these sketches explicitly configures the LED. Scenarios 01–06 have an empty `loop()`; scenarios 07 and 10 wait five seconds on each iteration; scenarios 08–09 enter CPU deep sleep from `setup()`.
 
 ## 01 — Empty
 
@@ -124,8 +124,16 @@ Reference: [Core 3.1.2 RF options and default deepSleep argument](https://github
 
 **Results: Ongoing.**
 
+## 10 — Automatic modem sleep with a five-second delay
+
+[Sketch](10_modem_sleep_5s/10_modem_sleep_5s.ino): request `WiFi.setSleepMode(WIFI_MODEM_SLEEP)` in `setup()`, then call `delay(5000)` on each loop iteration. Compared with scenario 07, this adds an explicit automatic modem-sleep setting. It does not call `WiFi.forceSleepBegin()` or enter CPU deep sleep.
+
+No access-point connection is configured, matching the disconnected conditions of the other idle scenarios. This tests the setting's effect in those conditions, not connected Wi-Fi power saving. The five seconds specify the application delay, not a guaranteed five-second radio sleep. For connected station operation, automatic modem sleep follows the access point's DTIM timing; see the [Core 3.1.2 documentation](https://arduino-esp8266.readthedocs.io/en/3.1.2/esp8266wifi/generic-class.html#wi-fi-power-management-dtim).
+
+**Results: Ongoing.**
+
 ## Recording
 
-Use a distinct `--name` for each sketch, such as `empty_code_flash_all`, `wifi_off_flash_all`, `serial_off_flash_all`, `wifi_and_serial_off_flash_all`, `rf_disabled_flash_all`, `wifi_force_sleep_flash_all`, `delay_loop_5s_flash_all`, `deep_sleep_5s_flash_all`, and `deep_sleep_5s_rf_default_flash_all`. Record the actual sketch, board, Core version, clock, erase-flash option, and wiring in `--notes`. Keep all other measurement conditions identical.
+Use a distinct `--name` for each sketch, such as `empty_code_flash_all`, `wifi_off_flash_all`, `serial_off_flash_all`, `wifi_and_serial_off_flash_all`, `rf_disabled_flash_all`, `wifi_force_sleep_flash_all`, `delay_loop_5s_flash_all`, `deep_sleep_5s_flash_all`, `deep_sleep_5s_rf_default_flash_all`, and `modem_sleep_5s_flash_all`. Record the actual sketch, board, Core version, clock, erase-flash option, and wiring in `--notes`. Keep all other measurement conditions identical.
 
-Results are available for scenarios 01–05 and 07. Measurements for scenarios 06 and 08–09 are ongoing.
+Results are available for scenarios 01–05 and 07. Measurements for scenarios 06 and 08–10 are ongoing.
