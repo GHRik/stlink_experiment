@@ -1,0 +1,17 @@
+{
+  "configuration": "wifi_and_serial_off_flash_all",
+  "run": "repeat_008",
+  "directory": "C:\\Users\\P50\\Downloads\\stlink_experiment\\results\\wifi_and_serial_off_flash_all_20261117_165458_850712\\repeat_008",
+  "voltage_V": 3.3,
+  "sampling_Hz": 1000,
+  "begin_s": 0,
+  "end_s": 100.0,
+  "duration_s": 100.0,
+  "samples": 100000,
+  "mean_current_mA": 73.55080453,
+  "min_current_mA": 7.741,
+  "max_current_mA": 151.2,
+  "within_run_sd_mA": 1.6622598872982555,
+  "mean_power_mW": 242.71765494899998,
+  "energy_estimate_J": 24.2717654949
+}

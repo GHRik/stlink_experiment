@@ -1,0 +1,17 @@
+{
+  "configuration": "serial_off_flash_all",
+  "run": "repeat_006",
+  "directory": "C:\\Users\\P50\\Downloads\\stlink_experiment\\results\\serial_off_flash_all_20261117_161237_936001\\repeat_006",
+  "voltage_V": 3.3,
+  "sampling_Hz": 1000,
+  "begin_s": 0,
+  "end_s": 100.0,
+  "duration_s": 100.0,
+  "samples": 100000,
+  "mean_current_mA": 73.4551964,
+  "min_current_mA": 7.724,
+  "max_current_mA": 154.3,
+  "within_run_sd_mA": 1.6496490496669012,
+  "mean_power_mW": 242.40214812,
+  "energy_estimate_J": 24.240214811999998
+}

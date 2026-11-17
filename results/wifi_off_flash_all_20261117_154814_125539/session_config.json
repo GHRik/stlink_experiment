@@ -1,0 +1,125 @@
+{
+  "identity": {
+    "whoami": "ack STLINK-V3PWR 003B003D3533511639383331",
+    "version": "ack version: V3PWR V4.J7.B3.P6",
+    "apiver": "ack apiver: 1"
+  },
+  "commands": [
+    {
+      "host_monotonic_s": 259717.5191279,
+      "tx": "stop"
+    },
+    {
+      "host_monotonic_s": 259718.6232544,
+      "tx": "status"
+    },
+    {
+      "rx": "ack status error: STOP not executed because ACQUISITION system is not running"
+    },
+    {
+      "host_monotonic_s": 259718.6239567,
+      "tx": "whoami"
+    },
+    {
+      "rx": "ack STLINK-V3PWR 003B003D3533511639383331"
+    },
+    {
+      "host_monotonic_s": 259718.6243717,
+      "tx": "version"
+    },
+    {
+      "rx": "ack version: V3PWR V4.J7.B3.P6"
+    },
+    {
+      "host_monotonic_s": 259718.624838,
+      "tx": "apiver"
+    },
+    {
+      "rx": "ack apiver: 1"
+    },
+    {
+      "host_monotonic_s": 259718.6254588,
+      "tx": "htc"
+    },
+    {
+      "rx": "ack htc"
+    },
+    {
+      "host_monotonic_s": 259718.6257787,
+      "tx": "pwr off"
+    },
+    {
+      "rx": "ack pwr off"
+    },
+    {
+      "host_monotonic_s": 259718.6265797,
+      "tx": "volt vout 3300m"
+    },
+    {
+      "rx": "ack volt vout 3300m"
+    },
+    {
+      "host_monotonic_s": 259718.6270698,
+      "tx": "format ascii_dec"
+    },
+    {
+      "rx": "ack format ascii_dec"
+    },
+    {
+      "host_monotonic_s": 259718.6273929,
+      "tx": "freq 1000"
+    },
+    {
+      "rx": "ack freq 1000"
+    },
+    {
+      "host_monotonic_s": 259718.6278004,
+      "tx": "output current"
+    },
+    {
+      "rx": "ack output current"
+    },
+    {
+      "host_monotonic_s": 259718.6280322,
+      "tx": "acqtime inf"
+    },
+    {
+      "rx": "ack acqtime inf"
+    },
+    {
+      "host_monotonic_s": 259718.6283269,
+      "tx": "trigsrc sw"
+    },
+    {
+      "rx": "ack trigsrc sw"
+    },
+    {
+      "host_monotonic_s": 259718.6285815,
+      "tx": "trigdelay 0"
+    },
+    {
+      "rx": "ack trigdelay 0"
+    },
+    {
+      "host_monotonic_s": 259718.6288074,
+      "tx": "status"
+    },
+    {
+      "rx": "ack status ok"
+    }
+  ],
+  "arguments": {
+    "action": "capture",
+    "port": "COM18",
+    "name": "wifi_off_flash_all",
+    "repeats": 10,
+    "seconds": 100.0,
+    "hz": 1000,
+    "voltage": 3.3,
+    "off_seconds": 1,
+    "warmup_seconds": 180,
+    "out": "results",
+    "notes": "NodeMCU V3; ESP8266 Core 3.1.2; All Flash; CPU 80 MHz; wifi off."
+  },
+  "source": "https://www.st.com/resource/en/user_manual/um3291-getting-started-with-stlinkv3pwr-firmware-stmicroelectronics.pdf"
+}
