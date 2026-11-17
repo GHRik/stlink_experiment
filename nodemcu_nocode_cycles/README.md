@@ -16,7 +16,7 @@ Mean current: **75.695 mA**, SD across captures: **0.391 mA**. Mean estimated en
 
 | Current traces | Summary statistics |
 | --- | --- |
-| [![Empty sketch current traces](../results/empty_code_flash_all_20261115_205305_543823/comparison_eng.png)](../results/empty_code_flash_all_20261115_205305_543823/comparison_eng.png) | [![Empty sketch summary statistics](../results/empty_code_flash_all_20261115_205305_543823/statistics_eng.png)](../results/empty_code_flash_all_20261115_205305_543823/statistics_eng.png) |
+| [![Empty sketch current traces](../results/empty_code_flash_all_20261115_205305_543823/comparison_eng.svg)](../results/empty_code_flash_all_20261115_205305_543823/comparison_eng.svg) | [![Empty sketch summary statistics](../results/empty_code_flash_all_20261115_205305_543823/statistics_eng.svg)](../results/empty_code_flash_all_20261115_205305_543823/statistics_eng.svg) |
 
 [Raw data and reports](../results/empty_code_flash_all_20261115_205305_543823). This scenario has no explicit Wi-Fi, radio, UART, or LED shutdown code; it differs from the initialized no-code baseline in [NodeMCU measurements](../nodemcu_led_cycles/README.md#00--no-code).
 

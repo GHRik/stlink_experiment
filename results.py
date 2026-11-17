@@ -7,6 +7,8 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 from scipy.stats import t as student_t
 from storage import save_json, write_csv
 
@@ -30,6 +32,15 @@ def plot_save(fig, base, bottom=0):
     for ext in ("png", "svg"):
         fig.savefig(base.with_suffix("." + ext), dpi=160)
     plt.close(fig)
+
+
+def envelope_legend(language="eng"):
+    if language == "pl":
+        mean, spread = "Linia: średnia w przedziale czasu", "Pas: min–max w przedziale czasu"
+    else:
+        mean, spread = "Line: mean within each time bin", "Band: min–max within each time bin"
+    return [Line2D([], [], color="tab:blue", linewidth=0.8, label=mean),
+            Patch(facecolor="tab:blue", alpha=0.25, label=spread)]
 
 
 def save_report_plot(fig, base, footer, handles):
@@ -97,7 +108,10 @@ def analyze_run(directory, begin, end):
     ax.set(xlabel="Time from acquisition start [s]", ylabel="Current [mA]",
            title=f'{meta["configuration"]} | {directory.name}')
     ax.grid(alpha=0.25)
-    plot_save(fig, directory / "current")
+    save_report_plot(fig, directory / "current",
+                     "Display: up to 2500 time bins; calculations use all samples.\n"
+                     "The min–max band is not standard deviation or measurement uncertainty.",
+                     envelope_legend())
     return row, data[a:b]
 
 def aggregate(rows):
@@ -220,7 +234,13 @@ def plot_report(root, rows, traces, stats, language):
         ax.grid(alpha=0.25)
     axes[0, 0].set_ylabel(current_label)
     fig.suptitle(f"{root.name}\n{comparison_title}")
-    save_report_plot(fig, root / f"comparison_{language}", footer, trace_handles)
+    display_note = ("Wykres: do 2500 przedziałów czasu na przebieg; obliczenia ze wszystkich próbek.\n"
+                    "Pas min–max nie oznacza odchylenia standardowego ani niepewności pomiaru."
+                    if language == "pl" else
+                    "Display: up to 2500 time bins per trace; calculations use all samples.\n"
+                    "The min–max band is not standard deviation or measurement uncertainty.")
+    save_report_plot(fig, root / f"comparison_{language}", footer + "\n" + display_note,
+                     [*trace_handles, *envelope_legend(language)])
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     repeat_handles = {}
     for ax, field, ylabel in zip(axes, ("mean_current_mA", "energy_estimate_J"),

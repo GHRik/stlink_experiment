@@ -129,6 +129,7 @@ Warm-up and manual calibration do not disable automatic calibration. Calibration
 - Measurements cover the **whole powered board**, not just the microcontroller.
 - Energy is estimated from current samples and configured voltage; voltage is not separately sampled.
 - ±SD describes variation **between repeat results**, not the minimum-to-maximum range.
+- Current traces use up to 2500 time bins: the line shows each bin's mean and the shaded band its minimum–maximum range. Calculations use all samples. The band is not SD or measurement uncertainty. SVG plots can be enlarged without losing sharpness; individual raw samples remain in CSV files.
 - Complete task cycles are not detected automatically. Fixed-duration windows can contain different numbers of cycles.
 - Calibration/resynchronization during acquisition invalidates the repeat; raw data are retained.
 

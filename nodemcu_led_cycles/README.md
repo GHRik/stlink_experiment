@@ -14,7 +14,7 @@ Mean current: **20.859 mA**, SD across captures: **0.017 mA**. Mean estimated en
 
 | Current traces | Summary statistics |
 | --- | --- |
-| [![Current traces](../results/modem_20261114_202635_901512/comparison_eng.png)](../results/modem_20261114_202635_901512/comparison_eng.png) | [![Summary statistics](../results/modem_20261114_202635_901512/statistics_eng.png)](../results/modem_20261114_202635_901512/statistics_eng.png) |
+| [![Current traces](../results/modem_20261114_202635_901512/comparison_eng.svg)](../results/modem_20261114_202635_901512/comparison_eng.svg) | [![Summary statistics](../results/modem_20261114_202635_901512/statistics_eng.svg)](../results/modem_20261114_202635_901512/statistics_eng.svg) |
 
 [Raw data and reports](../results/modem_20261114_202635_901512). The historical session name is `modem`; its notes identify it as “Zero code test”.
 
@@ -29,7 +29,7 @@ The plots below preserve the original problematic session, before the full flash
 
 | Current traces | Summary statistics |
 | --- | --- |
-| [![No-code high-current capture](../results/no_code_in_loop_20261114_214557_320334/comparison_eng.png)](../results/no_code_in_loop_20261114_214557_320334/comparison_eng.png) | [![No-code session statistics](../results/no_code_in_loop_20261114_214557_320334/statistics_eng.png)](../results/no_code_in_loop_20261114_214557_320334/statistics_eng.png) |
+| [![No-code high-current capture](../results/no_code_in_loop_20261114_214557_320334/comparison_eng.svg)](../results/no_code_in_loop_20261114_214557_320334/comparison_eng.svg) | [![No-code session statistics](../results/no_code_in_loop_20261114_214557_320334/statistics_eng.svg)](../results/no_code_in_loop_20261114_214557_320334/statistics_eng.svg) |
 
 [Raw data and reports](../results/no_code_in_loop_20261114_214557_320334).
 
@@ -47,7 +47,7 @@ Mean current: **17.099 mA**, SD across captures: **0.008 mA**. Mean estimated en
 
 | Current traces | Summary statistics |
 | --- | --- |
-| [![Modem sleep current traces](../results/Modem_sleep_20261114_211145_480806/comparison_eng.png)](../results/Modem_sleep_20261114_211145_480806/comparison_eng.png) | [![Modem sleep summary statistics](../results/Modem_sleep_20261114_211145_480806/statistics_eng.png)](../results/Modem_sleep_20261114_211145_480806/statistics_eng.png) |
+| [![Modem sleep current traces](../results/Modem_sleep_20261114_211145_480806/comparison_eng.svg)](../results/Modem_sleep_20261114_211145_480806/comparison_eng.svg) | [![Modem sleep summary statistics](../results/Modem_sleep_20261114_211145_480806/statistics_eng.svg)](../results/Modem_sleep_20261114_211145_480806/statistics_eng.svg) |
 
 [Raw data and reports](../results/Modem_sleep_20261114_211145_480806).
 
