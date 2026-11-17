@@ -12,6 +12,9 @@ from matplotlib.patches import Patch
 from scipy.stats import t as student_t
 from storage import save_json, write_csv
 
+# Display split chosen to include the measured NodeMCU power-on transient and a short margin.
+STARTUP_END_S = 0.2
+
 def envelope(ax, x, y, label=None, color=None):
     # Only plots are reduced: keep per-bin MIN/MAX, so narrow peaks remain visible.
     bins = min(2500, len(x))
@@ -44,8 +47,8 @@ def envelope_legend(language="eng"):
 
 
 def startup_trace(overview, zoom, x, y, color="tab:blue"):
-    """Show original samples in acquisition seconds 0–1, never rebase a cropped window."""
-    selected = (x >= 0) & (x < 1)
+    """Show original samples in acquisition seconds 0–0.2, never rebase a cropped window."""
+    selected = (x >= 0) & (x < STARTUP_END_S)
     if not np.any(selected):
         return None
     times, values = x[selected], y[selected]
@@ -56,28 +59,28 @@ def startup_trace(overview, zoom, x, y, color="tab:blue"):
 
 
 def overview_trace(ax, x, y, end, label=None, color=None, language="eng"):
-    selected = x >= 1
+    selected = x >= STARTUP_END_S
     envelope(ax, x[selected], y[selected], label=label, color=color)
     if np.any(selected):
-        left = max(1, float(x[selected][0]))
+        left = max(STARTUP_END_S, float(x[selected][0]))
         right = max(float(end), left + 0.001)
         ax.set_xlim(left, right)
         ticks = ax.get_xticks()
         ax.set_xticks([left, *[t for t in ticks if left < t <= right]])
     else:
-        ax.set_xlim(1, 2)
+        ax.set_xlim(STARTUP_END_S, STARTUP_END_S + 1)
         if not ax.texts:
-            ax.text(0.5, 0.5, "Brak próbek od 1 s" if language == "pl"
-                    else "No samples from 1 s onward", transform=ax.transAxes,
+            ax.text(0.5, 0.5, "Brak próbek od 0,2 s" if language == "pl"
+                    else "No samples from 0.2 s onward", transform=ax.transAxes,
                     ha="center", va="center")
 
 
 def finish_startup(overview, zoom, peaks, language="eng"):
-    zoom.set(xlim=(0, 1), xlabel=("Czas od rozpoczęcia pomiaru [s]" if language == "pl"
+    zoom.set(xlim=(0, STARTUP_END_S), xlabel=("Czas od rozpoczęcia pomiaru [s]" if language == "pl"
                                  else "Time from acquisition start [s]"),
              ylabel="Prąd [mA]" if language == "pl" else "Current [mA]",
-             title="Rozruch 0–1 s — surowe próbki" if language == "pl"
-                   else "Power-on startup 0–1 s — raw samples")
+             title="Rozruch 0–0,2 s — surowe próbki" if language == "pl"
+                   else "Power-on startup 0–0.2 s — raw samples")
     zoom.grid(alpha=0.25)
     peaks = [peak for peak in peaks if peak is not None]
     if not peaks:
@@ -90,7 +93,7 @@ def finish_startup(overview, zoom, peaks, language="eng"):
     for (time, value, color), name, height in ((high, "Maks." if language == "pl" else "Max", 0.95),
                                               (low, "Min", 0.07)):
         zoom.scatter([time], [value], color=color, s=30, zorder=5)
-        label = f"{name} 0–1 s: {value:.3f} mA\nt = {time:.3f} s"
+        label = f"{name} 0–0.2 s: {value:.3f} mA\nt = {time:.3f} s"
         if language == "pl":
             label = label.replace(".", ",")
         zoom.annotate(label, xy=(time, value), xytext=(0.97, height),
@@ -164,14 +167,14 @@ def analyze_run(directory, begin, end):
                                    gridspec_kw={"width_ratios": [2, 1]})
     overview_trace(ax, data["time_s"][a:b], current, end)
     ax.set(xlabel="Time from acquisition start [s]", ylabel="Current [mA]",
-           title="Current from 1 s onward")
+           title="Current from 0.2 s onward")
     fig.suptitle(f'{meta["configuration"]} | {directory.name}')
     ax.grid(alpha=0.25)
     finish_startup(ax, zoom, [startup_trace(ax, zoom, data["time_s"][a:b], current)])
     save_report_plot(fig, directory / "current",
                      "Display: up to 2500 time bins; calculations use all samples.\n"
                      "The min–max band is not standard deviation or measurement uncertainty.\n"
-                     "Left: from 1 s onward. Right: power-on startup 0–1 s. Statistics use the full analysis window.",
+                     "Left: from 0.2 s onward. Right: power-on startup 0–0.2 s. Statistics use the full analysis window.",
                      envelope_legend())
     return row, data[a:b]
 
@@ -303,11 +306,11 @@ def plot_report(root, rows, traces, stats, language):
     fig.suptitle(f"{root.name}\n{comparison_title}")
     display_note = ("Wykres: do 2500 przedziałów czasu na przebieg; obliczenia ze wszystkich próbek.\n"
                     "Pas min–max nie oznacza odchylenia standardowego ani niepewności pomiaru.\n"
-                    "Lewy panel: od 1 s. Prawy: rozruch 0–1 s. Statystyki obejmują cały analizowany przedział."
+                    "Lewy panel: od 0,2 s. Prawy: rozruch 0–0,2 s. Statystyki obejmują cały analizowany przedział."
                     if language == "pl" else
                     "Display: up to 2500 time bins per trace; calculations use all samples.\n"
                     "The min–max band is not standard deviation or measurement uncertainty.\n"
-                    "Left: from 1 s onward. Right: power-on startup 0–1 s. Statistics use the full analysis window.")
+                    "Left: from 0.2 s onward. Right: power-on startup 0–0.2 s. Statistics use the full analysis window.")
     save_report_plot(fig, root / f"comparison_{language}", footer + "\n" + display_note,
                      [*trace_handles, *envelope_legend(language)])
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))

@@ -141,10 +141,10 @@ class Tests(unittest.TestCase):
                         self.assertGreaterEqual(box.x0, 0)
                         self.assertLessEqual(box.x1, fig.bbox.width)
                     if base.name.startswith("comparison"):
-                        self.assertEqual(fig.axes[0].get_xlim(), (1, 1000))
+                        self.assertEqual(fig.axes[0].get_xlim(), (1, 1000))  # 1 Hz fixture: first post-startup sample is at 1 s.
                         self.assertEqual(fig.axes[0].get_xticks()[0], 1)
                         self.assertEqual(len(fig.axes), 2)
-                        self.assertEqual(fig.axes[1].get_xlim(), (0, 1))
+                        self.assertEqual(fig.axes[1].get_xlim(), (0, 0.2))
                         self.assertEqual(len(fig.axes[1].lines), count)
                     results.plt.close(fig)
                 for language in ("pl", "eng"):
@@ -154,7 +154,7 @@ class Tests(unittest.TestCase):
 
     def test_startup_zoom_preserves_raw_peak_and_absolute_time(self):
         fig, (overview, zoom) = results.plt.subplots(1, 2)
-        times = np.array([0, 0.001, 0.002, 0.999, 1.0, 2.0])
+        times = np.array([0, 0.001, 0.002, 0.199, 0.2, 2.0])
         current = np.array([20, 155, 75, 74, 200, 73])
         overview.plot(times, current)
         peak = results.startup_trace(overview, zoom, times, current)
@@ -163,7 +163,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(peak[0][:2], (0.001, 155))
         self.assertEqual(peak[1][1], min(current[:4]))
         self.assertIn("155.000 mA", zoom.texts[0].get_text())
-        self.assertIn("Min 0–1 s", zoom.texts[1].get_text())
+        self.assertIn("Min 0–0.2 s", zoom.texts[1].get_text())
         results.plt.close(fig)
         fig, (overview, zoom) = results.plt.subplots(1, 2)
         peak = results.startup_trace(overview, zoom, times[-2:], current[-2:])

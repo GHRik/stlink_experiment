@@ -130,7 +130,7 @@ Warm-up and manual calibration do not disable automatic calibration. Calibration
 - Energy is estimated from current samples and configured voltage; voltage is not separately sampled.
 - ±SD describes variation **between repeat results**, not the minimum-to-maximum range.
 - Current traces use up to 2500 time bins: the line shows each bin's mean and the shaded band its minimum–maximum range. Calculations use all samples. The band is not SD or measurement uncertainty. SVG plots can be enlarged without losing sharpness; individual raw samples remain in CSV files.
-- Current and comparison plots show the trace from 1 s onward on the left and power-on startup (0–1 s) on the right, using raw samples with marked minimum and maximum. Both panels use their own axis scales; summary statistics still cover the full selected analysis window, including startup when selected.
+- Current and comparison plots show the trace from 0.2 s onward on the left and power-on startup (0–0.2 s) on the right, using raw samples with marked minimum and maximum. Both panels use their own axis scales; summary statistics still cover the full selected analysis window, including startup when selected.
 - Complete task cycles are not detected automatically. Fixed-duration windows can contain different numbers of cycles.
 - Calibration/resynchronization during acquisition invalidates the repeat; raw data are retained.
 
