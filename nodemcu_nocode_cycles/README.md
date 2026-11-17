@@ -12,13 +12,15 @@ These variants are independent, not cumulative. Unmentioned peripherals and GPIO
 
 ### Results
 
-Mean current: **75.695 mA**, SD across captures: **0.391 mA**. Mean estimated energy per capture: **24.979 J**.
+Mean current: **73.776 mA**, SD across captures: **0.404 mA**. Mean estimated energy per capture: **24.346 J**.
 
 | Current traces | Summary statistics |
 | --- | --- |
-| [![Empty sketch current traces](../results/empty_code_flash_all_20261115_205305_543823/comparison_eng.svg)](../results/empty_code_flash_all_20261115_205305_543823/comparison_eng.svg) | [![Empty sketch summary statistics](../results/empty_code_flash_all_20261115_205305_543823/statistics_eng.svg)](../results/empty_code_flash_all_20261115_205305_543823/statistics_eng.svg) |
+| [![Empty sketch current traces](../results/empty_code2_flash_all_20261117_181652_994327/comparison_eng.svg)](../results/empty_code2_flash_all_20261117_181652_994327/comparison_eng.svg) | [![Empty sketch summary statistics](../results/empty_code2_flash_all_20261117_181652_994327/statistics_eng.svg)](../results/empty_code2_flash_all_20261117_181652_994327/statistics_eng.svg) |
 
-[Raw data and reports](../results/empty_code_flash_all_20261115_205305_543823). This scenario has no explicit Wi-Fi, radio, UART, or LED shutdown code; it differs from the initialized no-code baseline in [NodeMCU measurements](../nodemcu_led_cycles/README.md#00--no-code).
+[Raw data and reports](../results/empty_code2_flash_all_20261117_181652_994327). This scenario has no explicit Wi-Fi, radio, UART, or LED shutdown code; it differs from the initialized no-code baseline in [NodeMCU measurements](../nodemcu_led_cycles/README.md#00--no-code).
+
+The earlier session `empty_code_flash_all_20261115_205305_543823` was rejected as the baseline because its larger fluctuations were not reproduced in the repeat session. Its cause remains unconfirmed; the original data are retained locally.
 
 ## 02 — Wi-Fi off
 
