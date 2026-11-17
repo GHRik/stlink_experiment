@@ -1,0 +1,17 @@
+{
+  "configuration": "wifi_deep_sleep_5s_flash_all",
+  "run": "repeat_002",
+  "directory": "C:\\Users\\P50\\Downloads\\stlink_experiment\\results\\wifi_deep_sleep_5s_flash_all_20261117_193250_090805\\repeat_002",
+  "voltage_V": 3.3,
+  "sampling_Hz": 1000,
+  "begin_s": 0,
+  "end_s": 100.0,
+  "duration_s": 100.0,
+  "samples": 100000,
+  "mean_current_mA": 3.59579721,
+  "min_current_mA": 1.843,
+  "max_current_mA": 163.3,
+  "within_run_sd_mA": 10.77953496131285,
+  "mean_power_mW": 11.866130793,
+  "energy_estimate_J": 1.1866130793
+}

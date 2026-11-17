@@ -1,0 +1,17 @@
+{
+  "configuration": "wifi_forceSleep_flash_all",
+  "run": "repeat_001",
+  "directory": "C:\\Users\\P50\\Downloads\\stlink_experiment\\results\\wifi_forceSleep_flash_all_20261117_175245_740211\\repeat_001",
+  "voltage_V": 3.3,
+  "sampling_Hz": 1000,
+  "begin_s": 0,
+  "end_s": 100.0,
+  "duration_s": 100.0,
+  "samples": 100000,
+  "mean_current_mA": 20.832579770000006,
+  "min_current_mA": 7.654,
+  "max_current_mA": 152.8,
+  "within_run_sd_mA": 1.879627015429901,
+  "mean_power_mW": 68.74751324100002,
+  "energy_estimate_J": 6.874751324100001
+}

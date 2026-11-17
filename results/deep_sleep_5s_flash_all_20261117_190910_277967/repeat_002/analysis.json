@@ -1,0 +1,17 @@
+{
+  "configuration": "deep_sleep_5s_flash_all",
+  "run": "repeat_002",
+  "directory": "C:\\Users\\P50\\Downloads\\stlink_experiment\\results\\deep_sleep_5s_flash_all_20261117_190910_277967\\repeat_002",
+  "voltage_V": 3.3,
+  "sampling_Hz": 1000,
+  "begin_s": 0,
+  "end_s": 100.0,
+  "duration_s": 100.0,
+  "samples": 100000,
+  "mean_current_mA": 2.84562756,
+  "min_current_mA": 1.85,
+  "max_current_mA": 156.0,
+  "within_run_sd_mA": 5.187238160401523,
+  "mean_power_mW": 9.390570947999999,
+  "energy_estimate_J": 0.9390570947999999
+}

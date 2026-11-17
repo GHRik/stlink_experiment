@@ -232,5 +232,8 @@ __marimo__/
 !/results/wifi_and_serial_off_flash_all_20261117_165458_850712/
 !/results/rf_disabled_flash_all_20261117_172443_712074/
 !/results/delay_loop_5s_flash_all_20261117_184108_287151/
+!/results/wifi_forceSleep_flash_all_20261117_175245_740211/
+!/results/deep_sleep_5s_flash_all_20261117_190910_277967/
+!/results/wifi_deep_sleep_5s_flash_all_20261117_193250_090805/
 /test_results/
 /demo_results/

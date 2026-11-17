@@ -92,7 +92,17 @@ Mean current: **73.758 mA**, SD across captures: **0.346 mA**. Mean estimated en
 
 [Sketch](06_WifiForceSleep/06_WifiForceSleep.ino): call `WiFi.forceSleepBegin()` followed by `delay(1)` in `setup()`, then run an empty `loop()`. This requests radio/modem sleep, not CPU deep sleep; there are no explicit UART or LED changes.
 
-**Results: Ongoing.**
+**Measured: 10 captures × 100 seconds**, at 3.3 V and 1000 Hz, including power-on startup. Uploaded with **Erase Flash → All Flash Contents**, ESP8266 Core 3.1.2, CPU 80 MHz.
+
+### Results
+
+Mean current: **20.826 mA**, SD across captures: **0.016 mA**. Mean estimated energy per capture: **6.872 J**.
+
+| Current traces | Summary statistics |
+| --- | --- |
+| [![Wi-Fi forced sleep current traces](../results/wifi_forceSleep_flash_all_20261117_175245_740211/comparison_eng.svg)](../results/wifi_forceSleep_flash_all_20261117_175245_740211/comparison_eng.svg) | [![Wi-Fi forced sleep summary statistics](../results/wifi_forceSleep_flash_all_20261117_175245_740211/statistics_eng.svg)](../results/wifi_forceSleep_flash_all_20261117_175245_740211/statistics_eng.svg) |
+
+[Raw data and reports](../results/wifi_forceSleep_flash_all_20261117_175245_740211).
 
 ## 07 — Five-second delay in loop
 
@@ -114,7 +124,17 @@ Mean current: **16.777 mA**, SD across captures: **0.007 mA**. Mean estimated en
 
 [Sketch](08_deep_sleep_5s_setup/08_deep_sleep_5s_setup.ino): call `ESP.deepSleep(5e6, WAKE_RF_DISABLED)` immediately from `setup()`. The ESP8266 sleeps for approximately five seconds and restarts on wakeup with RF disabled; each cycle includes boot overhead before re-entering sleep. Connect **D0 / GPIO16 to RST** for timed wakeup and record this wiring in the measurement notes.
 
-**Results: Ongoing.**
+**Measured: 10 captures × 100 seconds**, at 3.3 V and 1000 Hz, including power-on startup. Uploaded with **Erase Flash → All Flash Contents**, ESP8266 Core 3.1.2, CPU 80 MHz.
+
+### Results
+
+Mean current: **2.842 mA**, SD across captures: **0.005 mA**. Mean estimated energy per capture: **0.938 J**.
+
+| Current traces | Summary statistics |
+| --- | --- |
+| [![Current traces](../results/deep_sleep_5s_flash_all_20261117_190910_277967/comparison_eng.svg)](../results/deep_sleep_5s_flash_all_20261117_190910_277967/comparison_eng.svg) | [![Summary statistics](../results/deep_sleep_5s_flash_all_20261117_190910_277967/statistics_eng.svg)](../results/deep_sleep_5s_flash_all_20261117_190910_277967/statistics_eng.svg) |
+
+[Raw data and reports](../results/deep_sleep_5s_flash_all_20261117_190910_277967).
 
 ## 09 — Five-second deep sleep with default RF wakeup
 
@@ -122,7 +142,17 @@ Mean current: **16.777 mA**, SD across captures: **0.007 mA**. Mean estimated en
 
 Reference: [Core 3.1.2 RF options and default deepSleep argument](https://github.com/esp8266/Arduino/blob/3.1.2/cores/esp8266/Esp.h#L44).
 
-**Results: Ongoing.**
+**Measured: 10 captures × 100 seconds**, at 3.3 V and 1000 Hz, including power-on startup. Uploaded with **Erase Flash → All Flash Contents**, ESP8266 Core 3.1.2, CPU 80 MHz.
+
+### Results
+
+Mean current: **3.597 mA**, SD across captures: **0.004 mA**. Mean estimated energy per capture: **1.187 J**.
+
+| Current traces | Summary statistics |
+| --- | --- |
+| [![Current traces](../results/wifi_deep_sleep_5s_flash_all_20261117_193250_090805/comparison_eng.svg)](../results/wifi_deep_sleep_5s_flash_all_20261117_193250_090805/comparison_eng.svg) | [![Summary statistics](../results/wifi_deep_sleep_5s_flash_all_20261117_193250_090805/statistics_eng.svg)](../results/wifi_deep_sleep_5s_flash_all_20261117_193250_090805/statistics_eng.svg) |
+
+[Raw data and reports](../results/wifi_deep_sleep_5s_flash_all_20261117_193250_090805).
 
 ## 10 — Automatic modem sleep with a five-second delay
 
@@ -136,4 +166,4 @@ No access-point connection is configured, matching the disconnected conditions o
 
 Use a distinct `--name` for each sketch, such as `empty_code_flash_all`, `wifi_off_flash_all`, `serial_off_flash_all`, `wifi_and_serial_off_flash_all`, `rf_disabled_flash_all`, `wifi_force_sleep_flash_all`, `delay_loop_5s_flash_all`, `deep_sleep_5s_flash_all`, `deep_sleep_5s_rf_default_flash_all`, and `modem_sleep_5s_flash_all`. Record the actual sketch, board, Core version, clock, erase-flash option, and wiring in `--notes`. Keep all other measurement conditions identical.
 
-Results are available for scenarios 01–05 and 07. Measurements for scenarios 06 and 08–10 are ongoing.
+Results are available for scenarios 01–09. Measurements for scenario 10 are ongoing.
