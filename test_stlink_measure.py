@@ -142,11 +142,33 @@ class Tests(unittest.TestCase):
                         self.assertLessEqual(box.x1, fig.bbox.width)
                     if base.name.startswith("comparison"):
                         self.assertGreater(fig.axes[0].get_xlim()[1], 1000)
+                        self.assertEqual(len(fig.axes), 2)
+                        self.assertEqual(fig.axes[1].get_xlim(), (0, 1))
+                        self.assertEqual(len(fig.axes[1].lines), count)
                     results.plt.close(fig)
                 for language in ("pl", "eng"):
                     with patch.object(results, "plot_save", side_effect=check_layout) as save:
                         results.plot_report(root, rows, {"modem": runs}, results.aggregate(rows), language)
                     self.assertEqual(save.call_count, 2)
+
+    def test_startup_zoom_preserves_raw_peak_and_absolute_time(self):
+        fig, (overview, zoom) = results.plt.subplots(1, 2)
+        times = np.array([0, 0.001, 0.002, 0.999, 1.0, 2.0])
+        current = np.array([20, 155, 75, 74, 200, 73])
+        overview.plot(times, current)
+        peak = results.startup_trace(overview, zoom, times, current)
+        results.finish_startup(overview, zoom, [peak])
+        np.testing.assert_array_equal(zoom.lines[0].get_ydata(), current[:4])
+        self.assertEqual(peak[:2], (0.001, 155))
+        self.assertIn("155.000 mA", zoom.texts[0].get_text())
+        results.plt.close(fig)
+        fig, (overview, zoom) = results.plt.subplots(1, 2)
+        peak = results.startup_trace(overview, zoom, times[-2:], current[-2:])
+        results.finish_startup(overview, zoom, [peak])
+        self.assertIsNone(peak)
+        self.assertEqual(len(zoom.lines), 0)
+        self.assertIn("Outside", zoom.texts[0].get_text())
+        results.plt.close(fig)
 
     def test_real_firmware_prompt_before_ack(self):
         class Serial:

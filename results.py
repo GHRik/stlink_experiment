@@ -43,6 +43,45 @@ def envelope_legend(language="eng"):
             Patch(facecolor="tab:blue", alpha=0.25, label=spread)]
 
 
+def startup_trace(overview, zoom, x, y, color="tab:blue"):
+    """Show original samples in acquisition seconds 0–1, never rebase a cropped window."""
+    selected = (x >= 0) & (x < 1)
+    if not np.any(selected):
+        return None
+    times, values = x[selected], y[selected]
+    zoom.plot(times, values, color=color, linewidth=0.7)
+    peak = int(np.argmax(values))
+    return float(times[peak]), float(values[peak]), color
+
+
+def finish_startup(overview, zoom, peaks, language="eng"):
+    zoom.set(xlim=(0, 1), xlabel=("Czas od rozpoczęcia pomiaru [s]" if language == "pl"
+                                 else "Time from acquisition start [s]"),
+             ylabel="Prąd [mA]" if language == "pl" else "Current [mA]",
+             title="Pierwsza sekunda — surowe próbki" if language == "pl"
+                   else "First second — raw samples")
+    zoom.grid(alpha=0.25)
+    peaks = [peak for peak in peaks if peak is not None]
+    if not peaks:
+        zoom.text(0.5, 0.5, "Poza analizowanym przedziałem" if language == "pl"
+                  else "Outside the analysis window", transform=zoom.transAxes,
+                  ha="center", va="center")
+        return
+    left, right = overview.get_xlim()
+    overview.axvspan(max(0, left), min(1, right), color="grey", alpha=0.15)
+    time, value, color = max(peaks, key=lambda peak: peak[1])
+    zoom.scatter([time], [value], color=color, s=30, zorder=5)
+    label = (f"Maks. 0–1 s: {value:.3f} mA\nt = {time:.3f} s" if language == "pl"
+             else f"Max 0–1 s: {value:.3f} mA\nt = {time:.3f} s")
+    if language == "pl":
+        label = label.replace(".", ",")
+    zoom.annotate(label, xy=(time, value), xytext=(0.97, 0.95),
+                  textcoords="axes fraction", ha="right", va="top", fontsize=9,
+                  bbox=dict(facecolor="white", alpha=0.9, edgecolor="none"),
+                  arrowprops=dict(arrowstyle="->", color="black"))
+    zoom.margins(y=0.18)
+
+
 def save_report_plot(fig, base, footer, handles):
     """Reserve measured space below the axes for a wrapped footer and legend."""
     width, height = fig.get_size_inches()
@@ -103,14 +142,18 @@ def analyze_run(directory, begin, end):
         "energy_estimate_J": float(np.sum(current) / 1000 * meta["voltage_V"] / hz),
     }
     save_json(directory / "analysis.json", row)
-    fig, ax = plt.subplots(figsize=(11, 4))
+    fig, (ax, zoom) = plt.subplots(1, 2, figsize=(14, 4),
+                                   gridspec_kw={"width_ratios": [2, 1]})
     envelope(ax, data["time_s"][a:b], current)
     ax.set(xlabel="Time from acquisition start [s]", ylabel="Current [mA]",
-           title=f'{meta["configuration"]} | {directory.name}')
+           title="Full analysis window")
+    fig.suptitle(f'{meta["configuration"]} | {directory.name}')
     ax.grid(alpha=0.25)
+    finish_startup(ax, zoom, [startup_trace(ax, zoom, data["time_s"][a:b], current)])
     save_report_plot(fig, directory / "current",
                      "Display: up to 2500 time bins; calculations use all samples.\n"
-                     "The min–max band is not standard deviation or measurement uncertainty.",
+                     "The min–max band is not standard deviation or measurement uncertainty.\n"
+                     "Grey region: first second; right panel: original samples. Statistics use the full analysis window.",
                      envelope_legend())
     return row, data[a:b]
 
@@ -219,26 +262,33 @@ def plot_report(root, rows, traces, stats, language):
     if all(row["begin_s"] == 0 for row in rows):
         footer += ("\nPomiar obejmuje rozruch po włączeniu zasilania." if language == "pl"
                    else "\nMeasurement includes startup after power-on.")
-    fig, axes = plt.subplots(1, len(traces), figsize=(max(10, 5 * len(traces)), 5),
-                             squeeze=False, sharex=True, sharey=True)
+    fig, axes = plt.subplots(len(traces), 2, figsize=(14, 4 * len(traces)),
+                             squeeze=False, gridspec_kw={"width_ratios": [2, 1]})
     trace_handles = []
-    for k, (ax, runs) in enumerate(zip(axes[0], traces.values()), 1):
+    for (ax, zoom), runs in zip(axes, traces.values()):
         colors = plt.get_cmap("tab20", max(20, len(runs)))
+        peaks = []
         for number, (row, data) in enumerate(runs):
             envelope(ax, data["time_s"], data["current_uA"] / 1000,
                      label=f'{repeat_label} {number + 1}', color=colors(number))
+            peaks.append(startup_trace(ax, zoom, data["time_s"],
+                                       data["current_uA"] / 1000, colors(number)))
         ax.set(xlabel=time_label,
                title=f'{row["configuration"]} | {row["voltage_V"]} V | n={len(runs)}')
         if len(ax.lines) > len(trace_handles):
             trace_handles = list(ax.lines)
         ax.grid(alpha=0.25)
+        ax.set_ylabel(current_label)
+        finish_startup(ax, zoom, peaks, language)
     axes[0, 0].set_ylabel(current_label)
     fig.suptitle(f"{root.name}\n{comparison_title}")
     display_note = ("Wykres: do 2500 przedziałów czasu na przebieg; obliczenia ze wszystkich próbek.\n"
-                    "Pas min–max nie oznacza odchylenia standardowego ani niepewności pomiaru."
+                    "Pas min–max nie oznacza odchylenia standardowego ani niepewności pomiaru.\n"
+                    "Szary obszar: pierwsza sekunda; prawy panel: surowe próbki. Statystyki obejmują cały analizowany przedział."
                     if language == "pl" else
                     "Display: up to 2500 time bins per trace; calculations use all samples.\n"
-                    "The min–max band is not standard deviation or measurement uncertainty.")
+                    "The min–max band is not standard deviation or measurement uncertainty.\n"
+                    "Grey region: first second; right panel: original samples. Statistics use the full analysis window.")
     save_report_plot(fig, root / f"comparison_{language}", footer + "\n" + display_note,
                      [*trace_handles, *envelope_legend(language)])
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
