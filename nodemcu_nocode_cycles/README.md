@@ -1,8 +1,8 @@
 # NodeMCU empty-loop measurements
 
-Eight independent sketches to compare initialization choices and idle behavior. Flash one at a time using **NodeMCU 1.0 (ESP-12E Module)**, ESP8266 Arduino Core **3.1.2**, and **80 MHz**. See the main [quick start](../README.md) for measurement instructions.
+Nine independent sketches to compare initialization choices and idle behavior. Flash one at a time using **NodeMCU 1.0 (ESP-12E Module)**, ESP8266 Arduino Core **3.1.2**, and **80 MHz**. See the main [quick start](../README.md) for measurement instructions.
 
-These variants are independent, not cumulative. Unmentioned peripherals and GPIOs are left at their runtime defaults. None of these sketches explicitly configures the LED. Scenarios 01–06 have an empty `loop()`; scenario 07 waits five seconds on each iteration; scenario 08 enters CPU deep sleep from `setup()`.
+These variants are independent, not cumulative. Unmentioned peripherals and GPIOs are left at their runtime defaults. None of these sketches explicitly configures the LED. Scenarios 01–06 have an empty `loop()`; scenario 07 waits five seconds on each iteration; scenarios 08–09 enter CPU deep sleep from `setup()`.
 
 ## 01 — Empty
 
@@ -116,8 +116,16 @@ Mean current: **16.777 mA**, SD across captures: **0.007 mA**. Mean estimated en
 
 **Results: Ongoing.**
 
+## 09 — Five-second deep sleep with default RF wakeup
+
+[Sketch](09_deep_sleep_5s_Radio_on/09_deep_sleep_5s_Radio_on.ino): same as scenario 08, but call `ESP.deepSleep(5e6)` without an explicit RF option. This uses `RF_DEFAULT`, whose RF calibration behavior on wakeup depends on SDK initialization data. The folder name refers to allowing default RF startup after wakeup; the radio is off during deep sleep, and no Wi-Fi connection is configured. Connect **D0 / GPIO16 to RST** for timed wakeup.
+
+Reference: [Core 3.1.2 RF options and default deepSleep argument](https://github.com/esp8266/Arduino/blob/3.1.2/cores/esp8266/Esp.h#L44).
+
+**Results: Ongoing.**
+
 ## Recording
 
-Use a distinct `--name` for each sketch, such as `empty_code_flash_all`, `wifi_off_flash_all`, `serial_off_flash_all`, `wifi_and_serial_off_flash_all`, `rf_disabled_flash_all`, `wifi_force_sleep_flash_all`, `delay_loop_5s_flash_all`, and `deep_sleep_5s_flash_all`. Record the actual sketch, board, Core version, clock, erase-flash option, and wiring in `--notes`. Keep all other measurement conditions identical.
+Use a distinct `--name` for each sketch, such as `empty_code_flash_all`, `wifi_off_flash_all`, `serial_off_flash_all`, `wifi_and_serial_off_flash_all`, `rf_disabled_flash_all`, `wifi_force_sleep_flash_all`, `delay_loop_5s_flash_all`, `deep_sleep_5s_flash_all`, and `deep_sleep_5s_rf_default_flash_all`. Record the actual sketch, board, Core version, clock, erase-flash option, and wiring in `--notes`. Keep all other measurement conditions identical.
 
-Results are available for scenarios 01–05 and 07. Measurements for scenarios 06 and 08 are ongoing.
+Results are available for scenarios 01–05 and 07. Measurements for scenarios 06 and 08–09 are ongoing.
