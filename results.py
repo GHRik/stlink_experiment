@@ -9,8 +9,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
+from matplotlib.offsetbox import AnchoredOffsetbox, HPacker
 from scipy.stats import t as student_t
 from storage import save_json, write_csv
+from plot_annotations import (extrema, mark_extrema, trace_captions, statistics_captions,
+                              MIN_COLOR, MAX_COLOR)
 
 # Display split chosen to include the measured NodeMCU power-on transient and a short margin.
 STARTUP_END_S = 0.2
@@ -75,7 +78,7 @@ def overview_trace(ax, x, y, end, label=None, color=None, language="eng"):
                     ha="center", va="center")
 
 
-def finish_startup(overview, zoom, peaks, language="eng"):
+def finish_startup(overview, zoom, peaks, language="eng", annotate=True):
     zoom.set(xlim=(0, STARTUP_END_S), xlabel=("Czas od rozpoczęcia pomiaru [s]" if language == "pl"
                                  else "Time from acquisition start [s]"),
              ylabel="Prąd [mA]" if language == "pl" else "Current [mA]",
@@ -88,22 +91,15 @@ def finish_startup(overview, zoom, peaks, language="eng"):
                   else "Outside the analysis window", transform=zoom.transAxes,
                   ha="center", va="center")
         return
+    if not annotate:
+        return
     high = max((pair[0] for pair in peaks), key=lambda peak: peak[1])
     low = min((pair[1] for pair in peaks), key=lambda peak: peak[1])
-    for (time, value, color), name, height in ((high, "Maks." if language == "pl" else "Max", 0.95),
-                                              (low, "Min", 0.07)):
-        zoom.scatter([time], [value], color=color, s=30, zorder=5)
-        label = f"{name} 0–0.2 s: {value:.3f} mA\nt = {time:.3f} s"
-        if language == "pl":
-            label = label.replace(".", ",")
-        zoom.annotate(label, xy=(time, value), xytext=(0.97, height),
-                      textcoords="axes fraction", ha="right", va="top" if height > 0.5 else "bottom", fontsize=9,
-                      bbox=dict(facecolor="white", alpha=0.9, edgecolor="none"),
-                      arrowprops=dict(arrowstyle="->", color="black"))
-    zoom.margins(y=0.18)
+    mark_extrema(zoom, (low[:2], high[:2]), language,
+                 scope="0–0,2 s" if language == "pl" else "0–0.2 s")
 
 
-def save_report_plot(fig, base, footer, handles):
+def save_report_plot(fig, base, footer, handles, captions=None):
     """Reserve measured space below the axes for a wrapped footer and legend."""
     width, height = fig.get_size_inches()
     wrapped = "\n".join(textwrap.fill(line, width=max(40, int(width * 12)))
@@ -122,11 +118,23 @@ def save_report_plot(fig, base, footer, handles):
         columns -= 1
     footer_height = text.get_window_extent(renderer).height / fig.dpi
     legend_height = legend.get_window_extent(renderer).height / fig.dpi
-    reserved = footer_height + legend_height + 0.65
+    caption = None
+    caption_height = 0
+    if captions:
+        caption = AnchoredOffsetbox(loc="lower center", frameon=False, pad=0, borderpad=0,
+                                   child=HPacker(children=captions, pad=0, sep=45, align="top"),
+                                   bbox_to_anchor=(0.5, 0), bbox_transform=fig.transFigure)
+        fig.add_artist(caption)
+        fig.canvas.draw()
+        caption_height = caption.get_window_extent(renderer).height / fig.dpi + 0.2
+    reserved = footer_height + legend_height + caption_height + 0.65
     total_height = height + reserved
     fig.set_size_inches(width, total_height)
     text.set_position((0.5, 0.15 / total_height))
     legend.set_bbox_to_anchor((0.5, (footer_height + 0.3) / total_height))
+    if caption is not None:
+        caption.set_bbox_to_anchor((0.5, (footer_height + legend_height + 0.5) / total_height),
+                                   transform=fig.transFigure)
     plot_save(fig, base, bottom=reserved / total_height)
 
 def load_run(directory):
@@ -163,20 +171,28 @@ def analyze_run(directory, begin, end):
         "energy_estimate_J": float(np.sum(current) / 1000 * meta["voltage_V"] / hz),
     }
     save_json(directory / "analysis.json", row)
+    plot_current(directory, meta, row, data[a:b])
+    return row, data[a:b]
+
+
+def plot_current(directory, meta, row, data):
+    """Render an already analyzed repeat without changing its measurements or analysis."""
+    current = data["current_uA"] / 1000
     fig, (ax, zoom) = plt.subplots(1, 2, figsize=(14, 4),
                                    gridspec_kw={"width_ratios": [2, 1]})
-    overview_trace(ax, data["time_s"][a:b], current, end)
+    overview_trace(ax, data["time_s"], current, row["end_s"])
     ax.set(xlabel="Time from acquisition start [s]", ylabel="Current [mA]",
            title="Current from 0.2 s onward")
-    fig.suptitle(f'{meta["configuration"]} | {directory.name}')
+    fig.suptitle(f'{meta["configuration"]} | {row["run"]}')
     ax.grid(alpha=0.25)
-    finish_startup(ax, zoom, [startup_trace(ax, zoom, data["time_s"][a:b], current)])
+    selected = data["time_s"] >= STARTUP_END_S
+    mark_extrema(ax, extrema(data["time_s"][selected], current[selected]))
+    finish_startup(ax, zoom, [startup_trace(ax, zoom, data["time_s"], current)])
     save_report_plot(fig, directory / "current",
                      "Display: up to 2500 time bins; calculations use all samples.\n"
                      "The min–max band is not standard deviation or measurement uncertainty.\n"
                      "Left: from 0.2 s onward. Right: power-on startup 0–0.2 s. Statistics use the full analysis window.",
                      envelope_legend())
-    return row, data[a:b]
 
 def aggregate(rows):
     # Never pool different voltage, sampling, notes, firmware or windows.
@@ -256,13 +272,11 @@ def plot_report(root, rows, traces, stats, language):
     for k, runs in enumerate(traces.values(), 1):
         currents = [data["current_uA"] / 1000 for _, data in runs]
         average = sum(float(np.sum(values)) for values in currents) / sum(len(values) for values in currents)
-        minimum = min(float(np.min(values)) for values in currents)
-        maximum = max(float(np.max(values)) for values in currents)
         if language == "pl":
-            values_text = f"Średni pobór: {average:.3f} mA | Maksymalny: {maximum:.3f} mA | Minimalny: {minimum:.3f} mA"
+            values_text = f"Średni pobór: {average:.3f} mA"
             values_text = values_text.replace(".", ",")
         else:
-            values_text = f"Mean current: {average:.3f} mA | Maximum: {maximum:.3f} mA | Minimum: {minimum:.3f} mA"
+            values_text = f"Mean current: {average:.3f} mA"
         summary_lines.append(f'{runs[0][0]["configuration"]}: {values_text}')
         # Match the sample SD used by the statistics error bars, not within-trace fluctuations.
         current_sd = float(np.std([row["mean_current_mA"] for row, _ in runs], ddof=1)) if len(runs) > 1 else None
@@ -280,12 +294,8 @@ def plot_report(root, rows, traces, stats, language):
     scope = ("Prąd ze wszystkich próbek w analizowanym przedziale, ze wszystkich powtórzeń."
              if language == "pl" else "Current across all samples in the analysis window, across all repeats.")
     footer = "\n".join(summary_lines + [scope])
-    if all(row["begin_s"] == 0 for row in rows):
-        footer += ("\nPomiar obejmuje rozruch po włączeniu zasilania." if language == "pl"
-                   else "\nMeasurement includes startup after power-on.")
     fig, axes = plt.subplots(len(traces), 2, figsize=(14, 4 * len(traces)),
                              squeeze=False, gridspec_kw={"width_ratios": [2, 1]})
-    trace_handles = []
     for (ax, zoom), runs in zip(axes, traces.values()):
         colors = plt.get_cmap("tab20", max(20, len(runs)))
         peaks = []
@@ -296,12 +306,9 @@ def plot_report(root, rows, traces, stats, language):
                                        data["current_uA"] / 1000, colors(number)))
         ax.set(xlabel=time_label,
                title=f'{row["configuration"]} | {row["voltage_V"]} V | n={len(runs)}')
-        if len(runs) > len(trace_handles):
-            trace_handles = [Line2D([], [], color=colors(n), linewidth=0.8,
-                                    label=f'{repeat_label} {n + 1}') for n in range(len(runs))]
         ax.grid(alpha=0.25)
         ax.set_ylabel(current_label)
-        finish_startup(ax, zoom, peaks, language)
+        finish_startup(ax, zoom, peaks, language, annotate=False)
     axes[0, 0].set_ylabel(current_label)
     fig.suptitle(f"{root.name}\n{comparison_title}")
     display_note = ("Wykres: do 2500 przedziałów czasu na przebieg; obliczenia ze wszystkich próbek.\n"
@@ -311,10 +318,18 @@ def plot_report(root, rows, traces, stats, language):
                     "Display: up to 2500 time bins per trace; calculations use all samples.\n"
                     "The min–max band is not standard deviation or measurement uncertainty.\n"
                     "Left: from 0.2 s onward. Right: power-on startup 0–0.2 s. Statistics use the full analysis window.")
+    caption_groups, result_groups = [], []
+    for runs in traces.values():
+        colors = plt.get_cmap("tab20", max(20, len(runs)))
+        caption_groups.append((runs[0][0]["configuration"], [
+            (f"{repeat_label} {n + 1}", colors(n), data["time_s"], data["current_uA"] / 1000)
+            for n, (_, data) in enumerate(runs)]))
+        result_groups.append((runs[0][0]["configuration"], [
+            (f"{repeat_label} {n + 1}", colors(n), row) for n, (row, _) in enumerate(runs)]))
     save_report_plot(fig, root / f"comparison_{language}", footer + "\n" + display_note,
-                     [*trace_handles, *envelope_legend(language)])
+                     envelope_legend(language),
+                     captions=trace_captions(caption_groups, STARTUP_END_S, language))
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-    repeat_handles = {}
     for ax, field, ylabel in zip(axes, ("mean_current_mA", "energy_estimate_J"),
                                  (mean_label, energy_label)):
         for i, group in enumerate(stats):
@@ -325,9 +340,14 @@ def plot_report(root, rows, traces, stats, language):
             # Spread repeats horizontally so near-identical results remain visible.
             offsets = np.linspace(-0.15, 0.15, len(matches)) if len(matches) > 1 else [0]
             for number, (value, offset) in enumerate(zip(values, offsets)):
-                point = ax.scatter(i + offset, value, color=colors(number), s=28,
-                                   alpha=0.85, label=f"{repeat_label} {number + 1}")
-                repeat_handles.setdefault(number, point)
+                ax.scatter(i + offset, value, color=colors(number), s=28,
+                           alpha=0.85, zorder=3, label=f"{repeat_label} {number + 1}")
+                if value == min(values):
+                    ax.scatter(i + offset, value, s=110, facecolor=MIN_COLOR, edgecolor="black",
+                               linewidth=0.6, zorder=2)
+                if value == max(values):
+                    ax.scatter(i + offset, value, s=110, facecolor=MAX_COLOR, edgecolor="black",
+                               linewidth=0.6, zorder=2)
             sd = group[field + "_between_run_sd"]
             mean = ax.errorbar(i, group[field + "_mean"], yerr=sd if sd is not None else 0,
                                fmt="o", color="black", capsize=5,
@@ -337,8 +357,12 @@ def plot_report(root, rows, traces, stats, language):
         ax.set_ylabel(ylabel)
         ax.grid(axis="y", alpha=0.25)
     fig.suptitle(f"{root.name}\n{stats_title}")
-    save_report_plot(fig, root / f"statistics_{language}", footer,
-                     [*repeat_handles.values(), mean])
+    stats_note = ("Wyróżnione min/max: najmniejsza i największa średnia prądu oraz energia wśród powtórzeń."
+                  if language == "pl" else
+                  "Highlighted min/max: lowest and highest mean current and energy among repeats.")
+    save_report_plot(fig, root / f"statistics_{language}", footer + "\n" + stats_note,
+                     [mean],
+                     captions=statistics_captions(result_groups, language))
 
 def demo(out):
     """Synthetic inputs only; exercise reports without hardware."""

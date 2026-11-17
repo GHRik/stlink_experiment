@@ -137,6 +137,13 @@ class Tests(unittest.TestCase):
                     footer = fig.texts[-1].get_window_extent(renderer)
                     self.assertLess(footer.y1, legend.y0)
                     self.assertLess(legend.y1, min(ax.get_tightbbox(renderer).y0 for ax in fig.axes))
+                    for artist in fig.artists:
+                        if isinstance(artist, results.AnchoredOffsetbox):
+                            caption = artist.get_window_extent(renderer)
+                            self.assertLess(legend.y1, caption.y0)
+                            self.assertLess(caption.y1, min(ax.get_tightbbox(renderer).y0 for ax in fig.axes))
+                            self.assertGreaterEqual(caption.x0, 0)
+                            self.assertLessEqual(caption.x1, fig.bbox.width)
                     for box in (legend, footer):
                         self.assertGreaterEqual(box.x0, 0)
                         self.assertLessEqual(box.x1, fig.bbox.width)
@@ -146,6 +153,11 @@ class Tests(unittest.TestCase):
                         self.assertEqual(len(fig.axes), 2)
                         self.assertEqual(fig.axes[1].get_xlim(), (0, 0.2))
                         self.assertEqual(len(fig.axes[1].lines), count)
+                        self.assertFalse(fig.axes[0].texts)
+                        self.assertFalse(fig.axes[1].texts)
+                        self.assertEqual(len(fig.legends[0].get_texts()), 2)
+                    else:
+                        self.assertEqual(len(fig.legends[0].get_texts()), 1)
                     results.plt.close(fig)
                 for language in ("pl", "eng"):
                     with patch.object(results, "plot_save", side_effect=check_layout) as save:
@@ -162,8 +174,9 @@ class Tests(unittest.TestCase):
         np.testing.assert_array_equal(zoom.lines[0].get_ydata(), current[:4])
         self.assertEqual(peak[0][:2], (0.001, 155))
         self.assertEqual(peak[1][1], min(current[:4]))
-        self.assertIn("155.000 mA", zoom.texts[0].get_text())
-        self.assertIn("Min 0–0.2 s", zoom.texts[1].get_text())
+        labels = [label.get_text() for label in zoom.texts]
+        self.assertTrue(any("155.000 mA" in label and "Max" in label for label in labels))
+        self.assertTrue(any("Min 0–0.2 s" in label for label in labels))
         results.plt.close(fig)
         fig, (overview, zoom) = results.plt.subplots(1, 2)
         peak = results.startup_trace(overview, zoom, times[-2:], current[-2:])
