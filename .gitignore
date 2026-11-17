@@ -230,5 +230,6 @@ __marimo__/
 !/results/wifi_off_flash_all_20261117_154814_125539/
 !/results/serial_off_flash_all_20261117_161237_936001/
 !/results/wifi_and_serial_off_flash_all_20261117_165458_850712/
+!/results/rf_disabled_flash_all_20261117_172443_712074/
 /test_results/
 /demo_results/

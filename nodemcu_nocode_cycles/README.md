@@ -1,8 +1,8 @@
 # NodeMCU empty-loop measurements
 
-Six independent sketches to compare initialization choices with an empty `loop()`. Flash one at a time using **NodeMCU 1.0 (ESP-12E Module)**, ESP8266 Arduino Core **3.1.2**, and **80 MHz**. See the main [quick start](../README.md) for measurement instructions.
+Seven independent sketches to compare initialization choices and idle behavior. Flash one at a time using **NodeMCU 1.0 (ESP-12E Module)**, ESP8266 Arduino Core **3.1.2**, and **80 MHz**. See the main [quick start](../README.md) for measurement instructions.
 
-These variants are independent, not cumulative. Unmentioned peripherals and GPIOs are left at their runtime defaults. Only scenario 06 explicitly turns off the GPIO2 LED. None of these sketches enters CPU deep sleep.
+These variants are independent, not cumulative. Unmentioned peripherals and GPIOs are left at their runtime defaults. None of these sketches explicitly configures the LED or enters CPU deep sleep. Scenarios 01–06 have an empty `loop()`; scenario 07 waits five seconds on each iteration.
 
 ## 01 — Empty
 
@@ -74,16 +74,32 @@ Mean current: **73.938 mA**, SD across captures: **0.425 mA**. Mean estimated en
 
 References: [RF mode definitions](https://github.com/esp8266/Arduino/blob/3.1.2/cores/esp8266/Esp.h#L44) and [pre-initialization hook](https://github.com/esp8266/Arduino/blob/3.1.2/cores/esp8266/core_esp8266_phy.cpp). Verify behavior on the selected Core/SDK with a measurement.
 
+**Measured: 10 captures × 100 seconds**, at 3.3 V and 1000 Hz, including power-on startup. Uploaded with **Erase Flash → All Flash Contents**, ESP8266 Core 3.1.2, CPU 80 MHz.
+
+### Results
+
+Mean current: **73.758 mA**, SD across captures: **0.346 mA**. Mean estimated energy per capture: **24.340 J**.
+
+| Current traces | Summary statistics |
+| --- | --- |
+| [![RF disabled current traces](../results/rf_disabled_flash_all_20261117_172443_712074/comparison_eng.svg)](../results/rf_disabled_flash_all_20261117_172443_712074/comparison_eng.svg) | [![RF disabled summary statistics](../results/rf_disabled_flash_all_20261117_172443_712074/statistics_eng.svg)](../results/rf_disabled_flash_all_20261117_172443_712074/statistics_eng.svg) |
+
+[Raw data and reports](../results/rf_disabled_flash_all_20261117_172443_712074).
+
+## 06 — Wi-Fi forced sleep
+
+[Sketch](06_WifiForceSleep/06_WifiForceSleep.ino): call `WiFi.forceSleepBegin()` followed by `delay(1)` in `setup()`, then run an empty `loop()`. This requests radio/modem sleep, not CPU deep sleep; there are no explicit UART or LED changes.
+
 **Results: Ongoing.**
 
-## 06 — Combined shutdown and forced modem sleep
+## 07 — Five-second delay in loop
 
-[Sketch](06_Combine_WifiDeepSleep/06_Combine_WifiDeepSleep.ino): select `RF_MODE(RF_DISABLED)` before SDK RF initialization, then disable Wi-Fi, request modem sleep, end both UART interfaces, and turn off the GPIO2 / D4 LED after releasing UART1. `WiFi.forceSleepBegin()` requests radio/modem sleep, not CPU deep sleep; the Arduino runtime continues to execute.
+[Sketch](07_delay_5s_in_loop/07_delay_5s_in_loop.ino): empty `setup()` with `delay(5000)` on each iteration of `loop()`. No explicit Wi-Fi, RF, UART, or LED changes. This tests yielding during idle time; a current reduction depends on the runtime and power-management state and must be measured.
 
 **Results: Ongoing.**
 
 ## Recording
 
-Use a distinct `--name` for each sketch, such as `empty_code_flash_all`, `wifi_off_flash_all`, `serial_off_flash_all`, `wifi_and_serial_off_flash_all`, `rf_disabled_flash_all`, and `combined_off_flash_all`. Record the actual sketch, board, Core version, clock, erase-flash option, and wiring in `--notes`. Keep all other measurement conditions identical.
+Use a distinct `--name` for each sketch, such as `empty_code_flash_all`, `wifi_off_flash_all`, `serial_off_flash_all`, `wifi_and_serial_off_flash_all`, `rf_disabled_flash_all`, `wifi_force_sleep_flash_all`, and `delay_5s_flash_all`. Record the actual sketch, board, Core version, clock, erase-flash option, and wiring in `--notes`. Keep all other measurement conditions identical.
 
-Results are available for scenarios 01–04. Measurements for scenarios 05–06 are ongoing.
+Results are available for scenarios 01–05. Measurements for scenarios 06–07 are ongoing.

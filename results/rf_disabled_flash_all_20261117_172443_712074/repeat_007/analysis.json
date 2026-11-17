@@ -1,0 +1,17 @@
+{
+  "configuration": "rf_disabled_flash_all",
+  "run": "repeat_007",
+  "directory": "C:\\Users\\P50\\Downloads\\stlink_experiment\\results\\rf_disabled_flash_all_20261117_172443_712074\\repeat_007",
+  "voltage_V": 3.3,
+  "sampling_Hz": 1000,
+  "begin_s": 0,
+  "end_s": 100.0,
+  "duration_s": 100.0,
+  "samples": 100000,
+  "mean_current_mA": 74.44557334,
+  "min_current_mA": 5.482,
+  "max_current_mA": 153.7,
+  "within_run_sd_mA": 1.667586554908148,
+  "mean_power_mW": 245.67039202199996,
+  "energy_estimate_J": 24.567039202199997
+}
