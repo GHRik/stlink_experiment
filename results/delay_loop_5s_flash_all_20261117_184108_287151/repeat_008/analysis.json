@@ -1,0 +1,17 @@
+{
+  "configuration": "delay_loop_5s_flash_all",
+  "run": "repeat_008",
+  "directory": "C:\\Users\\P50\\Downloads\\stlink_experiment\\results\\delay_loop_5s_flash_all_20261117_184108_287151\\repeat_008",
+  "voltage_V": 3.3,
+  "sampling_Hz": 1000,
+  "begin_s": 0,
+  "end_s": 100.0,
+  "duration_s": 100.0,
+  "samples": 100000,
+  "mean_current_mA": 16.78940927,
+  "min_current_mA": 7.674,
+  "max_current_mA": 155.2,
+  "within_run_sd_mA": 1.9631344647978994,
+  "mean_power_mW": 55.405050591,
+  "energy_estimate_J": 5.5405050591
+}
