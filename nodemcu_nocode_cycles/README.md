@@ -160,10 +160,20 @@ Mean current: **3.597 mA**, SD across captures: **0.004 mA**. Mean estimated ene
 
 No access-point connection is configured, matching the disconnected conditions of the other idle scenarios. This tests the setting's effect in those conditions, not connected Wi-Fi power saving. The five seconds specify the application delay, not a guaranteed five-second radio sleep. For connected station operation, automatic modem sleep follows the access point's DTIM timing; see the [Core 3.1.2 documentation](https://arduino-esp8266.readthedocs.io/en/3.1.2/esp8266wifi/generic-class.html#wi-fi-power-management-dtim).
 
-**Results: Ongoing.**
+**Measured: 10 captures × 100 seconds**, at 3.3 V and 1000 Hz, including power-on startup. Uploaded with **Erase Flash → All Flash Contents**, ESP8266 Core 3.1.2, CPU 80 MHz.
+
+### Results
+
+Mean current: **16.804 mA**, SD across captures: **0.003 mA**. Mean estimated energy per capture: **5.545 J**.
+
+| Current traces | Summary statistics |
+| --- | --- |
+| [![Automatic modem sleep current traces](../results/wifi_modem_sleep_5s_flash_all_20261117_200057_785780/comparison_eng.svg)](../results/wifi_modem_sleep_5s_flash_all_20261117_200057_785780/comparison_eng.svg) | [![Automatic modem sleep summary statistics](../results/wifi_modem_sleep_5s_flash_all_20261117_200057_785780/statistics_eng.svg)](../results/wifi_modem_sleep_5s_flash_all_20261117_200057_785780/statistics_eng.svg) |
+
+[Raw data and reports](../results/wifi_modem_sleep_5s_flash_all_20261117_200057_785780).
 
 ## Recording
 
 Use a distinct `--name` for each sketch, such as `empty_code_flash_all`, `wifi_off_flash_all`, `serial_off_flash_all`, `wifi_and_serial_off_flash_all`, `rf_disabled_flash_all`, `wifi_force_sleep_flash_all`, `delay_loop_5s_flash_all`, `deep_sleep_5s_flash_all`, `deep_sleep_5s_rf_default_flash_all`, and `modem_sleep_5s_flash_all`. Record the actual sketch, board, Core version, clock, erase-flash option, and wiring in `--notes`. Keep all other measurement conditions identical.
 
-Results are available for scenarios 01–09. Measurements for scenario 10 are ongoing.
+Results are available for all ten scenarios.

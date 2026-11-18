@@ -1,0 +1,17 @@
+{
+  "configuration": "wifi_modem_sleep_5s_flash_all",
+  "run": "repeat_009",
+  "directory": "C:\\Users\\P50\\Downloads\\stlink_experiment\\results\\wifi_modem_sleep_5s_flash_all_20261117_200057_785780\\repeat_009",
+  "voltage_V": 3.3,
+  "sampling_Hz": 1000,
+  "begin_s": 0,
+  "end_s": 100.0,
+  "duration_s": 100.0,
+  "samples": 100000,
+  "mean_current_mA": 16.804281369999998,
+  "min_current_mA": 7.665,
+  "max_current_mA": 156.0,
+  "within_run_sd_mA": 1.925233333877954,
+  "mean_power_mW": 55.454128520999994,
+  "energy_estimate_J": 5.545412852099999
+}

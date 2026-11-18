@@ -235,5 +235,6 @@ __marimo__/
 !/results/wifi_forceSleep_flash_all_20261117_175245_740211/
 !/results/deep_sleep_5s_flash_all_20261117_190910_277967/
 !/results/wifi_deep_sleep_5s_flash_all_20261117_193250_090805/
+!/results/wifi_modem_sleep_5s_flash_all_20261117_200057_785780/
 /test_results/
 /demo_results/
