@@ -2,7 +2,9 @@
 
 Turning off a USB port's power did not fully isolate the NodeMCU. Physically unplugging the YKUSH upstream USB connection reduced the current measured at STLINK OUT from **7.78 mA to 1.98 mA**.
 
-![Setup, measurement and physical USB disconnection](03_usb_disconnect.gif)
+[![Wiring diagram](02_wiring_diagram.svg)](02_wiring_diagram.svg)
+
+[![Measured current drop after physical USB disconnection](01_current_drop.png)](01_current_drop.png)
 
 ## Setup
 
@@ -15,6 +17,10 @@ Turning off a USB port's power did not fully isolate the NodeMCU. Physically unp
 The persistent drop occurs at **29.953 s** in the recording. Values above are median currents in windows before and after that event. The exact electrical path responsible for the extra current was not isolated.
 
 **Takeaway:** switching off VBUS can leave a USB connection that affects low-power measurements. Compare against a physically disconnected setup.
+
+## Animation
+
+![Setup, measurement and physical USB disconnection](03_usb_disconnect.gif)
 
 ## Files
 
