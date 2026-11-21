@@ -1,0 +1,10 @@
+{
+  "source": "PM_record_2026_11_21_22_53_03.stpm",
+  "samples": 69649,
+  "sampling_Hz": 1000,
+  "duration_s": 69.649,
+  "drop_time_s": 29.953,
+  "before_mA": 7.777,
+  "after_mA": 1.981,
+  "late_mA": 2.219
+}
