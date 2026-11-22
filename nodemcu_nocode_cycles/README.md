@@ -120,7 +120,7 @@ Mean current and energy are averages across captures. SD is the sample standard 
 ## Lab notes
 
 - Baseline: scenario 01 uses an empty sketch; the initialized baseline is documented separately in [NodeMCU measurements](../nodemcu_led_cycles/README.md#00--no-code).
-- Rejected baseline: `empty_code_flash_all_20261115_205305_543823`. Larger fluctuations were not reproduced in the replacement session. Cause unconfirmed; original data retained locally.
+- Rejected baseline: [empty_code_flash_all_20261115_205305_543823](../results/empty_code_flash_all_20261115_205305_543823) — [Current traces](../results/empty_code_flash_all_20261115_205305_543823/comparison_eng.svg) · [Summary statistics](../results/empty_code_flash_all_20261115_205305_543823/statistics_eng.svg). Larger fluctuations were not reproduced in the replacement session. Cause unconfirmed; original data retained for comparison.
 - Use a distinct `--name` per sketch. Record sketch, board, Core version, clock, flash-erasure setting and wiring in `--notes`; keep other conditions fixed.
 
 ## References
