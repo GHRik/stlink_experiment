@@ -77,7 +77,7 @@
     {
       "name": "nodemcu_1",
       "upload_profile": "nodemcu",
-      "sketch": "deep_sleep/deep_sleep.ino",
+      "sketch": "example/example.ino",
       "ykush_usb_port": 1,
       "com": "COM7",
       "relay": 0,
@@ -86,7 +86,7 @@
     {
       "name": "nodemcu_2",
       "upload_profile": "nodemcu",
-      "sketch": "deep_sleep/deep_sleep.ino",
+      "sketch": "example/example.ino",
       "ykush_usb_port": 2,
       "com": "COM8",
       "relay": 1,
@@ -95,7 +95,7 @@
     {
       "name": "nodemcu_3",
       "upload_profile": "nodemcu",
-      "sketch": "deep_sleep/deep_sleep.ino",
+      "sketch": "example/example.ino",
       "ykush_usb_port": 3,
       "com": "COM9",
       "relay": 2,
