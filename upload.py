@@ -1,15 +1,19 @@
 """Compile and upload a local Arduino sketch using a named board profile."""
 import argparse
+import json
 import os
+from pathlib import Path
 import subprocess
 import sys
 
 
-PROFILES = {"nodemcu": "esp8266:esp8266:nodemcuv2:xtal=80,wipe=all,baud=115200"}
+def load_profiles():
+    path = Path(__file__).with_name("board_profiles.json")
+    return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
 def main(argv=None):
-    profiles = PROFILES
+    profiles = load_profiles()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("board", choices=profiles, help="Board configuration profile")
     parser.add_argument("port", help="Board upload port, e.g. COM22 (not STLINK)")

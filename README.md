@@ -63,7 +63,7 @@ Then capture the full series:
 | `--off-seconds` | 1 second with target power off before acquisition |
 | `--controller` | Optional Python script running during each capture; [example and interface](controllers/README.md) |
 
-Standalone upload: `python upload.py nodemcu COM22 path/to/sketch.ino`. Board profiles are defined in [upload.py](upload.py); compiler and uploader diagnostics come directly from Arduino CLI.
+Standalone upload: `python upload.py nodemcu COM22 path/to/sketch.ino`. Board profiles are defined in [board_profiles.json](board_profiles.json); compiler and uploader diagnostics come directly from Arduino CLI.
 
 Change `--name` and `--notes` to match the flashed sketch. Keep voltage and sampling frequency identical across comparisons.
 
