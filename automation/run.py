@@ -56,7 +56,7 @@ def load_config(path):
     ports = config["ykush_ports"]
     if not ports or any(type(p) is not int or p not in (1, 2, 3) for p in ports) or len(set(ports)) != len(ports):
         raise ValueError("ykush_ports must be unique USB port numbers from 1 to 3")
-    for field in ("name", "usb_port", "com", "relay"):
+    for field in ("name", "ykush_usb_port", "com", "relay"):
         values = [board[field] for board in boards]
         if len(set(str(v).upper() for v in values)) != len(values):
             raise ValueError(f"Board {field} values must be unique")
@@ -66,7 +66,7 @@ def load_config(path):
     for board in boards:
         if not re.fullmatch(r"[A-Za-z0-9_-]+", board["name"]) or not board["notes"].strip():
             raise ValueError("Each board needs an ASCII name and nonempty measurement notes")
-        if type(board["usb_port"]) is not int or board["usb_port"] not in ports:
+        if type(board["ykush_usb_port"]) is not int or board["ykush_usb_port"] not in ports:
             raise ValueError("Board USB port is not in ykush_ports")
         if type(board["relay"]) is not int or not 0 <= board["relay"] < count:
             raise ValueError("Board relay must be a zero-based Numato channel")
@@ -212,12 +212,12 @@ def sequence(config, hardware):
             hardware.usb(port, False)
             hardware.pause()
         for board in config["connected_boards"]:
-            hardware.usb(board["usb_port"], True)
+            hardware.usb(board["ykush_usb_port"], True)
             hardware.pause()
             hardware.wait_port(board["com"])
             hardware.flash(board)
             hardware.pause()
-            hardware.usb(board["usb_port"], False)
+            hardware.usb(board["ykush_usb_port"], False)
             hardware.pause()
         for board in config["connected_boards"]:
             hardware.relay(board["relay"], True)

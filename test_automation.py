@@ -101,7 +101,7 @@ class AutomationTests(unittest.TestCase):
     def test_config_rejects_duplicate_or_out_of_range_mappings(self):
         base = self.config()
         base["sketch"] = str(run.ROOT / "automation/deep_sleep/deep_sleep.ino")
-        for field, value in (("relay", 4), ("relay", 1), ("usb_port", 2), ("com", "COM18")):
+        for field, value in (("relay", 4), ("relay", 1), ("ykush_usb_port", 2), ("com", "COM18")):
             with self.subTest(field=field, value=value), tempfile.TemporaryDirectory() as folder:
                 config = copy.deepcopy(base)
                 config["connected_boards"][0][field] = value

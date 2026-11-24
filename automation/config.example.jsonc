@@ -5,7 +5,11 @@
     "cmd": "C:\\Program Files (x86)\\YEPKIT LDA\\ykushcmd\\ykushcmd.exe",
     // Hub serial number from ykushcmd -l; sent as -s SERIAL.
     "serial": "REPLACE_WITH_YKUSH_SERIAL",
-    // Legacy CLI: "". Newer CLI: "ykush" or "ykush3", matching your model.
+    // Extra word required by some CLI versions, not the hub serial number.
+    // "": ykushcmd -s SERIAL -d 1
+    // "ykush": ykushcmd ykush -s SERIAL -d 1
+    // "ykush3": ykushcmd ykush3 -s SERIAL -d 1
+    // Leave empty if your working command has no model word.
     "model_argument": "",
     // Physical USB port numbers (1-based); all are disabled at startup/cleanup.
     "ports": [1, 2, 3]
@@ -17,7 +21,9 @@
     "controller_port": "COM19",
     // Total relay count. 4 means channels 0, 1, 2, 3 are all disabled at startup.
     "ports": 4,
-    // 1 sends relay off 0; 3 sends relay off 000. Match your Numato firmware.
+    // Number of digits used to WRITE a relay number, not the relay count.
+    // 1: relay off 0; 2: relay off 00; 3: relay off 000.
+    // Leave at 1 for the standard 4-channel USB relay module.
     "channel_digits": 1
   },
 
@@ -36,7 +42,9 @@
       "voltage": 3.3,
       // Warm-up before each board's measurement series, with OUT powered.
       "warmup_seconds": 180,
-      // Target power-off interval before each repeat, seconds.
+      // How long STLINK OUT stays OFF after calibration, before EACH capture.
+      // 1 means: OUT off -> wait 1 second -> start acquisition and power on OUT.
+      // This is independent of the 2-second USB/relay switching delays.
       "off_seconds": 1
     }
   },
@@ -62,7 +70,7 @@
   // DEVICES UNDER TEST: 1-3 entries, independent of the total Numato relay count.
   // name: result directory label; ASCII letters, digits, underscores or hyphens.
   // upload_profile: key in ../board_profiles.json, selected separately per board.
-  // usb_port: physical YKUSH port (1-3).
+  // ykush_usb_port: physical USB socket on YKUSH (1-3), not a COM or relay number.
   // com: board's upload COM port while its USB connection is enabled.
   // relay: Numato channel (0-based), wired to this board's supply.
   // notes: actual board/firmware/wiring conditions saved with the measurements.
@@ -70,7 +78,7 @@
     {
       "name": "nodemcu_1",
       "upload_profile": "nodemcu",
-      "usb_port": 1,
+      "ykush_usb_port": 1,
       "com": "COM7",
       "relay": 0,
       "notes": "NodeMCU V3; ESP8266 Core 3.1.2; 80 MHz; deepSleep(0); Erase All Flash"
@@ -78,7 +86,7 @@
     {
       "name": "nodemcu_2",
       "upload_profile": "nodemcu",
-      "usb_port": 2,
+      "ykush_usb_port": 2,
       "com": "COM8",
       "relay": 1,
       "notes": "NodeMCU V3; ESP8266 Core 3.1.2; 80 MHz; deepSleep(0); Erase All Flash"
@@ -86,7 +94,7 @@
     {
       "name": "nodemcu_3",
       "upload_profile": "nodemcu",
-      "usb_port": 3,
+      "ykush_usb_port": 3,
       "com": "COM9",
       "relay": 2,
       "notes": "NodeMCU V3; ESP8266 Core 3.1.2; 80 MHz; deepSleep(0); Erase All Flash"
