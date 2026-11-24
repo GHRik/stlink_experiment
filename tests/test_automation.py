@@ -121,14 +121,30 @@ class AutomationTests(unittest.TestCase):
 
     def test_ykush_serial_and_model_command(self):
         config = self.config()
-        config["ykush_model_argument"] = "ykush"
+        config["hub"]["model_argument"] = "ykush"
         with tempfile.TemporaryDirectory() as folder:
             with patch.object(run, "run_command", side_effect=["", "Downstream port 2 is OFF"]) as command:
                 hardware = run.Hardware(config, Path(folder))
                 hardware.usb(2, False)
-            expected = [config["ykush_cmd"], "ykush", "-s", config["ykush_serial"]]
+            expected = [config["hub"]["cmd"], "ykush", "-s", config["hub"]["serial"]]
             self.assertEqual(command.call_args_list[0].args[0], expected + ["-d", "2"])
             self.assertEqual(command.call_args_list[1].args[0], expected + ["-g", "2"])
+
+    def test_legacy_ykush_section_and_ykush3_driver(self):
+        data = run.read_config(run.ROOT / "automation/config.example.jsonc")
+        hub = data.pop("hub")
+        hub.pop("driver")
+        hub["model_argument"] = "ykush3"
+        data["ykush"] = hub
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "config.json"
+            path.write_text(json.dumps(data))
+            config = run.load_config(path)
+            self.assertEqual(config["hub"]["driver"], "ykush3")
+            with patch.object(run, "run_command", side_effect=["", "Downstream port 1 is ON"]) as command:
+                hardware = run.Hardware(config, Path(folder))
+                hardware.usb(1, True)
+            self.assertEqual(command.call_args_list[0].args[0][1], "ykush3")
 
     def test_lcus2_configuration_selects_individual_channels(self):
         config = run.load_config(run.ROOT / "automation/config.lcus2.json")

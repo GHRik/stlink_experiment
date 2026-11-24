@@ -16,8 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-
 from automation.relays import create_relay
+from automation.hubs import create_hub
 
 
 def read_config(path):
@@ -30,7 +30,12 @@ def read_config(path):
 def load_config(path):
     path = Path(path).resolve()
     config = read_config(path)
-    if "ykush" in config:
+    if "stlink" in config and ("hub" in config or "ykush" in config):
+        hub_config = config.get("hub")
+        if hub_config is None:
+            old_hub = config["ykush"]
+            model = old_hub.get("model_argument", "")
+            hub_config = dict(old_hub, driver="ykush3" if model == "ykush3" else "ykush")
         relay_config = config.get("relay_controller")
         if relay_config is None:
             old = config["numato"]
@@ -38,10 +43,7 @@ def load_config(path):
                                 channels=old["ports"], channel_digits=old["channel_digits"])
         # Keep the execution layer independent of the human-facing config layout.
         config = {
-            "ykush_cmd": config["ykush"]["cmd"],
-            "ykush_serial": config["ykush"]["serial"],
-            "ykush_model_argument": config["ykush"]["model_argument"],
-            "ykush_ports": config["ykush"]["ports"],
+            "hub": hub_config,
             "relay_controller": relay_config,
             "stlink_com": config["stlink"]["com"],
             "measurement": config["stlink"]["measurement"],
@@ -58,11 +60,15 @@ def load_config(path):
         config["relay_controller"] = dict(driver="numato", port=config["numato_controller_port"],
                                           channels=config["numato_ports"], channel_digits=config["numato_channel_digits"])
     relay_config = config["relay_controller"]
-    create_relay(relay_config)
+    create_relay(relay_config)  # Validate driver settings without opening the device.
     count = relay_config["channels"]
-    ports = config["ykush_ports"]
-    if not ports or any(type(p) is not int or p not in (1, 2, 3) for p in ports) or len(set(ports)) != len(ports):
-        raise ValueError("ykush_ports must be unique USB port numbers from 1 to 3")
+    if "hub" not in config:
+        model = config["ykush_model_argument"]
+        config["hub"] = dict(driver="ykush3" if model == "ykush3" else "ykush",
+                             cmd=config["ykush_cmd"], serial=config["ykush_serial"],
+                             model_argument=model, ports=config["ykush_ports"])
+    create_hub(config["hub"])  # Validate without sending any USB command.
+    ports = config["hub"]["ports"]
     for field in ("name", "ykush_usb_port", "com", "relay"):
         values = [board[field] for board in boards]
         if len(set(str(v).upper() for v in values)) != len(values):
@@ -75,7 +81,7 @@ def load_config(path):
         if not re.fullmatch(r"[A-Za-z0-9_-]+", board["name"]) or not board["notes"].strip():
             raise ValueError("Each board needs an ASCII name and nonempty measurement notes")
         if type(board["ykush_usb_port"]) is not int or board["ykush_usb_port"] not in ports:
-            raise ValueError("Board USB port is not in ykush_ports")
+            raise ValueError("Board ykush_usb_port is not in hub.ports")
         if type(board["relay"]) is not int or not 0 <= board["relay"] < count:
             raise ValueError("Board relay must be a zero-based controller channel")
     from upload import load_profiles
@@ -86,10 +92,6 @@ def load_config(path):
     for field in ("step_delay_s", "port_timeout_s", "flash_timeout_s"):
         if not math.isfinite(config[field]) or config[field] <= 0:
             raise ValueError(f"{field} must be positive and finite")
-    if not config["ykush_serial"].strip():
-        raise ValueError("ykush_serial is required")
-    if config["ykush_model_argument"] not in ("", "ykush", "ykush3"):
-        raise ValueError("Use an empty model argument for legacy CLI, or ykush / ykush3")
     # Use the existing measurement validator before switching any hardware.
     from stlink_protocol import validate_settings
     m = config["measurement"]
@@ -127,6 +129,7 @@ class Hardware:
         self.config = config
         self.directory = directory
         self.relays = None
+        self.hub = create_hub(config["hub"], run_command, self.event)
 
     def event(self, action, **details):
         print(action, details or "", flush=True)
@@ -138,6 +141,7 @@ class Hardware:
         time.sleep(self.config["step_delay_s"])
 
     def open(self):
+        self.hub.open()
         self.relays = create_relay(self.config["relay_controller"], self.event)
         self.relays.open()
 
@@ -145,16 +149,7 @@ class Hardware:
         self.relays.set(channel, enabled)
 
     def usb(self, port, enabled):
-        c = self.config
-        base = [c["ykush_cmd"]]
-        if c["ykush_model_argument"]:
-            base.append(c["ykush_model_argument"])
-        base += ["-s", c["ykush_serial"]]
-        response = run_command(base + ["-u" if enabled else "-d", str(port)], 15)
-        status = run_command(base + ["-g", str(port)], 15)
-        self.event("ykush", port=port, enabled=enabled, response=response, status=status)
-        if not re.search(r"\b" + ("ON" if enabled else "OFF") + r"\b", status, re.I):
-            raise RuntimeError(f"YKUSH port {port} state not confirmed: {status}")
+        self.hub.set(port, enabled)
 
     def wait_port(self, port):
         from serial.tools.list_ports import comports
@@ -186,8 +181,11 @@ class Hardware:
             run_command(command, timeout, log)
 
     def close(self):
-        if self.relays is not None:
-            self.relays.close()
+        try:
+            if self.relays is not None:
+                self.relays.close()
+        finally:
+            self.hub.close()
 
 
 def sequence(config, hardware):
@@ -197,7 +195,7 @@ def sequence(config, hardware):
         for channel in range(config["relay_controller"]["channels"]):
             hardware.relay(channel, False)
             hardware.pause()
-        for port in config["ykush_ports"]:
+        for port in config["hub"]["ports"]:
             hardware.usb(port, False)
             hardware.pause()
         for board in config["connected_boards"]:
@@ -217,7 +215,7 @@ def sequence(config, hardware):
             hardware.pause()
     finally:
         failures = []
-        for kind, channels in (("relay", range(config["relay_controller"]["channels"])), ("usb", config["ykush_ports"])):
+        for kind, channels in (("relay", range(config["relay_controller"]["channels"])), ("usb", config["hub"]["ports"])):
             for channel in channels:
                 try:
                     getattr(hardware, kind)(channel, False)
@@ -245,7 +243,7 @@ class DryRun(Hardware):
         self.event("relay", channel=channel, enabled=enabled)
 
     def usb(self, port, enabled):
-        self.event("USB", port=port, enabled=enabled, serial=self.config["ykush_serial"])
+        self.event("USB", port=port, enabled=enabled, driver=self.config["hub"]["driver"], serial=self.config["hub"]["serial"])
 
     def wait_port(self, port):
         self.event("wait for COM", port=port)
@@ -267,10 +265,10 @@ def main():
     if args.dry_run:
         sequence(config, DryRun(config, None))
         return
-    for key in ("ykush_cmd", "arduino_cli"):
-        if not shutil.which(config[key]):
-            raise ValueError(f"{key}: executable not found: {config[key]}")
-    if "REPLACE" in config["ykush_serial"]:
+    for key, executable in (("hub.cmd", config["hub"]["cmd"]), ("arduino_cli", config["arduino_cli"])):
+        if not shutil.which(executable):
+            raise ValueError(f"{key}: executable not found: {executable}")
+    if "REPLACE" in config["hub"]["serial"]:
         raise ValueError("Set the actual YKUSH serial number in the configuration")
     directory = Path(args.out).resolve() / ("automation_" + datetime.now().strftime("%Y%m%d_%H%M%S_%f"))
     directory.mkdir(parents=True)

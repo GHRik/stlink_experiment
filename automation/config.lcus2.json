@@ -1,13 +1,9 @@
 {
-  "ykush": {
+  "hub": {
+    "driver": "ykush",
     "cmd": "C:\\Program Files (x86)\\YEPKIT LDA\\ykushcmd\\ykushcmd.exe",
     "serial": "REPLACE_WITH_YKUSH_SERIAL",
-    "ports": [
-      1,
-      2,
-      3
-    ],
-    "model_argument": ""
+    "ports": [1, 2, 3]
   },
   "relay_controller": {
     "driver": "lcus2",

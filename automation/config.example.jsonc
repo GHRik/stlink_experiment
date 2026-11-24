@@ -1,16 +1,13 @@
 {
   // USB HUB: switches each board's USB connection during firmware upload.
-  "ykush": {
+  "hub": {
+    // "ykush3": YKUSH3, CLI subcommand selected automatically.
+    // "ykush": original YKUSH, legacy CLI syntax by default.
+    "driver": "ykush",
     // Full executable path, without a trailing CMD prompt character (>).
     "cmd": "C:\\Program Files (x86)\\YEPKIT LDA\\ykushcmd\\ykushcmd.exe",
     // Hub serial number from ykushcmd -l; sent as -s SERIAL.
     "serial": "REPLACE_WITH_YKUSH_SERIAL",
-    // Extra word required by some CLI versions, not the hub serial number.
-    // "": ykushcmd -s SERIAL -d 1
-    // "ykush": ykushcmd ykush -s SERIAL -d 1
-    // "ykush3": ykushcmd ykush3 -s SERIAL -d 1
-    // Leave empty if your working command has no model word.
-    "model_argument": "",
     // Physical USB port numbers (1-based); all are disabled at startup/cleanup.
     "ports": [1, 2, 3]
   },

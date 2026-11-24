@@ -1,6 +1,6 @@
 # Sequential upload and measurement
 
-Flash 1–3 ESP8266 boards through YKUSH, then measure each board through a separate relay channel (Numato or LCUS-2). The existing STLINK capture script is unchanged.
+Flash 1–3 ESP8266 boards through YKUSH, then measure each board through a separate relay channel (Numato or LCUS-2). The existing STLINK capture script is unchanged. USB hub and relay drivers are selected independently.
 
 ## Configure
 
@@ -8,7 +8,7 @@ Copy [config.example.jsonc](config.example.jsonc) to `config.local.jsonc` in thi
 
 | Setting | Meaning |
 | --- | --- |
-| `ykush` | Hub executable, serial number, CLI model argument and switched USB ports |
+| `hub` | Driver (`ykush` or `ykush3`), executable, serial number and switched USB ports |
 | `relay_controller` | Driver (`numato` or `lcus2`), COM port, total channels; Numato also accepts `channel_digits` |
 | `stlink` | SMU COM and acquisition settings under `measurement` |
 | `upload` | Arduino CLI executable and upload timeout |
@@ -19,7 +19,7 @@ Copy [config.example.jsonc](config.example.jsonc) to `config.local.jsonc` in thi
 
 Three settings need distinguishing:
 
-- `ykush.model_argument`: extra word in the command. Empty produces `ykushcmd -s SERIAL -d 1`; `"ykush"` produces `ykushcmd ykush -s SERIAL -d 1`. Match the command accepted by your installed CLI.
+- `hub.driver`: `"ykush3"` automatically uses `ykushcmd ykush3 -s SERIAL ...`. The `"ykush"` driver preserves the original hub syntax; only that driver optionally accepts `model_argument: "ykush"` for newer CLI builds.
 - `relay_controller.channel_digits`: number formatting only: `1` sends channel `0`, `2` sends `00`, `3` sends `000`. It is not the relay count; use `1` for the standard 4-channel USB relay module.
 - `stlink.measurement.off_seconds`: STLINK OUT power-off time after calibration and before each repeat. At `1`, the meter waits one second with OUT off, then starts acquisition with automatic OUT power-on. USB/relay switching delays are configured separately under `timing`.
 
@@ -85,3 +85,20 @@ Both implementations inherit [Relay](relays.py), exposing `open()`, `set(channel
 - [Current YKUSH CLI syntax](https://github.com/Yepkit/ykush/blob/master/doc/reference-manual-ykushcmd/ykushcmd-reference-ykush.html): model subcommand where required, e.g. `ykushcmd ykush -s SERIAL -d 1`.
 - [Numato 4-channel USB powered relay manual](https://productdata.numato.com/assets/downloads/usbrelay/usbpoweredrelay4/UsbPoweredRelay4UserManualV9.pdf): `relay on/off/read`, channels 0–3.
 - [Arduino CLI compile](https://docs.arduino.cc/arduino-cli/commands-reference/arduino-cli_compile): `--upload` and verbose compiler/uploader output.
+
+## Hub driver
+
+For YKUSH3, configure:
+
+```json
+"hub": {
+  "driver": "ykush3",
+  "cmd": "C:\\path\\to\\ykushcmd.exe",
+  "serial": "YOUR_HUB_SERIAL",
+  "ports": [1, 2, 3]
+}
+```
+
+`Ykush3` selects the `ykush3` CLI subcommand automatically; no `model_argument` is needed. Both hub drivers inherit [Hub](hubs.py) with `open()`, `set(port, enabled)` and `close()`. Each switch is followed by a CLI state query; a command error or state mismatch aborts the batch. Port numbers remain 1-based. Existing `ykush` configuration sections are still accepted.
+
+[Official YKUSH3 Windows commands](https://www.yepkit.com/learn/setup-guide-ykush3_windows).
