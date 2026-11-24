@@ -132,6 +132,17 @@ class AutomationTests(unittest.TestCase):
             args = command.call_args.args[0]
             self.assertEqual(args[:6], [sys.executable, "-u", str(run.ROOT / "upload.py"), "nodemcu", "COM7", config["sketch"]])
 
+    def test_upload_profile_is_selected_per_board(self):
+        config = self.config()
+        config["connected_boards"][1]["upload_profile"] = "second_profile"
+        with tempfile.TemporaryDirectory() as folder:
+            hardware = run.Hardware(config, Path(folder))
+            with patch.object(run, "run_command") as command:
+                for board in config["connected_boards"][:2]:
+                    hardware.flash(board)
+            self.assertEqual([call.args[0][3] for call in command.call_args_list],
+                             ["nodemcu", "second_profile"])
+
     def test_subprocess_failure_stops_sequence(self):
         with self.assertRaisesRegex(RuntimeError, "Command failed"):
             run.run_command([sys.executable, "-c", "raise SystemExit(7)"], 5)

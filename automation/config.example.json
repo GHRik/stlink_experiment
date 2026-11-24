@@ -27,6 +27,7 @@
   "connected_boards": [
     {
       "name": "nodemcu_1",
+      "upload_profile": "nodemcu",
       "usb_port": 1,
       "com": "COM7",
       "relay": 0,
@@ -34,6 +35,7 @@
     },
     {
       "name": "nodemcu_2",
+      "upload_profile": "nodemcu",
       "usb_port": 2,
       "com": "COM8",
       "relay": 1,
@@ -41,11 +43,11 @@
     },
     {
       "name": "nodemcu_3",
+      "upload_profile": "nodemcu",
       "usb_port": 3,
       "com": "COM9",
       "relay": 2,
       "notes": "NodeMCU V3; ESP8266 Core 3.1.2; 80 MHz; deepSleep(0); Erase All Flash"
     }
-  ],
-  "upload_profile": "nodemcu"
+  ]
 }

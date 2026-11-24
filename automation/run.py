@@ -46,8 +46,9 @@ def load_config(path):
             raise ValueError("Board relay must be a zero-based Numato channel")
     from upload import load_profiles
     profiles = load_profiles()
-    if config["upload_profile"] not in profiles:
-        raise ValueError("upload_profile must match a profile in board_profiles.json")
+    for board in boards:
+        if board.get("upload_profile") not in profiles:
+            raise ValueError(f"Board {board['name']}: upload_profile must match a profile in board_profiles.json")
     for field in ("step_delay_s", "port_timeout_s", "flash_timeout_s"):
         if not math.isfinite(config[field]) or config[field] <= 0:
             raise ValueError(f"{field} must be positive and finite")
@@ -153,7 +154,7 @@ class Hardware:
         self.event("flash", board=board["name"], port=board["com"])
         with (self.directory / f"{board['name']}_upload.log").open("w", encoding="utf-8") as log:
             run_command([sys.executable, "-u", str(ROOT / "upload.py"),
-                         self.config["upload_profile"], board["com"], self.config["sketch"],
+                         board["upload_profile"], board["com"], self.config["sketch"],
                          "--cli", self.config["arduino_cli"]],
                         self.config["flash_timeout_s"], log)
 
@@ -235,7 +236,7 @@ class DryRun(Hardware):
         self.event("wait for COM", port=port)
 
     def flash(self, board):
-        self.event("upload", board=board["name"], port=board["com"], sketch=self.config["sketch"], profile=self.config["upload_profile"])
+        self.event("upload", board=board["name"], port=board["com"], sketch=self.config["sketch"], profile=board["upload_profile"])
 
     def measure(self, board):
         self.event("measure", board=board["name"], stlink=self.config["stlink_com"], settings=self.config["measurement"])
