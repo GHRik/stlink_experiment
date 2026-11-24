@@ -20,6 +20,25 @@ if str(ROOT) not in sys.path:
 def load_config(path):
     path = Path(path).resolve()
     config = json.loads(path.read_text(encoding="utf-8-sig"))
+    if "ykush" in config:
+        # Keep the execution layer independent of the human-facing config layout.
+        config = {
+            "ykush_cmd": config["ykush"]["cmd"],
+            "ykush_serial": config["ykush"]["serial"],
+            "ykush_model_argument": config["ykush"]["model_argument"],
+            "ykush_ports": config["ykush"]["ports"],
+            "numato_controller_port": config["numato"]["controller_port"],
+            "numato_ports": config["numato"]["ports"],
+            "numato_channel_digits": config["numato"]["channel_digits"],
+            "stlink_com": config["stlink"]["com"],
+            "measurement": config["stlink"]["measurement"],
+            "arduino_cli": config["upload"]["arduino_cli"],
+            "sketch": config["upload"]["sketch"],
+            "flash_timeout_s": config["upload"]["timeout_s"],
+            "step_delay_s": config["timing"]["step_delay_s"],
+            "port_timeout_s": config["timing"]["port_timeout_s"],
+            "connected_boards": config["connected_boards"],
+        }
     config["sketch"] = str((path.parent / config["sketch"]).resolve())
     boards = config["connected_boards"]
     if not isinstance(boards, list) or not 1 <= len(boards) <= 3:

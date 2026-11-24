@@ -4,22 +4,21 @@ Flash 1–3 ESP8266 boards through YKUSH, then measure each board through a sepa
 
 ## Configure
 
-Copy `config.example.json` to `config.local.json` in this directory and edit:
+Copy [config.example.json](config.example.json) to `config.local.json` in this directory and edit. Settings are grouped by hardware device and task.
 
 | Setting | Meaning |
 | --- | --- |
-| `ykush_cmd`, `ykush_serial`, `ykush_model_argument` | Hub executable, serial number and optional CLI model subcommand |
-| `ykush_ports` | USB ports disabled at startup and cleanup |
-| `numato_controller_port`, `numato_ports`, `numato_channel_digits` | Relay controller COM, total channel count and number formatting |
-| `stlink_com`, `measurement` | SMU COM and capture settings |
-| `arduino_cli`, `sketch` | CLI executable and sketch path relative to this file |
-| `step_delay_s`, `port_timeout_s`, `flash_timeout_s` | Inter-step delay, enumeration timeout and upload timeout, seconds |
-| `connected_boards` | 1–3 board mappings: name, USB port, COM, relay and notes |
-| `connected_boards[].upload_profile` | Per-board profile from `board_profiles.json` |
+| `ykush` | Hub executable, serial number, CLI model argument and switched USB ports |
+| `numato` | Relay controller COM, total relay count and channel-number format |
+| `stlink` | SMU COM and acquisition settings under `measurement` |
+| `upload` | Arduino CLI executable, shared sketch and upload timeout |
+| `timing` | Inter-step delay and board COM enumeration timeout |
+| `connected_boards` | List of 1–3 boards; list length is the connected-board count |
+| `connected_boards[].upload_profile` | Per-board profile name from `board_profiles.json`, e.g. `nodemcu` |
 
 Each board defines its own `upload_profile` and maps `usb_port` (**1–3**) to an upload `com` and a Numato `relay` (**zero-based**). Names, USB ports, board COM ports and relay assignments must be unique. Example: three boards use relays 0, 1, 2 while relay 3 is still disabled at startup and cleanup. Replace example COM ports with actual values; the script cannot infer the physical mapping.
 
-The `nodemcu` profile in [board_profiles.json](../board_profiles.json) selects NodeMCU 1.0, 80 MHz, full flash erase and 115200 baud upload. Add profiles to this JSON file; the automation configuration selects a profile for each board. The file is resolved relative to `upload.py`, independently of the working directory. Install **ESP8266 Core 3.1.2** in Arduino CLI before running; the script does not install packages. `ESP.deepSleep(0)` sleeps indefinitely until reset or a power cycle; no periodic wakeup is configured.
+The `nodemcu` profile in [board_profiles.json](../board_profiles.json) selects NodeMCU 1.0, 80 MHz, full flash erase and 115200 baud upload. Add profiles to this JSON file; the automation configuration only selects a profile. The file is resolved relative to `upload.py`, independently of the working directory. Install **ESP8266 Core 3.1.2** in Arduino CLI before running; the script does not install packages. `ESP.deepSleep(0)` sleeps indefinitely until reset or a power cycle; no periodic wakeup is configured.
 
 ## Run
 
