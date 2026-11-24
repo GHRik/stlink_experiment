@@ -73,7 +73,7 @@ def load_config(path):
     profiles = load_profiles()
     for board in boards:
         if board.get("upload_profile") not in profiles:
-            raise ValueError(f"Board {board['name']}: upload_profile must match a profile in board_profiles.json")
+            raise ValueError(f"Board {board['name']}: upload_profile must match a profile in automation/board_profiles.json")
     for field in ("step_delay_s", "port_timeout_s", "flash_timeout_s"):
         if not math.isfinite(config[field]) or config[field] <= 0:
             raise ValueError(f"{field} must be positive and finite")

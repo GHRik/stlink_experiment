@@ -67,7 +67,7 @@
 
   // DEVICES UNDER TEST: 1-3 entries, independent of the total Numato relay count.
   // name: result directory label; ASCII letters, digits, underscores or hyphens.
-  // upload_profile: key in ../board_profiles.json, selected separately per board.
+  // upload_profile: key in board_profiles.json, selected separately per board.
   // sketch: this board's local .ino path, relative to this config file.
   // ykush_usb_port: physical USB socket on YKUSH (1-3), not a COM or relay number.
   // com: board's upload COM port while its USB connection is enabled.
