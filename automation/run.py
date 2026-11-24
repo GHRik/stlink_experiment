@@ -40,13 +40,11 @@ def load_config(path):
             "stlink_com": config["stlink"]["com"],
             "measurement": config["stlink"]["measurement"],
             "arduino_cli": config["upload"]["arduino_cli"],
-            "sketch": config["upload"]["sketch"],
             "flash_timeout_s": config["upload"]["timeout_s"],
             "step_delay_s": config["timing"]["step_delay_s"],
             "port_timeout_s": config["timing"]["port_timeout_s"],
             "connected_boards": config["connected_boards"],
         }
-    config["sketch"] = str((path.parent / config["sketch"]).resolve())
     boards = config["connected_boards"]
     if not isinstance(boards, list) or not 1 <= len(boards) <= 3:
         raise ValueError("connected_boards must contain 1 to 3 board mappings")
@@ -64,6 +62,7 @@ def load_config(path):
     if any(not isinstance(p, str) or not p.strip() for p in device_ports) or len(set(p.upper() for p in device_ports)) != len(device_ports):
         raise ValueError("STLINK, Numato and board COM ports must be distinct and nonempty")
     for board in boards:
+        board["sketch"] = str((path.parent / board["sketch"]).resolve())
         if not re.fullmatch(r"[A-Za-z0-9_-]+", board["name"]) or not board["notes"].strip():
             raise ValueError("Each board needs an ASCII name and nonempty measurement notes")
         if type(board["ykush_usb_port"]) is not int or board["ykush_usb_port"] not in ports:
@@ -180,7 +179,7 @@ class Hardware:
         self.event("flash", board=board["name"], port=board["com"])
         with (self.directory / f"{board['name']}_upload.log").open("w", encoding="utf-8") as log:
             run_command([sys.executable, "-u", str(ROOT / "upload.py"),
-                         board["upload_profile"], board["com"], self.config["sketch"],
+                         board["upload_profile"], board["com"], board["sketch"],
                          "--cli", self.config["arduino_cli"]],
                         self.config["flash_timeout_s"], log)
 
@@ -262,7 +261,7 @@ class DryRun(Hardware):
         self.event("wait for COM", port=port)
 
     def flash(self, board):
-        self.event("upload", board=board["name"], port=board["com"], sketch=self.config["sketch"], profile=board["upload_profile"])
+        self.event("upload", board=board["name"], port=board["com"], sketch=board["sketch"], profile=board["upload_profile"])
 
     def measure(self, board):
         self.event("measure", board=board["name"], stlink=self.config["stlink_com"], settings=self.config["measurement"])

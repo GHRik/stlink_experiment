@@ -11,10 +11,11 @@ Copy [config.example.jsonc](config.example.jsonc) to `config.local.jsonc` in thi
 | `ykush` | Hub executable, serial number, CLI model argument and switched USB ports |
 | `numato` | Relay controller COM, total relay count and channel-number format |
 | `stlink` | SMU COM and acquisition settings under `measurement` |
-| `upload` | Arduino CLI executable, shared sketch and upload timeout |
+| `upload` | Arduino CLI executable and upload timeout |
 | `timing` | Inter-step delay and board COM enumeration timeout |
 | `connected_boards` | List of 1–3 boards; list length is the connected-board count |
 | `connected_boards[].upload_profile` | Per-board profile name from `board_profiles.json`, e.g. `nodemcu` |
+| `connected_boards[].sketch` | Per-board .ino path, relative to the config file; each board may use a different sketch |
 
 Three settings need distinguishing:
 

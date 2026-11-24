@@ -100,7 +100,6 @@ class AutomationTests(unittest.TestCase):
 
     def test_config_rejects_duplicate_or_out_of_range_mappings(self):
         base = self.config()
-        base["sketch"] = str(run.ROOT / "automation/deep_sleep/deep_sleep.ino")
         for field, value in (("relay", 4), ("relay", 1), ("ykush_usb_port", 2), ("com", "COM18")):
             with self.subTest(field=field, value=value), tempfile.TemporaryDirectory() as folder:
                 config = copy.deepcopy(base)
@@ -136,7 +135,22 @@ class AutomationTests(unittest.TestCase):
             with patch.object(run, "run_command") as command:
                 hardware.flash(config["connected_boards"][0])
             args = command.call_args.args[0]
-            self.assertEqual(args[:6], [sys.executable, "-u", str(run.ROOT / "upload.py"), "nodemcu", "COM7", config["sketch"]])
+            self.assertEqual(args[:6], [sys.executable, "-u", str(run.ROOT / "upload.py"), "nodemcu", "COM7", config["connected_boards"][0]["sketch"]])
+
+    def test_sketch_is_selected_and_resolved_per_board(self):
+        data = run.read_config(run.ROOT / "automation/config.example.jsonc")
+        data["connected_boards"][0]["sketch"] = "first/first.ino"
+        data["connected_boards"][1]["sketch"] = "second/second.ino"
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "config.json"
+            path.write_text(json.dumps(data))
+            config = run.load_config(path)
+            hardware = run.Hardware(config, Path(folder))
+            with patch.object(run, "run_command") as command:
+                for board in config["connected_boards"][:2]:
+                    hardware.flash(board)
+            self.assertEqual([call.args[0][5] for call in command.call_args_list],
+                             [str(Path(folder) / "first/first.ino"), str(Path(folder) / "second/second.ino")])
 
     def test_upload_profile_is_selected_per_board(self):
         config = self.config()
