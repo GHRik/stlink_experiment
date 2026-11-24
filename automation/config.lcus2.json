@@ -1,0 +1,47 @@
+{
+  "ykush": {
+    "cmd": "C:\\Program Files (x86)\\YEPKIT LDA\\ykushcmd\\ykushcmd.exe",
+    "serial": "REPLACE_WITH_YKUSH_SERIAL",
+    "ports": [
+      1,
+      2,
+      3
+    ],
+    "model_argument": ""
+  },
+  "relay_controller": {
+    "driver": "lcus2",
+    "port": "COM22",
+    "channels": 2
+  },
+  "stlink": {
+    "com": "COM18",
+    "measurement": {
+      "repeats": 10,
+      "seconds": 100,
+      "hz": 1000,
+      "voltage": 3.3,
+      "warmup_seconds": 180,
+      "off_seconds": 1
+    }
+  },
+  "upload": {
+    "arduino_cli": "C:\\Users\\P50\\AppData\\Local\\Programs\\Arduino IDE\\resources\\app\\lib\\backend\\resources\\arduino-cli.exe",
+    "timeout_s": 300
+  },
+  "timing": {
+    "step_delay_s": 2,
+    "port_timeout_s": 30
+  },
+  "connected_boards": [
+    {
+      "name": "nodemcu_1",
+      "upload_profile": "nodemcu",
+      "sketch": "example/example.ino",
+      "ykush_usb_port": 1,
+      "com": "COM7",
+      "relay": 0,
+      "notes": "NodeMCU V3; ESP8266 Core 3.1.2; 80 MHz; deepSleep(0); Erase All Flash"
+    }
+  ]
+}

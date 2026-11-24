@@ -5,7 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from automation import run
 
@@ -70,6 +70,16 @@ class AutomationTests(unittest.TestCase):
     def config(self):
         return run.load_config(run.ROOT / "automation/config.example.jsonc")
 
+    def test_legacy_numato_config_remains_supported(self):
+        data = run.read_config(run.ROOT / "automation/config.example.jsonc")
+        relay = data.pop("relay_controller")
+        data["numato"] = dict(controller_port=relay["port"], ports=relay["channels"],
+                              channel_digits=relay["channel_digits"])
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "config.json"
+            path.write_text(json.dumps(data))
+            self.assertEqual(run.load_config(path)["relay_controller"], relay)
+
     def test_sequence_one_to_three_boards_with_four_relays(self):
         for count in (1, 2, 3):
             with self.subTest(count=count):
@@ -113,20 +123,23 @@ class AutomationTests(unittest.TestCase):
         config = self.config()
         config["ykush_model_argument"] = "ykush"
         with tempfile.TemporaryDirectory() as folder:
-            hardware = run.Hardware(config, Path(folder))
             with patch.object(run, "run_command", side_effect=["", "Downstream port 2 is OFF"]) as command:
+                hardware = run.Hardware(config, Path(folder))
                 hardware.usb(2, False)
             expected = [config["ykush_cmd"], "ykush", "-s", config["ykush_serial"]]
             self.assertEqual(command.call_args_list[0].args[0], expected + ["-d", "2"])
             self.assertEqual(command.call_args_list[1].args[0], expected + ["-g", "2"])
 
-    def test_numato_readback_required(self):
-        hardware = run.Hardware(self.config(), None)
-        hardware.command = Mock(side_effect=["relay off 3\r\n>", "relay read 3\r\noff\r\n>"])
-        hardware.relay(3, False)
-        hardware.command = Mock(side_effect=[">", "relay read 3\r\non\r\n>"])
-        with self.assertRaisesRegex(RuntimeError, "did not confirm"):
-            hardware.relay(3, False)
+    def test_lcus2_configuration_selects_individual_channels(self):
+        config = run.load_config(run.ROOT / "automation/config.lcus2.json")
+        self.assertEqual(config["relay_controller"]["driver"], "lcus2")
+        self.assertEqual(config["relay_controller"]["channels"], 2)
+        hardware = FakeHardware()
+        hardware.relays = {0: True, 1: True}
+        run.sequence(config, hardware)
+        self.assertEqual(hardware.events[1:3], [("relay", 0, False), ("relay", 1, False)])
+        self.assertEqual([event for event in hardware.events if event[0] == "relay" and event[2]],
+                         [("relay", 0, True)])
 
     def test_automation_calls_standalone_uploader(self):
         config = self.config()

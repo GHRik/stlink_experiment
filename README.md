@@ -63,7 +63,7 @@ Then capture the full series:
 | `--off-seconds` | 1 second with target power off before acquisition |
 | `--controller` | Optional Python script running during each capture; [example and interface](controllers/README.md) |
 
-For sequential firmware upload and measurements on up to three boards, see [YKUSH / Numato automation](automation/README.md).
+For sequential firmware upload and measurements on up to three boards, see [YKUSH / relay automation](automation/README.md).
 
 Standalone upload: `python upload.py nodemcu COM22 path/to/sketch.ino`. Board profiles are defined in [automation/board_profiles.json](automation/board_profiles.json); compiler and uploader diagnostics come directly from Arduino CLI.
 

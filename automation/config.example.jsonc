@@ -16,14 +16,16 @@
   },
 
   // RELAY CONTROLLER: connects one board at a time to the meter's OUT supply.
-  "numato": {
-    // Numato controller's serial port, not a microcontroller or STLINK port.
-    "controller_port": "COM19",
+  "relay_controller": {
+    // Supported drivers: "numato" (ASCII + readback) or "lcus2" (binary commands).
+    "driver": "numato",
+    // Relay controller's serial port, not a microcontroller or STLINK port.
+    "port": "COM19",
     // Total relay count. 4 means channels 0, 1, 2, 3 are all disabled at startup.
-    "ports": 4,
+    "channels": 4,
     // Number of digits used to WRITE a relay number, not the relay count.
     // 1: relay off 0; 2: relay off 00; 3: relay off 000.
-    // Leave at 1 for the standard 4-channel USB relay module.
+    // Numato only; omit for LCUS-2. Leave at 1 for the standard Numato 4-channel module.
     "channel_digits": 1
   },
 
@@ -65,13 +67,13 @@
     "port_timeout_s": 30
   },
 
-  // DEVICES UNDER TEST: 1-3 entries, independent of the total Numato relay count.
+  // DEVICES UNDER TEST: 1-3 entries, independent of the total relay count.
   // name: result directory label; ASCII letters, digits, underscores or hyphens.
   // upload_profile: key in board_profiles.json, selected separately per board.
   // sketch: this board's local .ino path, relative to this config file.
   // ykush_usb_port: physical USB socket on YKUSH (1-3), not a COM or relay number.
   // com: board's upload COM port while its USB connection is enabled.
-  // relay: Numato channel (0-based), wired to this board's supply.
+  // relay: one physical relay channel (0-based), wired to this board's supply.
   // notes: actual board/firmware/wiring conditions saved with the measurements.
   "connected_boards": [
     {

@@ -1,4 +1,4 @@
-"""Sequential firmware upload and STLINK measurement through YKUSH and Numato."""
+"""Sequential firmware upload and STLINK measurement through USB and relay switches."""
 import argparse
 from datetime import datetime, timezone
 import json
@@ -17,6 +17,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 
+from automation.relays import create_relay
+
+
 def read_config(path):
     """JSON with optional full-line // comments; preserve JSON error line numbers."""
     text = Path(path).read_text(encoding="utf-8-sig")
@@ -28,15 +31,18 @@ def load_config(path):
     path = Path(path).resolve()
     config = read_config(path)
     if "ykush" in config:
+        relay_config = config.get("relay_controller")
+        if relay_config is None:
+            old = config["numato"]
+            relay_config = dict(driver="numato", port=old["controller_port"],
+                                channels=old["ports"], channel_digits=old["channel_digits"])
         # Keep the execution layer independent of the human-facing config layout.
         config = {
             "ykush_cmd": config["ykush"]["cmd"],
             "ykush_serial": config["ykush"]["serial"],
             "ykush_model_argument": config["ykush"]["model_argument"],
             "ykush_ports": config["ykush"]["ports"],
-            "numato_controller_port": config["numato"]["controller_port"],
-            "numato_ports": config["numato"]["ports"],
-            "numato_channel_digits": config["numato"]["channel_digits"],
+            "relay_controller": relay_config,
             "stlink_com": config["stlink"]["com"],
             "measurement": config["stlink"]["measurement"],
             "arduino_cli": config["upload"]["arduino_cli"],
@@ -48,9 +54,12 @@ def load_config(path):
     boards = config["connected_boards"]
     if not isinstance(boards, list) or not 1 <= len(boards) <= 3:
         raise ValueError("connected_boards must contain 1 to 3 board mappings")
-    count = config["numato_ports"]
-    if type(count) is not int or not 1 <= count <= 64:
-        raise ValueError("numato_ports must be the relay count (1 to 64)")
+    if "relay_controller" not in config:
+        config["relay_controller"] = dict(driver="numato", port=config["numato_controller_port"],
+                                          channels=config["numato_ports"], channel_digits=config["numato_channel_digits"])
+    relay_config = config["relay_controller"]
+    create_relay(relay_config)
+    count = relay_config["channels"]
     ports = config["ykush_ports"]
     if not ports or any(type(p) is not int or p not in (1, 2, 3) for p in ports) or len(set(ports)) != len(ports):
         raise ValueError("ykush_ports must be unique USB port numbers from 1 to 3")
@@ -58,9 +67,9 @@ def load_config(path):
         values = [board[field] for board in boards]
         if len(set(str(v).upper() for v in values)) != len(values):
             raise ValueError(f"Board {field} values must be unique")
-    device_ports = [config["stlink_com"], config["numato_controller_port"], *[b["com"] for b in boards]]
+    device_ports = [config["stlink_com"], relay_config["port"], *[b["com"] for b in boards]]
     if any(not isinstance(p, str) or not p.strip() for p in device_ports) or len(set(p.upper() for p in device_ports)) != len(device_ports):
-        raise ValueError("STLINK, Numato and board COM ports must be distinct and nonempty")
+        raise ValueError("STLINK, relay controller and board COM ports must be distinct and nonempty")
     for board in boards:
         board["sketch"] = str((path.parent / board["sketch"]).resolve())
         if not re.fullmatch(r"[A-Za-z0-9_-]+", board["name"]) or not board["notes"].strip():
@@ -68,7 +77,7 @@ def load_config(path):
         if type(board["ykush_usb_port"]) is not int or board["ykush_usb_port"] not in ports:
             raise ValueError("Board USB port is not in ykush_ports")
         if type(board["relay"]) is not int or not 0 <= board["relay"] < count:
-            raise ValueError("Board relay must be a zero-based Numato channel")
+            raise ValueError("Board relay must be a zero-based controller channel")
     from upload import load_profiles
     profiles = load_profiles()
     for board in boards:
@@ -77,8 +86,6 @@ def load_config(path):
     for field in ("step_delay_s", "port_timeout_s", "flash_timeout_s"):
         if not math.isfinite(config[field]) or config[field] <= 0:
             raise ValueError(f"{field} must be positive and finite")
-    if config["numato_channel_digits"] not in (1, 2, 3):
-        raise ValueError("numato_channel_digits must be 1, 2 or 3")
     if not config["ykush_serial"].strip():
         raise ValueError("ykush_serial is required")
     if config["ykush_model_argument"] not in ("", "ykush", "ykush3"):
@@ -119,7 +126,7 @@ class Hardware:
     def __init__(self, config, directory):
         self.config = config
         self.directory = directory
-        self.serial = None
+        self.relays = None
 
     def event(self, action, **details):
         print(action, details or "", flush=True)
@@ -131,28 +138,11 @@ class Hardware:
         time.sleep(self.config["step_delay_s"])
 
     def open(self):
-        import serial
-        self.serial = serial.Serial(self.config["numato_controller_port"], 19200,
-                                    timeout=2, write_timeout=3)
-
-    def command(self, text):
-        self.serial.reset_input_buffer()
-        self.serial.write((text + "\r").encode("ascii"))
-        self.serial.flush()
-        response = self.serial.read_until(b">").decode("ascii", errors="replace")
-        self.event("numato", command=text, response=response)
-        if not response.endswith(">") or re.search(r"error|invalid|unknown", response, re.I):
-            raise RuntimeError(f"Numato command failed: {text!r}: {response!r}")
-        return response
+        self.relays = create_relay(self.config["relay_controller"], self.event)
+        self.relays.open()
 
     def relay(self, channel, enabled):
-        state = "on" if enabled else "off"
-        index = f"{channel:0{self.config['numato_channel_digits']}d}"
-        self.command(f"relay {state} {index}")
-        response = self.command(f"relay read {index}")
-        states = re.findall(r"(?im)^\s*(on|off)\s*$", response.replace(">", ""))
-        if not states or states[-1].lower() != state:
-            raise RuntimeError(f"Numato relay {channel} did not confirm {state}")
+        self.relays.set(channel, enabled)
 
     def usb(self, port, enabled):
         c = self.config
@@ -196,15 +186,15 @@ class Hardware:
             run_command(command, timeout, log)
 
     def close(self):
-        if self.serial is not None:
-            self.serial.close()
+        if self.relays is not None:
+            self.relays.close()
 
 
 def sequence(config, hardware):
     """All relays off -> all USB off -> flash each -> measure each -> all off."""
     try:
         hardware.open()
-        for channel in range(config["numato_ports"]):
+        for channel in range(config["relay_controller"]["channels"]):
             hardware.relay(channel, False)
             hardware.pause()
         for port in config["ykush_ports"]:
@@ -227,7 +217,7 @@ def sequence(config, hardware):
             hardware.pause()
     finally:
         failures = []
-        for kind, channels in (("relay", range(config["numato_ports"])), ("usb", config["ykush_ports"])):
+        for kind, channels in (("relay", range(config["relay_controller"]["channels"])), ("usb", config["ykush_ports"])):
             for channel in channels:
                 try:
                     getattr(hardware, kind)(channel, False)
@@ -246,7 +236,7 @@ class DryRun(Hardware):
         print(action, details or "")
 
     def open(self):
-        self.event("open Numato", port=self.config["numato_controller_port"])
+        self.event("open relay controller", **self.config["relay_controller"])
 
     def pause(self):
         self.event("wait", seconds=self.config["step_delay_s"])
