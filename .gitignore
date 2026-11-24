@@ -238,6 +238,7 @@ __marimo__/
 !/results/wifi_deep_sleep_5s_flash_all_20261117_193250_090805/
 !/results/wifi_modem_sleep_5s_flash_all_20261117_200057_785780/
 /test_results/
+/tmp_agent/
 /automation/config.local.json
 /automation/config.local.jsonc
 /demo_results/
