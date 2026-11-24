@@ -1,0 +1,51 @@
+{
+  "ykush_cmd": "C:\\Program Files (x86)\\YEPKIT LDA\\ykushcmd\\ykushcmd.exe",
+  "ykush_serial": "REPLACE_WITH_YKUSH_SERIAL",
+  "ykush_model_argument": "",
+  "ykush_ports": [
+    1,
+    2,
+    3
+  ],
+  "stlink_com": "COM18",
+  "numato_controller_port": "COM19",
+  "numato_ports": 4,
+  "numato_channel_digits": 1,
+  "arduino_cli": "arduino-cli",
+  "sketch": "deep_sleep/deep_sleep.ino",
+  "step_delay_s": 2,
+  "port_timeout_s": 30,
+  "flash_timeout_s": 300,
+  "measurement": {
+    "repeats": 10,
+    "seconds": 100,
+    "hz": 1000,
+    "voltage": 3.3,
+    "warmup_seconds": 180,
+    "off_seconds": 1
+  },
+  "connected_boards": [
+    {
+      "name": "nodemcu_1",
+      "usb_port": 1,
+      "com": "COM7",
+      "relay": 0,
+      "notes": "NodeMCU V3; ESP8266 Core 3.1.2; 80 MHz; deepSleep(0); Erase All Flash"
+    },
+    {
+      "name": "nodemcu_2",
+      "usb_port": 2,
+      "com": "COM8",
+      "relay": 1,
+      "notes": "NodeMCU V3; ESP8266 Core 3.1.2; 80 MHz; deepSleep(0); Erase All Flash"
+    },
+    {
+      "name": "nodemcu_3",
+      "usb_port": 3,
+      "com": "COM9",
+      "relay": 2,
+      "notes": "NodeMCU V3; ESP8266 Core 3.1.2; 80 MHz; deepSleep(0); Erase All Flash"
+    }
+  ],
+  "upload_profile": "nodemcu"
+}
