@@ -50,8 +50,16 @@ class MeasurementController:
                 self.process.wait(timeout=3)
             except subprocess.TimeoutExpired:
                 forced = True
-                self.process.kill()
-                self.process.wait()
+                if os.name == "nt":
+                    # A venv launcher can own a child interpreter that still holds the log.
+                    result = subprocess.run(
+                        ["taskkill", "/PID", str(self.process.pid), "/T", "/F"],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+                    if result.returncode and self.process.poll() is None:
+                        raise RuntimeError("Could not terminate the controller process tree")
+                else:
+                    self.process.kill()
+                self.process.wait(timeout=10)
             return {"script": str(self.script), "start_monotonic": self.started,
                     "returncode": self.process.returncode, "forced_stop": forced}
         finally:
