@@ -17,9 +17,16 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 
+def read_config(path):
+    """JSON with optional full-line // comments; preserve JSON error line numbers."""
+    text = Path(path).read_text(encoding="utf-8-sig")
+    text = "\n".join("" if line.lstrip().startswith("//") else line for line in text.splitlines())
+    return json.loads(text)
+
+
 def load_config(path):
     path = Path(path).resolve()
-    config = json.loads(path.read_text(encoding="utf-8-sig"))
+    config = read_config(path)
     if "ykush" in config:
         # Keep the execution layer independent of the human-facing config layout.
         config = {

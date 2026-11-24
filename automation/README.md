@@ -4,7 +4,7 @@ Flash 1–3 ESP8266 boards through YKUSH, then measure each board through a sepa
 
 ## Configure
 
-Copy [config.example.json](config.example.json) to `config.local.json` in this directory and edit. Settings are grouped by hardware device and task.
+Copy [config.example.jsonc](config.example.jsonc) to `config.local.jsonc` in this directory and edit. Each section groups one device or task; fields are described directly in the file using full-line `//` comments. Inline comments, block comments and trailing commas are not supported.
 
 | Setting | Meaning |
 | --- | --- |
@@ -26,8 +26,8 @@ From the repository root:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r automation/requirements.txt
-.\.venv\Scripts\python.exe automation/run.py --config automation/config.local.json --dry-run
-.\.venv\Scripts\python.exe automation/run.py --config automation/config.local.json
+.\.venv\Scripts\python.exe automation/run.py --config automation/config.local.jsonc --dry-run
+.\.venv\Scripts\python.exe automation/run.py --config automation/config.local.jsonc
 ```
 
 Sequence (2 s delay after each switching/upload/measurement step):

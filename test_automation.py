@@ -61,8 +61,14 @@ class FakeHardware:
 
 
 class AutomationTests(unittest.TestCase):
+    def test_config_comments_do_not_change_string_values(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "config.jsonc"
+            path.write_text('// Description\n{\n  // Another comment\n  "value": "https://example.org/a//b"\n}\n')
+            self.assertEqual(run.read_config(path), {"value": "https://example.org/a//b"})
+
     def config(self):
-        return run.load_config(run.ROOT / "automation/config.example.json")
+        return run.load_config(run.ROOT / "automation/config.example.jsonc")
 
     def test_sequence_one_to_three_boards_with_four_relays(self):
         for count in (1, 2, 3):

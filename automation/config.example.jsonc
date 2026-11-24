@@ -1,0 +1,95 @@
+{
+  // USB HUB: switches each board's USB connection during firmware upload.
+  "ykush": {
+    // Full executable path, without a trailing CMD prompt character (>).
+    "cmd": "C:\\Program Files (x86)\\YEPKIT LDA\\ykushcmd\\ykushcmd.exe",
+    // Hub serial number from ykushcmd -l; sent as -s SERIAL.
+    "serial": "REPLACE_WITH_YKUSH_SERIAL",
+    // Legacy CLI: "". Newer CLI: "ykush" or "ykush3", matching your model.
+    "model_argument": "",
+    // Physical USB port numbers (1-based); all are disabled at startup/cleanup.
+    "ports": [1, 2, 3]
+  },
+
+  // RELAY CONTROLLER: connects one board at a time to the meter's OUT supply.
+  "numato": {
+    // Numato controller's serial port, not a microcontroller or STLINK port.
+    "controller_port": "COM19",
+    // Total relay count. 4 means channels 0, 1, 2, 3 are all disabled at startup.
+    "ports": 4,
+    // 1 sends relay off 0; 3 sends relay off 000. Match your Numato firmware.
+    "channel_digits": 1
+  },
+
+  // CURRENT METER: settings passed to the existing stlink_measure.py capture.
+  "stlink": {
+    // STLINK-V3PWR SMU port, not its debug UART port.
+    "com": "COM18",
+    "measurement": {
+      // Independent captures per board.
+      "repeats": 10,
+      // Duration of each capture, seconds.
+      "seconds": 100,
+      // Acquisition sample rate, samples/second.
+      "hz": 1000,
+      // OUT supply voltage, volts.
+      "voltage": 3.3,
+      // Warm-up before each board's measurement series, with OUT powered.
+      "warmup_seconds": 180,
+      // Target power-off interval before each repeat, seconds.
+      "off_seconds": 1
+    }
+  },
+
+  // FIRMWARE: compiled/uploaded by upload.py; board options are in board_profiles.json.
+  "upload": {
+    // Executable name on PATH or a full path to arduino-cli.exe.
+    "arduino_cli": "arduino-cli",
+    // Local sketch, relative to this config file. Shared by the listed boards.
+    "sketch": "deep_sleep/deep_sleep.ino",
+    // Maximum time for compilation and upload of one board, seconds.
+    "timeout_s": 300
+  },
+
+  // HOST TIMING: delays and USB enumeration timeout; values in seconds.
+  "timing": {
+    // Delay after each relay/USB switch, upload and measurement step.
+    "step_delay_s": 2,
+    // Maximum wait for a board's upload COM port after USB is enabled.
+    "port_timeout_s": 30
+  },
+
+  // DEVICES UNDER TEST: 1-3 entries, independent of the total Numato relay count.
+  // name: result directory label; ASCII letters, digits, underscores or hyphens.
+  // upload_profile: key in ../board_profiles.json, selected separately per board.
+  // usb_port: physical YKUSH port (1-3).
+  // com: board's upload COM port while its USB connection is enabled.
+  // relay: Numato channel (0-based), wired to this board's supply.
+  // notes: actual board/firmware/wiring conditions saved with the measurements.
+  "connected_boards": [
+    {
+      "name": "nodemcu_1",
+      "upload_profile": "nodemcu",
+      "usb_port": 1,
+      "com": "COM7",
+      "relay": 0,
+      "notes": "NodeMCU V3; ESP8266 Core 3.1.2; 80 MHz; deepSleep(0); Erase All Flash"
+    },
+    {
+      "name": "nodemcu_2",
+      "upload_profile": "nodemcu",
+      "usb_port": 2,
+      "com": "COM8",
+      "relay": 1,
+      "notes": "NodeMCU V3; ESP8266 Core 3.1.2; 80 MHz; deepSleep(0); Erase All Flash"
+    },
+    {
+      "name": "nodemcu_3",
+      "upload_profile": "nodemcu",
+      "usb_port": 3,
+      "com": "COM9",
+      "relay": 2,
+      "notes": "NodeMCU V3; ESP8266 Core 3.1.2; 80 MHz; deepSleep(0); Erase All Flash"
+    }
+  ]
+}

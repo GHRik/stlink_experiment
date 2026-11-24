@@ -239,4 +239,5 @@ __marimo__/
 !/results/wifi_modem_sleep_5s_flash_all_20261117_200057_785780/
 /test_results/
 /automation/config.local.json
+/automation/config.local.jsonc
 /demo_results/
