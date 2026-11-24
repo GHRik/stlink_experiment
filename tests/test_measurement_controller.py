@@ -9,14 +9,14 @@ from unittest.mock import patch
 
 from measurement_controller import MeasurementController
 import stlink_protocol
-from test_stlink_measure import FakeDevice
+from tests.test_stlink_measure import FakeDevice
 
 
 class ControllerTests(unittest.TestCase):
     def test_example_process_records_events_and_stops(self):
         with tempfile.TemporaryDirectory(prefix="controller test ") as folder:
             root = Path(folder)
-            controller = MeasurementController(Path(__file__).parent / "controllers/example.py", root, 10)
+            controller = MeasurementController(Path(__file__).resolve().parents[1] / "controllers/example.py", root, 10)
             controller.start()
             try:
                 deadline = time.monotonic() + 5

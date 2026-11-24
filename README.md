@@ -144,7 +144,7 @@ Warm-up and manual calibration do not disable automatic calibration. Calibration
 ## Without hardware
 
 ```powershell
-.\.venv\Scripts\python.exe -m unittest -v test_stlink_measure.py
+.\.venv\Scripts\python.exe -m unittest discover -s tests -t . -v
 .\.venv\Scripts\python.exe stlink_measure.py demo
 ```
 
