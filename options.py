@@ -37,6 +37,7 @@ def read_options():
     capture.add_argument("--warmup-seconds", type=float, default=180,
                          help="Warm up with OUT enabled before the series (default: 180 s; 0 skips). The target runs during warm-up.")
     capture.add_argument("--out", default="results")
+    capture.add_argument("--controller", help="Python script to run during each acquisition; stopped automatically when capture ends.")
     capture.add_argument("--notes", required=True, type=nonempty_text,
                          help=REQUIRED_REASONS["--notes"])
     analysis = sub.add_parser("analyze", help="Reanalyze saved CSV data without connecting to the device.")

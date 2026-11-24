@@ -61,6 +61,7 @@ Then capture the full series:
 | `--voltage` | 3.3 V |
 | `--warmup-seconds` | 180 seconds with OUT enabled before the series; `0` skips the delay |
 | `--off-seconds` | 1 second with target power off before acquisition |
+| `--controller` | Optional Python script running during each capture; [example and interface](controllers/README.md) |
 
 Change `--name` and `--notes` to match the flashed sketch. Keep voltage and sampling frequency identical across comparisons.
 

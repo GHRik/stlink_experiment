@@ -9,6 +9,7 @@ import re
 import time
 import csv
 from storage import save_json
+from measurement_controller import MeasurementController
 
 SAMPLE = re.compile(r"^(\d{4})([+-])(\d{1,2})$")
 SOURCE = "https://www.st.com/resource/en/user_manual/um3291-getting-started-with-stlinkv3pwr-firmware-stmicroelectronics.pdf"
@@ -137,6 +138,8 @@ def capture_one(device, directory, args, identity, repeat):
     next_progress = start_clock + 5
     energy = 0.0
     fatal = None
+    controller_path = getattr(args, "controller", None)
+    controller = MeasurementController(controller_path, directory, args.seconds) if controller_path else None
     try:
         # A full power cycle before EVERY repeat. AUX remains disabled.
         device.command("pwr off")
@@ -173,6 +176,8 @@ def capture_one(device, directory, args, identity, repeat):
             next_progress = start_clock + 5
             while True:
                 now = time.monotonic()
+                if controller is not None and controller.process is not None:
+                    controller.check()
                 if now > start_clock + args.seconds + 30:
                     raise RuntimeError("Timeout: the required sample count and end marker were not received.")
                 if stop_sent and now > stop_clock + 10:
@@ -194,6 +199,8 @@ def capture_one(device, directory, args, identity, repeat):
                                          f"{energy:.12g}"])
                         count += 1
                     if count >= n_target and not stop_sent:
+                        if controller is not None:
+                            controller.request_stop()
                         device.send("stop")
                         stop_sent = True
                         stop_clock = time.monotonic()
@@ -212,6 +219,8 @@ def capture_one(device, directory, args, identity, repeat):
                     raise RuntimeError(f"Device error: {line}")
                 elif line.lower().startswith("ack"):
                     if "start" in line.lower():
+                        if not started_ack and controller is not None:
+                            controller.start()
                         started_ack = True
                 elif line == "end":
                     ended = True
@@ -239,6 +248,14 @@ def capture_one(device, directory, args, identity, repeat):
             except Exception:
                 pass
         metadata["samples"] = count
+        if controller is not None:
+            try:
+                metadata["controller"] = controller.close()
+                outcome = metadata["controller"]
+                if outcome and (outcome["forced_stop"] or outcome["returncode"] != 0):
+                    metadata["issues"].append("Controller failed or required forced termination; see controller.log.")
+            except Exception as error:
+                metadata["issues"].append(f"Controller cleanup failed: {error}")
         metadata["status"] = "valid" if ended and not metadata["issues"] else "invalid"
         save_json(directory / "metadata.json", metadata)
         save_json(directory / "commands.json", device.events)
@@ -249,6 +266,9 @@ def capture_one(device, directory, args, identity, repeat):
     return directory
 
 def validate_settings(args):
+    controller = getattr(args, "controller", None)
+    if controller and (not Path(controller).is_file() or Path(controller).suffix.lower() != ".py"):
+        raise ValueError("--controller must point to an existing Python (.py) file.")
     warmup = getattr(args, "warmup_seconds", 180)
     if not math.isfinite(warmup) or not 0 <= warmup <= 3600:
         raise ValueError("--warmup-seconds must be between 0 and 3600.")
