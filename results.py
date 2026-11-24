@@ -1,4 +1,4 @@
-"""Obliczenia i wykresy. Dane wejsciowe pozostaja niezmienione."""
+"""Measurement analysis and plots. Input data are preserved."""
 from pathlib import Path
 import json
 import math

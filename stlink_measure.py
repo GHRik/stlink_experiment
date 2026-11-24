@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Eksperyment z NodeMCU: start zasilania -> pomiar -> pliki -> porownanie.
+"""NodeMCU experiment: power-on -> acquisition -> saved data -> comparison.
 
-Przyklad:
-    py stlink_measure.py capture --port COM18 --name modem --repeats 10
+Example:
+    py stlink_measure.py capture --port COM18 --name modem --notes "NodeMCU; test firmware" --repeats 10
 
-Domyslnie: 3.3 V, 1000 Hz, 100 s na pomiar, 10 powtorzen.
-Wgraj odpowiedni program NodeMCU przed uruchomieniem skryptu.
+Defaults: 3.3 V, 1000 Hz, 100 s per capture, 10 repeats.
+Upload the appropriate NodeMCU firmware before running this script.
 """
 from pathlib import Path
 import sys
@@ -20,7 +20,7 @@ from stlink_protocol import (
 
 
 def run_experiment(settings):
-    """Calosc czytana od gory: przygotuj, zmierz, zamknij, podsumuj."""
+    """Prepare the meter, capture repeats, close the device, and summarize results."""
     validate_settings(settings)
     session = create_session(settings)
     meter = Device(settings.port)
@@ -35,31 +35,31 @@ def run_experiment(settings):
             print(f"Repeat {number}/{settings.repeats}: {settings.name}", flush=True)
             run_folder = session / f"repeat_{number:03d}"
 
-            # Odetnij zasilanie, zacznij od nowa i zapisz wszystkie probki.
+            # Power-cycle the target and record all samples for this repeat.
             capture_one(meter, run_folder, settings, identity, number)
 
-            # Policz wynik i narysuj przebieg tego jednego pomiaru.
+            # Analyze and plot this repeat.
             analyze_run(run_folder, begin=0, end=None)
 
     finally:
-        # Rowniez po bledzie lub Ctrl+C: zachowaj log i probuj wylaczyc OUT.
+        # Preserve the log and attempt to disable OUT, including after errors or Ctrl+C.
         try:
             save_json(session / "last_commands.json", meter.events)
         finally:
             meter.close()
 
-    # Po serii porownaj zebrane konfiguracje i policz rozrzut powtorzen.
+    # Generate comparison plots and statistics across repeats.
     report(session, begin=0, end=None)
     print(f"Saved to: {session.resolve()}")
 
 
 def analyze_saved_measurements(settings):
-    """Ponowna analiza wybranego czasu, bez wlaczania miernika."""
+    """Reanalyze the selected time window without connecting to the meter."""
     report(Path(settings.root), begin=settings.from_s, end=settings.to_s)
 
 
 def show_ports():
-    """Pokaz porty, aby mozna bylo wybrac pomiarowy port SMU."""
+    """List serial ports so the measurement SMU port can be selected."""
     from serial.tools import list_ports
     for port in list_ports.comports():
         print(f"{port.device}: {port.description} | {port.hwid}")

@@ -1,6 +1,6 @@
-"""Komunikacja ze STLINK-V3PWR i zapis strumienia pomiarowego.
+"""STLINK-V3PWR communication and acquisition stream recording.
 
-Protokol: ST UM3291 API 1. Szczegoly transportu sa oddzielone od eksperymentu.
+Protocol: ST UM3291 API 1. Transport details are separate from experiment orchestration.
 """
 from datetime import datetime, timezone
 from pathlib import Path
@@ -16,7 +16,7 @@ SOURCE = "https://www.st.com/resource/en/user_manual/um3291-getting-started-with
 
 
 def normalize_line(line):
-    """Firmware moze poprzedzac odpowiedz lub probke promptem stlp >."""
+    """Firmware may prefix a response or sample with the stlp > prompt."""
     return re.sub(r"^(?:stlp\s*>\s*)+", "", line.strip(), flags=re.I).strip()
 
 def decode_sample(line):
