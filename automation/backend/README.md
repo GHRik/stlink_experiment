@@ -13,8 +13,9 @@
 | [relay_control.py](relay_control.py) | Manual switching through existing Numato and LCUS-2 drivers; closes COM after each command |
 | [capture.py](capture.py) | StandAlone CLI argument mapping, capture subprocess, log stream and STOP request |
 | [capture_worker.py](capture_worker.py) | Existing capture CLI with a cooperative STOP watcher; measurement cleanup remains in the capture script |
+| [hil.py](hil.py) / [hil_worker.py](hil_worker.py) | GUI configuration mapping and execution through the existing HIL runner |
 | [meter_power.py](meter_power.py) | Manual OUT commands through the existing Device protocol; keeps the connection while powered and releases it before capture |
 
-HTML, styles and JavaScript stay in [frontend](../frontend/README.md). StandAlone Run invokes the existing measurement CLI. Batch execution stays in [HIL](../HIL/README.md) and is not connected to GUI Run yet.
+HTML, styles and JavaScript stay in [frontend](../frontend/README.md). StandAlone Run invokes the existing measurement CLI; HIL Run generates a configuration for the existing [HIL runner](../HIL/README.md).
 
-Add configuration generation and process control as separate backend modules when those features are implemented. Keep the launcher limited to startup.
+`capture.py` creates a temporary JSONL telemetry file and passes its path as `STLINK_GUI_EVENT_FILE`. The runner and its child processes append confirmed hardware changes and measurement progress through [events.py](../../src/events.py). Status polling returns new events with the same cursor as log lines, even when a child writes its stdout to a separate log. Final events are collected before temporary-file cleanup. Outside the GUI, telemetry is disabled unless the environment variable is set.

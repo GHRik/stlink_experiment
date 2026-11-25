@@ -1,6 +1,7 @@
 """Launch the existing capture CLI and stream its output to the desktop UI."""
 from collections import deque
 import os
+import json
 from pathlib import Path
 import subprocess
 import sys
@@ -34,6 +35,9 @@ class CaptureProcess:
         self._lines = deque(maxlen=2000)
         self._sequence = 0
         self._stop_file = None
+        self._event_file = None
+        self._event_offset = 0
+        self._events = deque(maxlen=2000)
 
     def start(self, config, command=None):
         if command is None:
@@ -42,18 +46,22 @@ class CaptureProcess:
             if self._running:
                 raise RuntimeError("A capture is already running")
             self._lines.clear()
+            self._events.clear()
+            self._event_offset = 0
             self._sequence = 0
             self._returncode = None
             self._stopping = False
             stop_directory = TemporaryDirectory(prefix="stlink_gui_")
             self._stop_file = Path(stop_directory.name) / "stop"
+            self._event_file = Path(stop_directory.name) / "events.jsonl"
             try:
                 self._process = subprocess.Popen(
                     command, cwd=self._directory, stdin=subprocess.DEVNULL,
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                     text=True, encoding="utf-8", errors="replace",
                     env=dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1",
-                             STLINK_GUI_STOP_FILE=str(self._stop_file)),
+                             STLINK_GUI_STOP_FILE=str(self._stop_file),
+                             STLINK_GUI_EVENT_FILE=str(self._event_file)),
                     creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
                 )
             except BaseException:
@@ -74,14 +82,30 @@ class CaptureProcess:
             process.stdout.close()
             code = process.wait()
             with self._lock:
+                self._collect_events()
                 self._returncode = code
                 self._running = False
                 stop_directory.cleanup()
 
+    def _collect_events(self):
+        if self._event_file is None or not self._event_file.exists():
+            return
+        with self._event_file.open("rb") as file:
+            file.seek(self._event_offset)
+            for line in file:
+                if not line.endswith(b"\n"):
+                    break
+                self._event_offset += len(line)
+                event = json.loads(line)
+                self._sequence += 1
+                self._events.append((self._sequence, event))
+
     def status(self, after=0):
         with self._lock:
+            self._collect_events()
             return {"running": self._running, "stopping": self._stopping,
                     "returncode": self._returncode, "cursor": self._sequence,
+                    "events": [event for sequence, event in self._events if sequence > after],
                     "lines": [line for sequence, line in self._lines if sequence > after]}
 
     def stop(self):
