@@ -60,6 +60,31 @@
       gap: 12px;
       margin-bottom: 18px;
     }
+    #demo-mode {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border: 2px solid #ffb52e;
+      background: #713300;
+      color: #fff4cf;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      animation: demo-mode-pulse 1.8s ease-in-out infinite;
+    }
+    #demo-mode::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ffd166;
+      box-shadow: 0 0 8px #ffb52e;
+    }
+    @keyframes demo-mode-pulse {
+      0%, 100% { box-shadow: 0 0 3px #ffb52e66; }
+      50% { box-shadow: 0 0 18px #ffb52ecc, inset 0 0 10px #ffb52e44; }
+    }
     .theme-switch {
       display: flex;
       gap: 4px;
@@ -205,6 +230,7 @@
       line-height: 1;
     }
     @media (prefers-reduced-motion: reduce) {
+      #demo-mode { animation: none; }
       .flow-dot { display: none; }
       .wiring-connections path.external-power-wire {
         animation: none;
@@ -785,7 +811,7 @@
           <button class="theme-button" type="button" data-theme-choice="light" aria-pressed="true">☀ Light</button>
           <button class="theme-button" type="button" data-theme-choice="dark" aria-pressed="false">☾ Dark</button>
         </div>
-        <span class="badge" id="demo-mode" hidden>Demo mode</span>
+        <span class="badge" id="demo-mode" hidden>DEMO MODE</span>
       </div>
     </header>
     <nav class="layout-tabs" aria-label="Testbench layout">
