@@ -11,6 +11,7 @@ import csv
 from .storage import save_json
 from .measurement_controller import MeasurementController
 from .events import emit
+from .live_current import LiveCurrentPreview
 
 SAMPLE = re.compile(r"^(\d{4})([+-])(\d{1,2})$")
 SOURCE = "https://www.st.com/resource/en/user_manual/um3291-getting-started-with-stlinkv3pwr-firmware-stmicroelectronics.pdf"
@@ -136,6 +137,7 @@ def capture_one(device, directory, args, identity, repeat):
     save_json(directory / "metadata.json", metadata)
     device.events = []
     count = 0
+    preview = LiveCurrentPreview(args.name, repeat, args.hz)
     ended = False
     started_ack = False
     start_clock = time.monotonic()
@@ -206,6 +208,7 @@ def capture_one(device, directory, args, identity, repeat):
                                          f"{value * args.voltage * 1000:.9g}",
                                          f"{energy:.12g}"])
                         count += 1
+                        preview.add(value, count - 1)
                     if count >= n_target and not stop_sent:
                         if controller is not None:
                             controller.request_stop()
@@ -255,6 +258,7 @@ def capture_one(device, directory, args, identity, repeat):
         if metadata.get("calibration", {}).get("status") == "started":
             metadata["calibration"]["status"] = "failed"
     finally:
+        preview.flush()
         if fatal:
             try:
                 device.command("pwr off")

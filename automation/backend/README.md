@@ -20,3 +20,5 @@
 HTML, styles and JavaScript stay in [frontend](../frontend/README.md). StandAlone Run invokes the existing measurement CLI; HIL Run generates a configuration for the existing [HIL runner](../HIL/README.md).
 
 `capture.py` creates a temporary JSONL telemetry file and passes its path as `STLINK_GUI_EVENT_FILE`. The runner and its child processes append confirmed hardware changes and measurement progress through [events.py](../../src/events.py). Status polling returns new events with the same cursor as log lines, even when a child writes its stdout to a separate log. Final events are collected before temporary-file cleanup. Outside the GUI, telemetry is disabled unless the environment variable is set.
+
+[live_current.py](../../src/live_current.py) aggregates preview samples into approximately 50 ms bins. The `current_samples` event includes the capture name and repeat number; its points are `[time_s, mean_mA, min_mA, max_mA]`. Batches use the same telemetry channel in all layouts, including HIL child captures. Aggregation is disabled for ordinary CLI runs without GUI telemetry.
