@@ -25,6 +25,7 @@ include = ["src", "automation", "automation.*"]
 [tool.setuptools.package-data]
 "automation.HIL" = ["board_profiles.json", "config.example.jsonc", "config.lcus2.json", "example/*.ino"]
 "automation.frontend" = ["index.html"]
+"automation.backend" = ["config.json"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
