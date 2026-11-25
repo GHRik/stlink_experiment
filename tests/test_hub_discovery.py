@@ -9,6 +9,13 @@ from automation.backend.hub_discovery import available_hubs
 class HubDiscoveryTests(unittest.TestCase):
     @patch("automation.backend.hub_discovery.shutil.which", return_value="ykushcmd.exe")
     @patch("automation.backend.hub_discovery.subprocess.run")
+    def test_xs_discovery_subcommand(self, run, which):
+        run.return_value = SimpleNamespace(returncode=0, stderr="", stdout="Board found with serial number: XS123\n")
+        self.assertEqual(available_hubs("ykushxs"), [{"serial": "XS123"}])
+        self.assertEqual(run.call_args.args[0], ["ykushcmd.exe", "ykushxs", "-l"])
+
+    @patch("automation.backend.hub_discovery.shutil.which", return_value="ykushcmd.exe")
+    @patch("automation.backend.hub_discovery.subprocess.run")
     def test_legacy_list_and_unique_serials(self, run, which):
         run.return_value = SimpleNamespace(returncode=0, stderr="", stdout=(
             "Attached YKUSH Boards:\n1. Board found with serial number: YK17125\n"

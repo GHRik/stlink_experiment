@@ -61,9 +61,34 @@ class Ykush3(Ykush):
         super().__init__(cmd, serial, ports, "ykush3", command_runner, event)
 
 
+class YkushXs(Hub):
+    """Single downstream port; CLI switches have no port-number argument."""
+
+    def __init__(self, cmd, serial, ports, command_runner=None, event=None):
+        super().__init__(ports)
+        if ports != [1]:
+            raise ValueError("YKUSH XS has one downstream port; ports must be [1]")
+        if not isinstance(cmd, str) or not cmd.strip() or not isinstance(serial, str) or not serial.strip():
+            raise ValueError("YKUSH executable and serial number are required")
+        self.command = [cmd, "ykushxs", "-s", serial]
+        self.run = command_runner or _run
+        self.event = event or (lambda *args, **kwargs: None)
+
+    def _set(self, port, enabled):
+        response = self.run(self.command + ["-u" if enabled else "-d"], 15)
+        status = self.run(self.command + ["-g"], 15)
+        self.event("ykush", port=port, enabled=enabled, response=response, status=status)
+        if not re.search(r"\b" + ("ON" if enabled else "OFF") + r"\b", status, re.I):
+            raise RuntimeError(f"YKUSH XS port state not confirmed: {status}")
+
+
 def create_hub(config, command_runner=None, event=None):
     driver = config["driver"]
     args = (config["cmd"], config["serial"], config["ports"])
+    if driver == "ykushxs":
+        if config.get("model_argument", "ykushxs") != "ykushxs":
+            raise ValueError("YKUSH XS always uses the ykushxs CLI subcommand; remove model_argument")
+        return YkushXs(*args, command_runner=command_runner, event=event)
     if driver == "ykush3":
         if config.get("model_argument", "ykush3") != "ykush3":
             raise ValueError("YKUSH3 always uses the ykush3 CLI subcommand; remove model_argument")
@@ -71,4 +96,4 @@ def create_hub(config, command_runner=None, event=None):
     if driver == "ykush":
         return Ykush(*args, model_argument=config.get("model_argument", ""),
                      command_runner=command_runner, event=event)
-    raise ValueError(f"Unknown hub driver: {driver!r}; use ykush or ykush3")
+    raise ValueError(f"Unknown hub driver: {driver!r}; use ykush, ykush3 or ykushxs")

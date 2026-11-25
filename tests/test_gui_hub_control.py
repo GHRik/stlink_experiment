@@ -6,6 +6,18 @@ from automation.backend.hub_control import HubControl
 
 
 class HubControlTests(unittest.TestCase):
+    @patch("automation.backend.hub_control.resolve_command", return_value="ykushcmd")
+    @patch("automation.HIL.hubs._run")
+    def test_xs_uses_only_its_single_output(self, run, resolve):
+        run.side_effect = ["", "Downstream port is ON"]
+        self.assertTrue(HubControl().set_port("ykushxs", "ykushcmd", "XS123", 1, True)["enabled"])
+        self.assertEqual(run.call_args_list, [call(["ykushcmd", "ykushxs", "-s", "XS123", "-u"], 15),
+                                              call(["ykushcmd", "ykushxs", "-s", "XS123", "-g"], 15)])
+        run.reset_mock()
+        with self.assertRaises(ValueError):
+            HubControl().set_port("ykushxs", "ykushcmd", "XS123", 2, True)
+        run.assert_not_called()
+
     @patch("automation.backend.hub_control.resolve_command", return_value="C:/tools/ykushcmd.exe")
     @patch("automation.HIL.hubs._run")
     def test_selected_legacy_hub_and_physical_socket(self, run, resolve):

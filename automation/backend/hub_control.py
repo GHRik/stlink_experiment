@@ -12,13 +12,14 @@ class HubControl:
     def set_port(self, driver, command, serial, port, enabled):
         if not isinstance(serial, str) or not serial.strip():
             raise ValueError("Select a hub serial number first")
-        if driver not in ("ykush", "ykush3"):
-            raise ValueError("Expected ykush or ykush3")
-        if type(port) is not int or port not in (1, 2, 3) or type(enabled) is not bool:
-            raise ValueError("Expected port 1-3 and a boolean state")
+        if driver not in ("ykush", "ykush3", "ykushxs"):
+            raise ValueError("Expected ykush, ykush3 or ykushxs")
+        ports = [1] if driver == "ykushxs" else [1, 2, 3]
+        if type(port) is not int or port not in ports or type(enabled) is not bool:
+            raise ValueError(f"Expected a port in {ports} and a boolean state")
         with self._lock:
             hub = create_hub({"driver": driver, "cmd": resolve_command(command),
-                              "serial": serial.strip(), "ports": [1, 2, 3]})
+                              "serial": serial.strip(), "ports": ports})
             hub.open()
             try:
                 hub.set(port, enabled)

@@ -117,6 +117,17 @@ Both implementations inherit [Relay](relays.py), exposing `open()`, `set(channel
 
 ## Hub driver
 
+**YKUSH XS** uses `"driver": "ykushxs"` and `"ports": [1]`. It has one downstream port. The existing board mapping still uses `ykush_usb_port: 1`, but its CLI commands omit the port argument:
+
+```powershell
+ykushcmd ykushxs -l
+ykushcmd ykushxs -s SERIAL -u
+ykushcmd ykushxs -s SERIAL -d
+ykushcmd ykushxs -s SERIAL -g
+```
+
+See the [YKUSH XS setup guide](https://www.yepkit.com/learn/setup-guide-ykushxs_windows). Multiport XS configurations are rejected before any switching.
+
 For YKUSH3, configure:
 
 ```json

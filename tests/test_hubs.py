@@ -2,10 +2,31 @@ import subprocess
 import unittest
 from unittest.mock import Mock, call
 
-from automation.HIL.hubs import Hub, Ykush, Ykush3, create_hub
+from automation.HIL.hubs import Hub, Ykush, Ykush3, YkushXs, create_hub
 
 
 class HubTests(unittest.TestCase):
+    def test_xs_commands_have_no_port_argument(self):
+        command = Mock(side_effect=["", "Downstream port is OFF", "", "Downstream port is ON"])
+        hub = create_hub(dict(driver="ykushxs", cmd="ykushcmd", serial="XS123", ports=[1]), command)
+        self.assertIsInstance(hub, YkushXs)
+        hub.set(1, False)
+        hub.set(1, True)
+        prefix = ["ykushcmd", "ykushxs", "-s", "XS123"]
+        self.assertEqual(command.call_args_list, [call(prefix + ["-d"], 15), call(prefix + ["-g"], 15),
+                                                call(prefix + ["-u"], 15), call(prefix + ["-g"], 15)])
+        command.reset_mock()
+        with self.assertRaises(ValueError):
+            hub.set(2, True)
+        command.assert_not_called()
+
+    def test_xs_rejects_multiport_configuration_and_wrong_readback(self):
+        command = Mock(side_effect=["", "Downstream port is OFF"])
+        with self.assertRaises(ValueError):
+            YkushXs("ykushcmd", "XS123", [1, 2], command)
+        with self.assertRaisesRegex(RuntimeError, "not confirmed"):
+            YkushXs("ykushcmd", "XS123", [1], command).set(1, True)
+
     def test_ykush3_selects_subcommand_serial_and_port(self):
         command = Mock(side_effect=["", "Downstream port 2 is OFF", "", "Downstream port 1 is ON"])
         hub = Ykush3("path with spaces/ykushcmd.exe", "SERIAL", [1, 2, 3], command)

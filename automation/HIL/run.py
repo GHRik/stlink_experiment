@@ -35,7 +35,7 @@ def load_config(path):
         if hub_config is None:
             old_hub = config["ykush"]
             model = old_hub.get("model_argument", "")
-            hub_config = dict(old_hub, driver="ykush3" if model == "ykush3" else "ykush")
+            hub_config = dict(old_hub, driver=model if model in ("ykush3", "ykushxs") else "ykush")
         relay_config = config.get("relay_controller")
         if relay_config is None:
             old = config["numato"]
@@ -64,7 +64,7 @@ def load_config(path):
     count = relay_config["channels"]
     if "hub" not in config:
         model = config["ykush_model_argument"]
-        config["hub"] = dict(driver="ykush3" if model == "ykush3" else "ykush",
+        config["hub"] = dict(driver=model if model in ("ykush3", "ykushxs") else "ykush",
                              cmd=config["ykush_cmd"], serial=config["ykush_serial"],
                              model_argument=model, ports=config["ykush_ports"])
     create_hub(config["hub"])  # Validate without sending any USB command.

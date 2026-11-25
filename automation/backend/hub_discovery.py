@@ -21,10 +21,10 @@ def resolve_command(command):
 
 
 def available_hubs(driver, command="ykushcmd"):
-    if driver not in ("ykush", "ykush3"):
-        raise ValueError("Expected ykush or ykush3")
+    if driver not in ("ykush", "ykush3", "ykushxs"):
+        raise ValueError("Expected ykush, ykush3 or ykushxs")
     executable = resolve_command(command)
-    args = [executable] + (["ykush3"] if driver == "ykush3" else []) + ["-l"]
+    args = [executable] + ([driver] if driver != "ykush" else []) + ["-l"]
     result = subprocess.run(args, capture_output=True, text=True, errors="replace", timeout=10,
                             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     if result.returncode:
