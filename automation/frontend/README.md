@@ -30,7 +30,7 @@ Both Hub 1 and Hub 2 have model and serial selectors. Demo mode provides `YK1712
 
 The selector beside each hub output or relay contact assigns its physical port/channel. Choosing an occupied channel swaps the two assignments. Available numbers follow the selected model: YKUSH XS has one port, LCUS-2 has two channels, and Numato has four. Changing an assignment resets its displayed switch state without sending hardware commands.
 
-Opens the existing HTML in a separate desktop window using pywebview. **Choose file** opens a native file dialog and displays the full local path for `.ino` sketches and the optional `.py` controller. Cancel keeps the previous selection. StandAlone and One hub Run, plus manual STLINK, hub and relay controls, use the backend. Run in One relay and HIL remains simulated.
+Opens the existing HTML in a separate desktop window using pywebview. **Choose file** opens a native file dialog and displays the full local path for `.ino` sketches and the optional `.py` controller. Cancel keeps the previous selection. StandAlone, One hub and One relay Run, plus manual STLINK, hub and relay controls, use the backend. Run in HIL remains simulated.
 
 ### One hub Run
 
@@ -42,6 +42,10 @@ Opens the existing HTML in a separate desktop window using pywebview. **Choose f
 6. Start the same capture as StandAlone, including the optional controller.
 
 Cancel or a failed step stops the sequence before measurement. STOP during upload waits for the uploader to finish, disables the DUT USB port and skips capture.
+
+### One relay Run
+
+Disable all physical relay channels (four for Numato, two for LCUS-2), then disable STLINK OUT. For each visible DUT in order: enable its mapped relay channel, wait 2 seconds, run the StandAlone capture, disable that channel and wait 2 seconds. Each capture uses the test name with `_relayN` appended, where N is the physical channel number shown in the GUI. Measurement settings and the optional controller are shared across captures. STOP waits for capture cleanup before disabling the active relay; subsequent DUTs are skipped.
 
 ## Browser preview
 

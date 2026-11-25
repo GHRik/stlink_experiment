@@ -1145,6 +1145,7 @@
 <script src="modes.js"></script>
 <script src="capture.js"></script>
 <script src="one-hub.js"></script>
+<script src="one-relay.js"></script>
 <script src="meter.js"></script>
 <script src="relay.js"></script>
 <script src="mappings.js"></script>
@@ -1643,6 +1644,10 @@
       startOneHubCapture();
       return;
     }
+    if (desktopReady && currentLayout === 'one-relay') {
+      startOneRelayCapture();
+      return;
+    }
     setRunning(true);
     status.textContent = 'Running (prototype). Controls are locked. Press STOP to unlock; no hardware actions are started.';
   }
@@ -1727,6 +1732,10 @@
 
   runButton.addEventListener('click', handleRun);
   stopButton.addEventListener('click', () => {
+    if (relaySequenceRunning) {
+      stopOneRelayCapture();
+      return;
+    }
     if (oneHubPreparing) {
       stopOneHubPreparation();
       return;
