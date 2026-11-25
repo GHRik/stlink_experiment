@@ -10,6 +10,7 @@ import time
 import csv
 from .storage import save_json
 from .measurement_controller import MeasurementController
+from .events import emit
 
 SAMPLE = re.compile(r"^(\d{4})([+-])(\d{1,2})$")
 SOURCE = "https://www.st.com/resource/en/user_manual/um3291-getting-started-with-stlinkv3pwr-firmware-stmicroelectronics.pdf"
@@ -68,6 +69,8 @@ class Device:
             if line.lower().startswith("err"):
                 raise RuntimeError(f"{text}: {line}")
             if re.match(r"^ack\s+" + re.escape(expected) + r"(?:\s|:|$)", line, re.I):
+                if text in ("pwr off", "pwr vout on"):
+                    emit("meter_power", enabled=text == "pwr vout on")
                 return line
         raise RuntimeError(f"No acknowledgement for {text!r}. Responses: {received[-8:]}")
 
@@ -97,6 +100,7 @@ def read_temperature(device):
 def warm_up(device, seconds):
     """Warm up once per series, without acquiring samples; AUX stays off."""
     before = read_temperature(device)
+    emit("warmup", state="started", seconds=seconds, elapsed=0)
     if seconds > 0:
         print(f"Warming up for {seconds:g} s with OUT enabled (target is running).", flush=True)
         device.command("pwr vout on")
@@ -106,9 +110,11 @@ def warm_up(device, seconds):
                 step = min(10, remaining)
                 time.sleep(step)
                 remaining -= step
+                emit("warmup", state="progress", seconds=seconds, elapsed=seconds - remaining)
                 print(f"  Warm-up: {seconds - remaining:g}/{seconds:g} s", flush=True)
         finally:
             device.command("pwr off")
+    emit("warmup", state="completed", seconds=seconds, elapsed=seconds)
     return {"requested_seconds": seconds, "temperature_before_C": before,
             "temperature_after_C": read_temperature(device)}
 
@@ -146,6 +152,7 @@ def capture_one(device, directory, args, identity, repeat):
         metadata["temperature_before_calibration_C"] = read_temperature(device)
         metadata["calibration"] = {"status": "started", "utc": datetime.now(timezone.utc).isoformat()}
         print(f"  Calibrating before repeat {repeat}...", flush=True)
+        emit("calibration", state="started", repeat=repeat)
         # Verified on V4.J7.B3.P6: calib returns "error calib" with OUT off.
         # Keep AUX off; power-cycle the target AFTER calibration for the capture.
         device.command("pwr vout on")
@@ -159,6 +166,7 @@ def capture_one(device, directory, args, identity, repeat):
         if not re.search(r"\bstatus\s*:?\s*ok\s*$", status, re.I):
             raise RuntimeError(f"Meter not ready after calibration: {status}")
         metadata["calibration"].update(status="acknowledged", response=reply, device_status=status)
+        emit("calibration", state="completed", repeat=repeat)
         metadata["temperature_before_C"] = read_temperature(device)
         device.command("pwr off")
         time.sleep(args.off_seconds)
@@ -219,16 +227,21 @@ def capture_one(device, directory, args, identity, repeat):
                     raise RuntimeError(f"Device error: {line}")
                 elif line.lower().startswith("ack"):
                     if "start" in line.lower():
+                        if not started_ack:
+                            emit("meter_power", enabled=True)
+                            emit("repeat", state="started", repeat=repeat, elapsed=0, seconds=args.seconds)
                         if not started_ack and controller is not None:
                             controller.start()
                         started_ack = True
                 elif line == "end":
+                    emit("meter_power", enabled=False)
                     ended = True
                     break
                 elif line and not (line.startswith("pwr ") or line.startswith("summary")):
                     # Unknown metadata is retained; do not silently parse as current.
                     metadata["issues"].append(f"Unknown protocol line: {line[:160]}")
                 if now >= next_progress:
+                    emit("repeat", state="progress", repeat=repeat, elapsed=count / args.hz, seconds=args.seconds)
                     print(f"  {args.name} #{repeat}: {count / args.hz:.1f}/{args.seconds:g} s", flush=True)
                     next_progress = now + 5
         if not ended or count != n_target:

@@ -13,6 +13,7 @@ import sys
 from .options import read_options
 from .results import analyze_run, report, demo
 from .storage import save_json
+from .events import emit
 from .stlink_protocol import (
     Device, validate_settings, create_session, identify_device,
     configure_device, save_session_settings, capture_one, warm_up,
@@ -22,6 +23,8 @@ from .stlink_protocol import (
 def run_experiment(settings):
     """Prepare the meter, capture repeats, close the device, and summarize results."""
     validate_settings(settings)
+    emit("capture_plan", name=settings.name, repeats=settings.repeats, seconds=settings.seconds,
+         warmup_seconds=getattr(settings, "warmup_seconds", 180), off_seconds=settings.off_seconds)
     session = create_session(settings)
     meter = Device(settings.port)
 
@@ -37,6 +40,7 @@ def run_experiment(settings):
 
             # Power-cycle the target and record all samples for this repeat.
             capture_one(meter, run_folder, settings, identity, number)
+            emit("repeat", state="completed", repeat=number, elapsed=settings.seconds, seconds=settings.seconds)
 
             # Analyze and plot this repeat.
             analyze_run(run_folder, begin=0, end=None)
@@ -49,7 +53,9 @@ def run_experiment(settings):
             meter.close()
 
     # Generate comparison plots and statistics across repeats.
+    emit("report", state="started")
     report(session, begin=0, end=None)
+    emit("report", state="completed")
     print(f"Saved to: {session.resolve()}")
 
 

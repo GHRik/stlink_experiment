@@ -18,6 +18,7 @@ if str(ROOT) not in sys.path:
 
 from automation.HIL.relays import create_relay
 from automation.HIL.hubs import create_hub
+from src.events import emit
 
 
 def read_config(path):
@@ -147,9 +148,11 @@ class Hardware:
 
     def relay(self, channel, enabled):
         self.relays.set(channel, enabled)
+        emit("relay", channel=channel, enabled=enabled)
 
     def usb(self, port, enabled):
         self.hub.set(port, enabled)
+        emit("hub", serial=self.config["hub"]["serial"], port=port, enabled=enabled)
 
     def wait_port(self, port):
         from serial.tools.list_ports import comports
@@ -161,12 +164,14 @@ class Hardware:
         raise RuntimeError(f"Board upload port did not appear: {port}")
 
     def flash(self, board):
+        emit("upload", state="started", name=board["name"])
         self.event("flash", board=board["name"], port=board["com"])
         with (self.directory / f"{board['name']}_upload.log").open("w", encoding="utf-8") as log:
             run_command([sys.executable, "-u", str(ROOT / "automation/HIL/upload.py"),
                          board["upload_profile"], board["com"], board["sketch"],
                          "--cli", self.config["arduino_cli"]],
                         self.config["flash_timeout_s"], log)
+        emit("upload", state="completed", name=board["name"])
 
     def measure(self, board):
         self.event("measure", board=board["name"])
