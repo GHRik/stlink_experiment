@@ -28,6 +28,8 @@ For the frontend alone, use `stlink-gui --demo`. It opens sample COM ports and s
 
 Both Hub 1 and Hub 2 have model and serial selectors. Demo mode provides `YK17125`, `YK21493` and `YK30001`. A serial selected for one hub is hidden from the other hub's choices. Assigned COM ports are likewise hidden from other active devices and become available again when released. Both hubs share the same switching handler, using the model and serial selected in the clicked card.
 
+The selector beside each hub output or relay contact assigns its physical port/channel. Choosing an occupied channel swaps the two assignments. Available numbers follow the selected model: YKUSH XS has one port, LCUS-2 has two channels, and Numato has four. Changing an assignment resets its displayed switch state without sending hardware commands.
+
 Opens the existing HTML in a separate desktop window using pywebview. **Choose file** opens a native file dialog and displays the full local path for `.ino` sketches and the optional `.py` controller. Cancel keeps the previous selection. StandAlone Run and manual STLINK, hub and relay controls use the backend. Run in other layouts remains simulated.
 
 ## Browser preview
@@ -38,7 +40,7 @@ Use **Light / Dark** in the page header to select a theme. The browser remembers
 
 In the desktop launcher, opening a COM selector rescans serial ports and device descriptions. Choose each device explicitly; no roles are assigned automatically. Existing choices are retained, and disconnected choices are marked until reconnected or replaced. Discovery does not open serial ports. Browser preview keeps sample COM ports.
 
-Duplicate assignments are flagged. In StandAlone, Run passes the SMU port, test name, description, repeats, capture time and sampling rate to the existing capture CLI. Notes are saved as `<description>; USB disconnected`. Voltage, warm-up, OUT off time and an optional controller are passed too. CLI diagnostics stream into the measurement log; results use the repository's `results/` directory. STOP requests normal capture cleanup. Closing the window also requests STOP and waits for cleanup.
+Duplicate assignments are flagged. In StandAlone, Run passes the SMU port, test name, description, repeats, capture time and sampling rate to the existing capture CLI. Notes are taken directly from Description. Voltage, warm-up, OUT off time and an optional controller are passed too. CLI diagnostics stream into the measurement log; results use the repository's `results/` directory. STOP requests normal capture cleanup. Closing the window also requests STOP and waits for cleanup.
 
 The STLINK **OUT ON/OFF** button uses the selected SMU port. ON applies **OUT voltage [V]** and enables VOUT; OFF disables power and releases the connection. Acknowledgement updates the displayed state. Capture takes over the meter connection and retains its normal warm-up, calibration and power-cycle sequence. Manual OUT commands are blocked during capture. Window close also disables manually enabled OUT.
 
