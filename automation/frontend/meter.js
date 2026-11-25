@@ -38,7 +38,7 @@ async function switchMeterPower() {
   } finally {
     meterBusy = false;
     previous.forEach(({control, disabled}) => { control.disabled = disabled; });
-    runButton.disabled = isRunning || refreshingPorts || switchingHub;
+    runButton.disabled = isRunning || refreshingPorts || switchingHub || relayBusy;
     updateMeterControls();
   }
 }

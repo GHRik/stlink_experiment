@@ -24,7 +24,7 @@ include = ["src", "automation", "automation.*"]
 
 [tool.setuptools.package-data]
 "automation.HIL" = ["board_profiles.json", "config.example.jsonc", "config.lcus2.json", "example/*.ino"]
-"automation.frontend" = ["index.html", "modes.js", "modes.css", "capture.js", "meter.js"]
+"automation.frontend" = ["index.html", "modes.js", "modes.css", "capture.js", "meter.js", "relay.js"]
 "automation.backend" = ["config.json"]
 
 [tool.setuptools.dynamic]

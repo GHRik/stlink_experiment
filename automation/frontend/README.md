@@ -28,7 +28,7 @@ For the frontend alone, use `stlink-gui --demo`. It opens sample COM ports and s
 
 Both Hub 1 and Hub 2 have model and serial selectors. Demo mode provides `YK17125`, `YK21493` and `YK30001`. A serial selected for one hub is hidden from the other hub's choices. Assigned COM ports are likewise hidden from other active devices and become available again when released. Both hubs share the same switching handler, using the model and serial selected in the clicked card.
 
-Opens the existing HTML in a separate desktop window using pywebview. **Choose file** opens a native file dialog and displays the full local path for `.ino` sketches and the optional `.py` controller. Cancel keeps the previous selection. StandAlone Run, STLINK OUT and both hubs use the backend. Run in other layouts and relay switches remain simulated.
+Opens the existing HTML in a separate desktop window using pywebview. **Choose file** opens a native file dialog and displays the full local path for `.ino` sketches and the optional `.py` controller. Cancel keeps the previous selection. StandAlone Run and manual STLINK, hub and relay controls use the backend. Run in other layouts remains simulated.
 
 ## Browser preview
 
@@ -50,7 +50,7 @@ Select **Relay channels** (1–3) in **Relay contacts** to show the matching num
 
 **Hub 2** provides a model selector for `ykush` and `ykush3`. Opening **Hub serial number** runs `ykushcmd -l` or `ykushcmd ykush3 -l` and lists attached serial numbers. The executable defaults to `ykushcmd`; override `hub.cmd` in [backend/config.json](../backend/config.json) if needed. Discovery does not switch hub ports.
 
-**Relay controller** provides a model selector for the supported `numato` and `lcus2` drivers. This selection is also frontend-only.
+**Relay controller** selects the existing `numato` or `lcus2` driver and COM port. Each ON/OFF button switches its corresponding physical channel through that driver. No COM selection means the buttons are disabled. Numato confirms state readback; LCUS-2 reports command write/flush completion. Changing COM or model resets the displayed states to unknown (`?`); it does not switch hardware.
 
 LCUS-2 supports at most two relay channels. Selecting it limits the channel selector and the HIL / One relay DUT count to two (or fewer if the selected DUT hub has only one port).
 
@@ -60,9 +60,9 @@ In the desktop launcher, select a **hub model and serial number** before switchi
 
 All browser-preview switches remain simulated. Hub 2 shows ports for the selected DUT count.
 
-Relay contacts use simulated clickable ON/OFF indicators for each visible channel. They are independent of real hub switching.
+Relay contacts show ON/OFF after the driver completes the command. Model-specific errors are shown unchanged. The COM connection is closed after each manual operation without resetting other channels.
 
-Active connections glow in their wiring color and show a moving dot. Inactive connections are gray. Both hubs and manual STLINK OUT reflect confirmed commands; other manual connections remain simulated.
+Active connections glow in their wiring color and show a moving dot. Inactive connections are gray. Desktop manual controls reflect completed backend commands; demo mode remains simulated.
 
 **Run** locks all controls, including profile links and help buttons, and reveals **STOP** below it. Editing is restored when capture finishes or stops, without resetting selections. In demo and other layouts, Run/STOP only simulate this state.
 

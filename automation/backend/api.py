@@ -5,6 +5,7 @@ from .hub_discovery import available_hubs
 from .hub_control import HubControl
 from .capture import CaptureProcess
 from .meter_power import MeterPower
+from .relay_control import RelayControl
 from threading import Lock
 
 
@@ -12,6 +13,7 @@ class DesktopApi:
     def __init__(self, webview, settings=None):
         self._picker = FilePicker(webview)
         self._hub_control = HubControl()
+        self._relay_control = RelayControl()
         self._capture = CaptureProcess()
         self._meter_power = MeterPower()
         self._meter_lock = Lock()
@@ -31,6 +33,9 @@ class DesktopApi:
 
     def set_hub_port(self, driver, serial, port, enabled):
         return self._hub_control.set_port(driver, self._hub_command, serial, port, enabled)
+
+    def set_relay(self, driver, port, channel, enabled):
+        return self._relay_control.set_channel(driver, port, channel, enabled)
 
     def start_capture(self, config):
         with self._meter_lock:

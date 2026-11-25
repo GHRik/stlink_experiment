@@ -14,7 +14,7 @@ function modeDutCount() {
 function initializeModes() {
   const tabs = [...document.querySelectorAll('.layout-tabs [data-layout]')];
   function activate(layout) {
-    if (isRunning || switchingHub) return;
+    if (isRunning || switchingHub || meterBusy || relayBusy) return;
     document.dispatchEvent(new Event('close-device-menus'));
     currentLayout = layout;
     document.querySelector('.wiring-diagram').dataset.layout = layout;

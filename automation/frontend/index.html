@@ -1019,21 +1019,21 @@
               </select>
             </div>
           </div>
-          <button class="relay-channel state-toggle" type="button" aria-pressed="false">
+          <button class="relay-channel state-toggle" data-channel="0" type="button" aria-pressed="false">
             <span>1 → DUT 1</span>
             <span class="port-indicator">
               <span class="port-state">OFF</span>
               <span class="port-led" aria-hidden="true"></span>
             </span>
           </button>
-          <button class="relay-channel state-toggle" type="button" aria-pressed="false">
+          <button class="relay-channel state-toggle" data-channel="1" type="button" aria-pressed="false">
             <span>2 → DUT 2</span>
             <span class="port-indicator">
               <span class="port-state">OFF</span>
               <span class="port-led" aria-hidden="true"></span>
             </span>
           </button>
-          <button class="relay-channel state-toggle" type="button" aria-pressed="false">
+          <button class="relay-channel state-toggle" data-channel="2" type="button" aria-pressed="false">
             <span>3 → DUT 3</span>
             <span class="port-indicator">
               <span class="port-state">OFF</span>
@@ -1118,6 +1118,7 @@
 <script src="modes.js"></script>
 <script src="capture.js"></script>
 <script src="meter.js"></script>
+<script src="relay.js"></script>
 <script>
   // Desktop mode replaces browser uploads with native dialogs returning full paths.
   window.addEventListener('pywebviewready', () => {
@@ -1127,13 +1128,15 @@
       return;
     }
     desktopReady = true;
+    resetRelayStates();
+    updateRelayControls();
     displayMeterPower(null);
     updateMeterControls();
     resetHubPortStates();
     updateHubControls();
     // Discard sample assignments before populating real ports; never guess device roles.
     selectors.forEach(select => { select.replaceChildren(new Option('Select a port', '')); });
-    document.querySelector('#prototype-note').textContent = 'StandAlone Run, STLINK OUT and both hubs use the local backend. Other layout Run actions and relays remain simulated.';
+    document.querySelector('#prototype-note').textContent = 'StandAlone Run, STLINK OUT, hubs and relay switches use the local backend. Run in other layouts remains simulated.';
     selectors.forEach(select => initializeLiveChoice(select, refreshSerialPorts));
     hubSelectors.forEach(select => select.replaceChildren(new Option('Select a hub', '')));
     initializeLiveChoice(document.querySelector('#hub-serial'), () => refreshHubs());
@@ -1295,7 +1298,7 @@
       switchingHub = false;
       port.removeAttribute('aria-busy');
       locked.forEach(({control, disabled}) => { control.disabled = disabled; });
-      runButton.disabled = isRunning || refreshingPorts || meterBusy;
+      runButton.disabled = isRunning || refreshingPorts || meterBusy || relayBusy;
       updateHubControls();
       updateConnectionFlows();
     }
@@ -1410,6 +1413,7 @@
       });
       updateExclusiveChoices();
       updateMeterControls();
+      updateRelayControls();
       discoveryStatus.textContent = ports.length ? `${ports.length} serial ports detected` : 'No serial ports detected';
       validatePorts();
     } catch (error) {
@@ -1417,7 +1421,7 @@
       throw error;
     } finally {
       refreshingPorts = false;
-      runButton.disabled = isRunning || switchingHub || meterBusy;
+      runButton.disabled = isRunning || switchingHub || meterBusy || relayBusy;
     }
   }
 
@@ -1597,7 +1601,7 @@
   }
 
   function handleRun() {
-    if (isRunning || refreshingPorts || switchingHub || meterBusy) return;
+    if (isRunning || refreshingPorts || switchingHub || meterBusy || relayBusy) return;
     validatePorts();
     if (status.classList.contains('error')) return;
     if (activePorts().some(select => !select.value)) {
@@ -1618,6 +1622,10 @@
   document.querySelector('#meter-port').addEventListener('change', () => {
     if (desktopReady) displayMeterPower(null);
     updateMeterControls();
+  });
+  document.querySelector('#relay-port').addEventListener('change', () => {
+    resetRelayStates();
+    updateRelayControls();
   });
   hubSelectors.forEach(select => {
     fillDemoHubs(select);
@@ -1670,6 +1678,10 @@
         switchMeterPower();
         return;
       }
+      if (desktopReady && port.classList.contains('relay-channel')) {
+        switchRelay(port);
+        return;
+      }
       if (port.classList.contains('hub-port') && !hubConfigured(port.closest('.device-card'))) return;
       if (desktopReady && port.classList.contains('hub-port')) {
         switchHubPort(port);
@@ -1702,6 +1714,10 @@
     updateDeviceCount();
   }
   document.querySelector('#relay-model').addEventListener('change', updateRelayCapacity);
+  document.querySelector('#relay-model').addEventListener('change', () => {
+    resetRelayStates();
+    updateRelayControls();
+  });
   updateRelayCapacity();
   updateDeviceCount();
   resetHubOneStates();
