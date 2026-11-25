@@ -11,6 +11,8 @@
     header { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
     h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: -.6px; }
     p { color: #5c6c80; margin: 0 0 24px; line-height: 1.6; }
+    .configuration { margin-top: 14px; }
+    [hidden] { display: none !important; }
     .badge { border: 1px solid #cbd5e1; border-radius: 20px; padding: 6px 12px; white-space: nowrap; font-size: 12px; }
     .viewport { overflow-x: auto; border: 1px solid #d7dfe9; border-radius: 16px; background: white; }
     .bench { position: relative; width: 1360px; height: 1280px; margin: auto; }
@@ -59,21 +61,36 @@
   <div class="viewport" tabindex="0" role="region" aria-label="HIL wiring diagram; scroll horizontally on smaller screens">
     <div class="bench">
       <svg viewBox="0 0 1360 1280" aria-hidden="true">
-        <path class="usb" d="M144 610 H195 M330 610 H365 V195 H405 M365 610 H405 M365 610 V1030 H405"/>
-        <text x="155" y="598">USB</text>
-        <path class="usb" d="M595 610 H670"/><text x="611" y="599">Control</text>
-        <path class="power" d="M595 185 H745 V521"/><text x="626" y="173">OUT + GND</text>
-        <path class="power" d="M820 574 H900 V110 H1040 M820 610 H1040 M820 646 H875 V950 H1040"/>
-        <text x="930" y="98">3V3 + GND</text><text x="930" y="598">3V3 + GND</text><text x="930" y="938">3V3 + GND</text>
-        <path class="usb upload" d="M595 1030 H1000 V175 H1040 M1000 675 H1040 M1000 1015 H1040"/>
-        <text x="640" y="1054">USB upload · ports 1 / 2 / 3</text>
-      </svg>
+          <path class="usb" d="M144 610 H195 M330 610 H365 V195 H405 M365 610 H405 M365 610 V1030 H405"/>
+          <text x="155" y="598">USB</text>
+          <path class="usb" d="M595 610 H670"/>
+          <text x="611" y="599">Control</text>
+          <path class="power" d="M595 185 H745 V521"/>
+          <text x="626" y="173">OUT + GND</text>
+          <g data-dut="1">
+            <path class="power" d="M820 574 H900 V110 H1040"/>
+            <text x="930" y="98">3V3 + GND</text>
+            <path class="usb upload" d="M1000 175 H1040"/>
+          </g>
+          <g data-dut="2">
+            <path class="power" d="M820 610 H1040"/>
+            <text x="930" y="598">3V3 + GND</text>
+            <path class="usb upload" d="M1000 675 H1040"/>
+          </g>
+          <g data-dut="3">
+            <path class="power" d="M820 646 H875 V950 H1040"/>
+            <text x="930" y="938">3V3 + GND</text>
+            <path class="usb upload" d="M1000 1015 H1040"/>
+          </g>
+          <path class="usb upload" id="upload-trunk" d="M595 1030 H1000 V175"/>
+          <text id="upload-label" x="640" y="1054">USB upload · ports 1 / 2 / 3</text>
+        </svg>
       <div class="node pc"><strong>PC</strong><small>Host</small><button class="run" id="run" type="button">Run</button></div>
       <div class="node hub1"><strong>Hub 1</strong><small>USB hub</small></div>
       <section class="node meter"><strong>STLINK-V3PWR</strong><small>Current measurement</small><label for="meter-port">SMU port</label><select id="meter-port" data-default="COM18"></select></section>
       <section class="node relay"><strong>Relay controller</strong><small>Numato / LCUS-2</small><label for="relay-port">Control port</label><select id="relay-port" data-default="COM19"></select></section>
       <div class="node hub2"><strong>Hub 2 · YKUSH</strong><small>Switched USB ports 1–3</small></div>
-      <div class="node contacts"><strong>Relay contacts</strong><div class="contact">Relay 1 → DUT 1</div><div class="contact">Relay 2 → DUT 2</div><div class="contact">Relay 3 → DUT 3</div></div>
+      <div class="node contacts"><strong>Relay contacts</strong><div class="configuration"><label for="relay-count">Relay channels</label><select id="relay-count"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option></select></div><div class="contact">Relay 1 → DUT 1</div><div class="contact">Relay 2 → DUT 2</div><div class="contact">Relay 3 → DUT 3</div></div>
       <section class="node dut dut1"><strong>Device Under Test 1</strong><small>YKUSH port 1 · relay 1</small><label for="dut1-port">Upload port</label><select id="dut1-port" data-default="COM7"></select><label class="sketch-label" for="dut1-profile">Board profile</label><select id="dut1-profile" class="board-profile"><option value="nodemcu">nodemcu</option></select><a class="add-profile" href="../HIL/board_profiles.json" target="_blank" rel="noopener">Add profile ↗</a><label class="sketch-label" for="dut1-sketch">Arduino sketch</label><input class="sketch" id="dut1-sketch" type="file" accept=".ino"></section>
       <section class="node dut dut2"><strong>Device Under Test 2</strong><small>YKUSH port 2 · relay 2</small><label for="dut2-port">Upload port</label><select id="dut2-port" data-default="COM8"></select><label class="sketch-label" for="dut2-profile">Board profile</label><select id="dut2-profile" class="board-profile"><option value="nodemcu">nodemcu</option></select><a class="add-profile" href="../HIL/board_profiles.json" target="_blank" rel="noopener">Add profile ↗</a><label class="sketch-label" for="dut2-sketch">Arduino sketch</label><input class="sketch" id="dut2-sketch" type="file" accept=".ino"></section>
       <section class="node dut dut3"><strong>Device Under Test 3</strong><small>YKUSH port 3 · relay 3</small><label for="dut3-port">Upload port</label><select id="dut3-port" data-default="COM9"></select><label class="sketch-label" for="dut3-profile">Board profile</label><select id="dut3-profile" class="board-profile"><option value="nodemcu">nodemcu</option></select><a class="add-profile" href="../HIL/board_profiles.json" target="_blank" rel="noopener">Add profile ↗</a><label class="sketch-label" for="dut3-sketch">Arduino sketch</label><input class="sketch" id="dut3-sketch" type="file" accept=".ino"></section>
@@ -84,36 +101,66 @@
   <p>Sample COM ports only. This prototype does not connect to hardware or save configuration.</p>
 </main>
 <script>
+  // Port controls are separate from board-profile and relay-count selectors.
   const selectors = [...document.querySelectorAll('select[data-default]')];
   const status = document.querySelector('#status');
+  const relayCount = document.querySelector('#relay-count');
+
+  // Only visible DUTs participate in port validation.
+  function activePorts() {
+    return selectors.filter(select => !select.closest('[hidden]'));
+  }
+
+  // Synchronize relay rows, DUT cards and their SVG connections.
+  function updateDeviceCount() {
+    const count = Number(relayCount.value);
+    document.querySelectorAll('.dut').forEach((dut, index) => { dut.hidden = index >= count; });
+    document.querySelectorAll('.contact').forEach((contact, index) => { contact.hidden = index >= count; });
+    document.querySelectorAll('[data-dut]').forEach(group => {
+      group.style.display = Number(group.dataset.dut) <= count ? '' : 'none';
+    });
+    document.querySelector('#upload-label').textContent = `USB upload · ${count === 1 ? 'port' : 'ports'} ${Array.from({length: count}, (_, index) => index + 1).join(' / ')}`;
+    validatePorts();
+  }
+
   function validatePorts() {
-    const assigned = selectors.map(select => select.value).filter(Boolean);
+    const ports = activePorts();
+    const assigned = ports.map(select => select.value).filter(Boolean);
     const duplicates = [...new Set(assigned.filter((port, index) => assigned.indexOf(port) !== index))];
     status.classList.toggle('error', duplicates.length > 0);
     status.textContent = duplicates.length
       ? `Port assigned more than once: ${duplicates.join(', ')}. Choose a separate port for each device.`
-      : `${assigned.length} of 5 serial ports assigned.`;
+      : `${assigned.length} of ${ports.length} serial ports assigned.`;
   }
-  selectors.forEach(select => {
-    select.add(new Option('Select a port', ''));
-    for (let number = 1; number <= 32; number++) {
-      const port = `COM${number}`;
-      select.add(new Option(port, port));
-    }
-    select.value = select.dataset.default;
-    select.addEventListener('change', validatePorts);
-  });
-  document.querySelector('#run').addEventListener('click', () => {
+
+  function initializePortSelectors() {
+    selectors.forEach(select => {
+      select.add(new Option('Select a port', ''));
+      for (let number = 1; number <= 32; number++) {
+        const port = `COM${number}`;
+        select.add(new Option(port, port));
+      }
+      select.value = select.dataset.default;
+      select.addEventListener('change', validatePorts);
+    });
+  }
+
+  function handleRun() {
     validatePorts();
     if (status.classList.contains('error')) return;
-    if (selectors.some(select => !select.value)) {
+    if (activePorts().some(select => !select.value)) {
       status.classList.add('error');
       status.textContent = 'Select a serial port for each device before running.';
       return;
     }
     status.textContent = 'Prototype only: Run is not connected to the HIL automation. No hardware actions were started.';
-  });
-  validatePorts();
+  }
+
+  // Initialize the local prototype and register UI events.
+  initializePortSelectors();
+  document.querySelector('#run').addEventListener('click', handleRun);
+  relayCount.addEventListener('change', updateDeviceCount);
+  updateDeviceCount();
 </script>
 </body>
 </html>
