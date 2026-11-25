@@ -2,6 +2,8 @@
 let runProgress = null;
 
 function beginRunProgress(config, names = [config.name], uploads = false) {
+  if (typeof stopLiveDemo === 'function') stopLiveDemo();
+  if (typeof resetLiveCurrent === 'function') resetLiveCurrent();
   runProgress = {finished: false, current: '', phase: 'Preparing', clock: null,
     boards: names.map(name => ({name: name.trim(), repeats: Number(config.repeats), seconds: Number(config.seconds),
       warmup: Number(config.warmup_seconds), warmElapsed: 0, elapsed: 0, calibration: 0,
@@ -12,6 +14,7 @@ function beginRunProgress(config, names = [config.name], uploads = false) {
 
 function applyRunEvents(result) {
   for (const event of result.events || []) {
+    if (typeof updateLiveCurrent === 'function') updateLiveCurrent(event);
     if (event.type === 'meter_power') displayMeterPower(event.enabled);
     if (event.type === 'hub' || event.type === 'relay') {
       const buttons = event.type === 'relay' ? relaySwitches : [...hub1Switches, ...hub2Switches];

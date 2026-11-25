@@ -6,6 +6,7 @@
   <title>HIL testbench</title>
   <link rel="stylesheet" href="modes.css">
   <link rel="stylesheet" href="gallery.css">
+  <link rel="stylesheet" href="live-current.css">
   <style>
     :root {
       --instrument-font: "Cascadia Mono", "Consolas", "Liberation Mono", monospace;
@@ -1138,6 +1139,13 @@
       <span class="key orange">Switched OUT + GND · two contacts per DUT</span>
     </footer>
     <p id="status" role="status"> </p>
+    <section class="live-current" aria-label="Live current preview">
+      <header><h2>Live current · last 30 seconds</h2><button id="live-current-demo" type="button">Demo preview</button></header>
+      <p id="live-current-label">Waiting for acquisition</p>
+      <canvas id="live-current-canvas" role="img" aria-label="Live current in milliamps over the last 30 seconds"></canvas>
+      <p class="live-current-legend"><span>Bin mean</span><span class="range">Bin minimum–maximum</span></p>
+      <p><small>Preview: approximately 50 ms bins, or one sample at low sampling rates. Full-resolution samples are saved independently.</small></p>
+    </section>
     <section class="capture-log" id="run-progress" aria-label="Run progress" hidden>
       <h2>Run progress</h2>
       <p id="run-stage" role="status"></p>
@@ -1161,6 +1169,7 @@
   </main>
 <script src="modes.js"></script>
 <script src="gallery.js"></script>
+<script src="live-current.js"></script>
 <script src="progress.js"></script>
 <script src="capture.js"></script>
 <script src="one-hub.js"></script>
