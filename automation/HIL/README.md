@@ -32,9 +32,10 @@ The `nodemcu` profile in [board_profiles.json](board_profiles.json) selects Node
 From the repository root:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -r automation/HIL/requirements.txt
-.\.venv\Scripts\python.exe automation/HIL/run.py --config automation/HIL/config.local.jsonc --dry-run
-.\.venv\Scripts\python.exe automation/HIL/run.py --config automation/HIL/config.local.jsonc
+.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\Activate.ps1
+stlink-hil --config automation/HIL/config.local.jsonc --dry-run
+stlink-hil --config automation/HIL/config.local.jsonc
 ```
 
 Sequence (2 s delay after each switching/upload/measurement step):
@@ -54,7 +55,7 @@ Results: `results/automation_<timestamp>/` contains the configuration snapshot, 
 ## Standalone upload
 
 ```powershell
-.\.venv\Scripts\python.exe automation/HIL/upload.py nodemcu COM22 automation/HIL/example/example.ino
+arduino-upload nodemcu COM22 automation/HIL/example/example.ino
 ```
 
 This command only compiles/uploads; it does not switch USB, relays or meter power. The last argument is a local `.ino` path or sketch directory, not an HTTP URL. Pass `--cli "C:\path\to\arduino-cli.exe"` if Arduino CLI is not on PATH, or set `ARDUINO_CLI`. Compiler and uploader output is passed through unchanged with verbose logging and the original CLI exit code. Batch runs save this output in each board's upload log. No Python wrapper library is required.

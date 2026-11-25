@@ -12,8 +12,11 @@ Python 3.10+; run these commands from the repository root in PowerShell:
 
 ```powershell
 py -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\Activate.ps1
 ```
+
+The editable install provides `stlink-measure` in the activated environment and uses the code in this checkout. The command works from any directory; relative paths such as `results/` are resolved from the current working directory.
 
 ### 2. Connect
 
@@ -35,7 +38,7 @@ For the default **3.3 V** supply, use NodeMCU's **3V3** pin. **VIN** feeds the o
 - Close STM32CubeMonitor-Power and any terminal using the meter. Identify its **SMU** port:
 
 ```powershell
-.\.venv\Scripts\python.exe -m src.stlink_measure ports
+stlink-measure ports
 ```
 
 ### 3. Capture and analyze
@@ -43,13 +46,13 @@ For the default **3.3 V** supply, use NodeMCU's **3V3** pin. **VIN** feeds the o
 Replace `COM18` with the SMU port and match `--name` / `--notes` to your board and firmware:
 
 ```powershell
-.\.venv\Scripts\python.exe -m src.stlink_measure capture --port COM18 --name no_code --notes "NodeMCU V3; Core 3.1.2; CPU 80 MHz; 00_no_code; USB disconnected" --repeats 10 --seconds 100 --hz 1000
+stlink-measure capture --port COM18 --name no_code --notes "NodeMCU V3; Core 3.1.2; CPU 80 MHz; 00_no_code; USB disconnected" --repeats 10 --seconds 100 --hz 1000
 ```
 
 Results are saved in `results/<name>_<timestamp>/`. To regenerate reports, use the directory printed after capture:
 
 ```powershell
-.\.venv\Scripts\python.exe -m src.stlink_measure analyze --root results/no_code_20261114_183000_123456
+stlink-measure analyze --root results/no_code_20261114_183000_123456
 ```
 
 ## Detailed documentation
@@ -70,7 +73,7 @@ Use `--controller` to run a Python script alongside each capture. See the [contr
 
 **How can I automate firmware uploads and switch between boards for measurement?**
 
-See [automation](automation/README.md) for sequential firmware uploads, USB hub control, relay switching and STLINK captures.
+Use `stlink-hil --config automation/HIL/config.local.jsonc` for batch measurements or `arduino-upload nodemcu COM22 path/to/sketch.ino` for an upload. See [automation](automation/README.md) for configuration, USB hub control and relay switching.
 
 ## Citation
 
