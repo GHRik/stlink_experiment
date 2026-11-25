@@ -25,6 +25,9 @@
     .node label { display: block; font-size: 11px; font-weight: 600; color: #65758b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .7px; }
     select { width: 100%; padding: 9px; border-radius: 6px; border: 1px solid #c4cfdd; background: #f8fafc; color: #172538; font: inherit; }
     select:focus-visible { outline: 3px solid #a8cefc; outline-offset: 2px; }
+    .run { width: 100%; border: 0; border-radius: 6px; padding: 9px; background: #24745f; color: white; font: inherit; font-weight: 600; cursor: pointer; }
+    .run:hover { background: #195b49; }
+    .run:focus-visible { outline: 3px solid #a8cefc; outline-offset: 2px; }
     .pc { left: 24px; top: 270px; width: 120px; }
     .hub1 { left: 195px; top: 270px; width: 135px; }
     .meter { left: 405px; top: 40px; border-top: 3px solid #3479c3; }
@@ -59,7 +62,7 @@
         <path class="usb upload" d="M595 550 H860 V175 H880 M860 385 H880 M860 585 H880"/>
         <text x="640" y="574">USB upload · ports 1 / 2 / 3</text>
       </svg>
-      <div class="node pc"><strong>PC</strong><small>Host</small></div>
+      <div class="node pc"><strong>PC</strong><small>Host</small><button class="run" id="run" type="button">Run</button></div>
       <div class="node hub1"><strong>Hub 1</strong><small>USB hub</small></div>
       <section class="node meter"><strong>STLINK-V3PWR</strong><small>Current measurement</small><label for="meter-port">SMU port</label><select id="meter-port" data-default="COM18"></select></section>
       <section class="node relay"><strong>Relay controller</strong><small>Numato / LCUS-2</small><label for="relay-port">Control port</label><select id="relay-port" data-default="COM19"></select></section>
@@ -93,6 +96,16 @@
     }
     select.value = select.dataset.default;
     select.addEventListener('change', validatePorts);
+  });
+  document.querySelector('#run').addEventListener('click', () => {
+    validatePorts();
+    if (status.classList.contains('error')) return;
+    if (selectors.some(select => !select.value)) {
+      status.classList.add('error');
+      status.textContent = 'Select a serial port for each device before running.';
+      return;
+    }
+    status.textContent = 'Prototype only: Run is not connected to the HIL automation. No hardware actions were started.';
   });
   validatePorts();
 </script>
