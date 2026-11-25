@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stlink-power-measurements"
+version = "0.1.0"
+description = "Capture and analyze board current measurements with STLINK-V3PWR."
+readme = "README.md"
+requires-python = ">=3.10"
+dynamic = ["dependencies"]
+
+[project.scripts]
+stlink-measure = "src.stlink_measure:main"
+stlink-hil = "automation.HIL.run:cli"
+arduino-upload = "automation.HIL.upload:main"
+
+[tool.setuptools.packages.find]
+include = ["src", "automation", "automation.*"]
+
+[tool.setuptools.package-data]
+"automation.HIL" = ["board_profiles.json", "config.example.jsonc", "config.lcus2.json", "example/*.ino"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}

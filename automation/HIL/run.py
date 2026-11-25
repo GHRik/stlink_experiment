@@ -277,12 +277,17 @@ def main():
     sequence(config, Hardware(config, directory))
 
 
-if __name__ == "__main__":
+def cli():
     try:
         main()
     except KeyboardInterrupt:
         print("Interrupted; cleanup attempted.", file=sys.stderr)
-        sys.exit(130)
+        return 130
     except Exception as error:
         print(f"ERROR: {error}", file=sys.stderr)
-        sys.exit(1)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(cli())
