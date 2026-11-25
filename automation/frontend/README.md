@@ -18,4 +18,6 @@ Both hubs show output-port LEDs with ON/OFF labels. Click a port row to toggle i
 
 Relay contacts use the same clickable ON/OFF indicators for each visible channel. Hub and relay switches are independent in this prototype.
 
+Active connections glow in their wiring color and show a moving dot. Inactive connections are gray. Animations represent simulated switch states only.
+
 The panel above STLINK contains the existing measurement settings: sample rate, capture duration, repeats, OUT voltage, warm-up time and OUT off time. Defaults match the HIL example configuration; values remain in the browser.

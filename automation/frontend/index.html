@@ -87,6 +87,14 @@
       stroke: white;
       stroke-width: 1;
     }
+    .wiring-connections path {
+      stroke: #b5bdc8;
+      transition: stroke 180ms ease, filter 180ms ease;
+    }
+    .wiring-connections path.is-active {
+      stroke: var(--connection-color);
+      filter: drop-shadow(0 0 3px var(--connection-color));
+    }
     @media (prefers-reduced-motion: reduce) {
       .flow-dot { display: none; }
     }
@@ -318,7 +326,7 @@
     }
     .upload-hub {
       left: 405px;
-      top: 997px;
+      top: 780px;
     }
     .dut {
       left: 1040px;
@@ -408,7 +416,10 @@
       <div class="wiring-diagram">
         <!-- USB, relay control and switched measurement wiring. -->
         <svg class="wiring-connections" viewBox="0 0 1360 1280" aria-hidden="true">
-          <path class="usb" d="M144 768 H170 V610 H195 M330 610 H365 V430 H405 M365 610 H405 M365 610 V1030 H405"/>
+          <path class="usb" d="M144 768 H170 V610 H195"/>
+          <path class="usb" d="M330 610 H365 V430 H405"/>
+          <path class="usb" d="M330 610 H405"/>
+          <path class="usb" d="M330 610 H365 V813 H405"/>
           <text x="135" y="690">USB</text>
           <path class="usb" d="M595 610 H670"/>
           <text x="611" y="599">Control</text>
@@ -417,19 +428,19 @@
           <g data-dut="1">
             <path class="power" d="M820 574 H900 V110 H1040"/>
             <text x="930" y="98">3V3 + GND</text>
-            <path class="usb upload" d="M595 1165 H940 V175 H1040"/>
+            <path class="usb upload" d="M595 948 H940 V175 H1040"/>
           </g>
           <g data-dut="2">
             <path class="power" d="M820 610 H1040"/>
             <text x="930" y="598">3V3 + GND</text>
-            <path class="usb upload" d="M595 1195 H965 V675 H1040"/>
+            <path class="usb upload" d="M595 978 H965 V675 H1040"/>
           </g>
           <g data-dut="3">
             <path class="power" d="M820 646 H875 V950 H1040"/>
             <text x="930" y="938">3V3 + GND</text>
-            <path class="usb upload" d="M595 1225 H990 V1015 H1040"/>
+            <path class="usb upload" d="M595 1008 H990 V1015 H1040"/>
           </g>
-          <text id="upload-label" x="640" y="1260">USB upload · ports 1 / 2 / 3</text>
+          <text id="upload-label" x="640" y="1050">USB upload · ports 1 / 2 / 3</text>
         </svg>
         <!-- Host and upstream USB hub. -->
         <div class="device-card pc">
@@ -678,6 +689,8 @@
     const svg = document.querySelector('.wiring-connections');
     const namespace = 'http://www.w3.org/2000/svg';
     function addFlow(path, color, active) {
+      const line = [...svg.querySelectorAll('path')].find(element => element.getAttribute('d') === path);
+      line.style.setProperty('--connection-color', color);
       const dot = document.createElementNS(namespace, 'circle');
       dot.setAttribute('class', 'flow-dot');
       dot.setAttribute('r', '4');
@@ -688,21 +701,21 @@
       motion.setAttribute('repeatCount', 'indefinite');
       dot.append(motion);
       svg.append(dot);
-      connectionFlows.push({dot, active});
+      connectionFlows.push({dot, line, active});
     }
     const usbColor = '#8695aa';
     const powerColor = '#d67b22';
     addFlow('M144 768 H170 V610 H195', usbColor, () => hub1Switches.some(isOn));
     addFlow('M330 610 H365 V430 H405', usbColor, () => isOn(hub1Switches[0]));
     addFlow('M330 610 H405', usbColor, () => isOn(hub1Switches[1]));
-    addFlow('M330 610 H365 V1030 H405', usbColor, () => isOn(hub1Switches[2]));
+    addFlow('M330 610 H365 V813 H405', usbColor, () => isOn(hub1Switches[2]));
     addFlow('M595 610 H670', usbColor, () => isOn(hub1Switches[1]));
     const relayActive = index => index < Number(relayCount.value)
       && isOn(relaySwitches[index]) && isOn(hub1Switches[0]);
     addFlow('M595 420 H745 V521', powerColor, () => relaySwitches.some((_, index) => relayActive(index)));
     const powerPaths = ['M820 574 H900 V110 H1040', 'M820 610 H1040', 'M820 646 H875 V950 H1040'];
     const uploadHeights = [175, 675, 1015];
-    const uploadStarts = [1165, 1195, 1225];
+    const uploadStarts = [948, 978, 1008];
     const uploadLanes = [940, 965, 990];
     powerPaths.forEach((path, index) => {
       addFlow(path, powerColor, () => relayActive(index));
@@ -712,8 +725,10 @@
   }
 
   function updateConnectionFlows() {
-    connectionFlows.forEach(({dot, active}) => {
-      dot.style.visibility = active() ? 'visible' : 'hidden';
+    connectionFlows.forEach(({dot, line, active}) => {
+      const enabled = active();
+      dot.style.visibility = enabled ? 'visible' : 'hidden';
+      line.classList.toggle('is-active', enabled);
     });
   }
 
