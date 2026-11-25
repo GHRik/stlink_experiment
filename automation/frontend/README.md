@@ -26,9 +26,9 @@ stlink-gui
 
 For the frontend alone, use `stlink-gui --demo`. It opens sample COM ports and simulated switches without exposing the Python hardware API. **Demo mode** is shown in the header.
 
-Both Hub 1 and Hub 2 have model and serial selectors. Demo mode provides `YK17125`, `YK21493` and `YK30001`. A serial selected for one hub is hidden from the other hub's choices. Assigned COM ports are likewise hidden from other active devices and become available again when released. Hub 1 switching remains frontend-only.
+Both Hub 1 and Hub 2 have model and serial selectors. Demo mode provides `YK17125`, `YK21493` and `YK30001`. A serial selected for one hub is hidden from the other hub's choices. Assigned COM ports are likewise hidden from other active devices and become available again when released. Both hubs share the same switching handler, using the model and serial selected in the clicked card.
 
-Opens the existing HTML in a separate desktop window using pywebview. **Choose file** opens a native file dialog and displays the full local path for `.ino` sketches and the optional `.py` controller. Cancel keeps the previous selection. Hub 2 supports real manual switching; Run and the other hardware switches remain simulated.
+Opens the existing HTML in a separate desktop window using pywebview. **Choose file** opens a native file dialog and displays the full local path for `.ino` sketches and the optional `.py` controller. Cancel keeps the previous selection. StandAlone Run, STLINK OUT and both hubs use the backend. Run in other layouts and relay switches remain simulated.
 
 ## Browser preview
 
@@ -38,7 +38,9 @@ Use **Light / Dark** in the page header to select a theme. The browser remembers
 
 In the desktop launcher, opening a COM selector rescans serial ports and device descriptions. Choose each device explicitly; no roles are assigned automatically. Existing choices are retained, and disconnected choices are marked until reconnected or replaced. Discovery does not open serial ports. Browser preview keeps sample COM ports.
 
-Duplicate assignments are flagged. The Run button beside the PC validates port assignments and displays a prototype message. Measurement execution and configuration persistence are not implemented.
+Duplicate assignments are flagged. In StandAlone, Run passes the SMU port, test name, description, repeats, capture time and sampling rate to the existing capture CLI. Notes are saved as `<description>; USB disconnected`. Voltage, warm-up, OUT off time and an optional controller are passed too. CLI diagnostics stream into the measurement log; results use the repository's `results/` directory. STOP requests normal capture cleanup. Closing the window also requests STOP and waits for cleanup.
+
+The STLINK **OUT ON/OFF** button uses the selected SMU port. ON applies **OUT voltage [V]** and enables VOUT; OFF disables power and releases the connection. Acknowledgement updates the displayed state. Capture takes over the meter connection and retains its normal warm-up, calibration and power-cycle sequence. Manual OUT commands are blocked during capture. Window close also disables manually enabled OUT.
 
 Each DUT has a local `.ino` file picker showing the selected filename. Files stay in the browser; they are not uploaded or flashed.
 
@@ -54,15 +56,15 @@ LCUS-2 supports at most two relay channels. Selecting it limits the channel sele
 
 **One hub** and **HIL Hub 2** also support **YKUSH XS** (`ykushxs`), showing only port 1 and one DUT. HIL Hub 1 requires three downstream sockets, so XS is unavailable there. Switching to HIL clears an incompatible Hub 1 XS selection. Discovery uses `ykushcmd ykushxs -l`; switching and readback use `-u`, `-d` and `-g` without a trailing port number.
 
-In the desktop launcher, select a **Hub 2 serial number** before switching its ports. Clicking ON/OFF calls the existing HIL Hub driver for that exact serial and physical socket, then verifies the state with `-g`. Until confirmed, the state is unknown (`?`). Model/serial changes reset displayed states. Hub controls are locked while a command is pending. No ports are switched automatically on selection or window close.
+In the desktop launcher, select a **hub model and serial number** before switching its ports. Clicking ON/OFF calls the existing HIL Hub driver for that exact serial and physical socket, then verifies the state with `-g`. Until confirmed, the state is unknown (`?`). Model/serial changes reset displayed states. Hub controls are locked while a command is pending. No ports are switched automatically on selection or window close.
 
-Hub 1 and all browser-preview switches remain simulated. Hub 2 shows ports for the selected DUT count.
+All browser-preview switches remain simulated. Hub 2 shows ports for the selected DUT count.
 
-Relay contacts use simulated clickable ON/OFF indicators for each visible channel. They are independent of real Hub 2 switching.
+Relay contacts use simulated clickable ON/OFF indicators for each visible channel. They are independent of real hub switching.
 
-Active connections glow in their wiring color and show a moving dot. Inactive connections are gray. Hub 2 reflects confirmed CLI states; the remaining connections reflect simulated states.
+Active connections glow in their wiring color and show a moving dot. Inactive connections are gray. Both hubs and manual STLINK OUT reflect confirmed commands; other manual connections remain simulated.
 
-**Run** locks all controls, including profile links and help buttons, and reveals **STOP** below it. **STOP** restores editing without resetting selections. This is a frontend run state only.
+**Run** locks all controls, including profile links and help buttons, and reveals **STOP** below it. Editing is restored when capture finishes or stops, without resetting selections. In demo and other layouts, Run/STOP only simulate this state.
 
 The panel above STLINK contains the existing measurement settings: sample rate, capture duration, repeats, OUT voltage, warm-up time and OUT off time. Defaults match the HIL example configuration; values remain in the browser.
 

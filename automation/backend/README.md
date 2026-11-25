@@ -10,7 +10,10 @@
 | [serial_ports.py](serial_ports.py) | Serial device enumeration through pyserial; no ports are opened |
 | [hub_discovery.py](hub_discovery.py) | YKUSH serial discovery through `ykushcmd -l` or `ykushcmd ykush3 -l` |
 | [hub_control.py](hub_control.py) | Manual switching of the selected hub through existing HIL Hub drivers and state readback |
+| [capture.py](capture.py) | StandAlone CLI argument mapping, capture subprocess, log stream and STOP request |
+| [capture_worker.py](capture_worker.py) | Existing capture CLI with a cooperative STOP watcher; measurement cleanup remains in the capture script |
+| [meter_power.py](meter_power.py) | Manual OUT commands through the existing Device protocol; keeps the connection while powered and releases it before capture |
 
-HTML, styles and JavaScript stay in [frontend](../frontend/README.md). Measurement execution stays in [HIL](../HIL/README.md); the desktop bridge does not run it yet.
+HTML, styles and JavaScript stay in [frontend](../frontend/README.md). StandAlone Run invokes the existing measurement CLI. Batch execution stays in [HIL](../HIL/README.md) and is not connected to GUI Run yet.
 
 Add configuration generation and process control as separate backend modules when those features are implemented. Keep the launcher limited to startup.
