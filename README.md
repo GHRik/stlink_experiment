@@ -49,6 +49,16 @@ Firmware and results: [idle scenarios](firmware/nodemcu_nocode_cycles/README.md)
 
 Automation: [upload and measurement sequence](automation/README.md) · [scripts running during acquisition](controllers/README.md).
 
+## FAQ
+
+**How can I run custom actions during a STLINK measurement?**
+
+Use `--controller` to run a Python script alongside each capture. See the [controller README](controllers/README.md).
+
+**How can I automate firmware uploads and switch between boards for measurement?**
+
+See [automation](automation/README.md) for sequential firmware uploads, USB hub control, relay switching and STLINK captures.
+
 ## Citation
 
 Record the commit used for your measurements when citing the repository.
