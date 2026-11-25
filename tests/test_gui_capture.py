@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from automation.backend.capture import CaptureProcess, capture_command
+from automation.backend.api import DesktopApi
 
 
 def configuration():
@@ -16,6 +17,16 @@ def configuration():
 
 
 class CaptureCommandTests(unittest.TestCase):
+    def test_upload_uses_existing_runner_and_arduino_upload_module(self):
+        api = DesktopApi(Mock())
+        api._capture = Mock()
+        api._capture.status.return_value = {"running": False}
+        api._meter_power = Mock()
+        api.start_upload("nodemcu", "COM22", "C:/my sketches/example.ino")
+        api._meter_power.close.assert_called_once()
+        api._capture.start.assert_called_once_with({}, command=[sys.executable, "-u", "-m",
+            "automation.HIL.upload", "nodemcu", "COM22", "C:/my sketches/example.ino"])
+
     def test_maps_gui_fields_to_existing_cli_arguments(self):
         command = capture_command(configuration())
         self.assertEqual(command[:5], [sys.executable, "-u", "-m", "automation.backend.capture_worker", "capture"])

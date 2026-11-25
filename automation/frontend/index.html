@@ -1144,6 +1144,7 @@
   </main>
 <script src="modes.js"></script>
 <script src="capture.js"></script>
+<script src="one-hub.js"></script>
 <script src="meter.js"></script>
 <script src="relay.js"></script>
 <script src="mappings.js"></script>
@@ -1638,6 +1639,10 @@
       startStandaloneCapture();
       return;
     }
+    if (desktopReady && currentLayout === 'one-hub') {
+      startOneHubCapture();
+      return;
+    }
     setRunning(true);
     status.textContent = 'Running (prototype). Controls are locked. Press STOP to unlock; no hardware actions are started.';
   }
@@ -1722,6 +1727,10 @@
 
   runButton.addEventListener('click', handleRun);
   stopButton.addEventListener('click', () => {
+    if (oneHubPreparing) {
+      stopOneHubPreparation();
+      return;
+    }
     if (captureInProgress) {
       stopStandaloneCapture();
       return;

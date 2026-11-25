@@ -30,7 +30,18 @@ Both Hub 1 and Hub 2 have model and serial selectors. Demo mode provides `YK1712
 
 The selector beside each hub output or relay contact assigns its physical port/channel. Choosing an occupied channel swaps the two assignments. Available numbers follow the selected model: YKUSH XS has one port, LCUS-2 has two channels, and Numato has four. Changing an assignment resets its displayed switch state without sending hardware commands.
 
-Opens the existing HTML in a separate desktop window using pywebview. **Choose file** opens a native file dialog and displays the full local path for `.ino` sketches and the optional `.py` controller. Cancel keeps the previous selection. StandAlone Run and manual STLINK, hub and relay controls use the backend. Run in other layouts remains simulated.
+Opens the existing HTML in a separate desktop window using pywebview. **Choose file** opens a native file dialog and displays the full local path for `.ino` sketches and the optional `.py` controller. Cancel keeps the previous selection. StandAlone and One hub Run, plus manual STLINK, hub and relay controls, use the backend. Run in One relay and HIL remains simulated.
+
+### One hub Run
+
+1. Disable the assigned DUT USB port and check STLINK with OUT ON/OFF.
+2. Confirm that STLINK has been disconnected from the PC.
+3. Enable the DUT USB port and compile/upload the selected sketch with its board profile and COM port. Arduino CLI output appears in the log.
+4. Disable the DUT USB port and ask you to reconnect STLINK.
+5. Check STLINK with OUT ON/OFF, retrying up to three times with 5-second intervals.
+6. Start the same capture as StandAlone, including the optional controller.
+
+Cancel or a failed step stops the sequence before measurement. STOP during upload waits for the uploader to finish, disables the DUT USB port and skips capture.
 
 ## Browser preview
 

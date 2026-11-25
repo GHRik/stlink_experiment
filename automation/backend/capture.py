@@ -35,8 +35,9 @@ class CaptureProcess:
         self._sequence = 0
         self._stop_file = None
 
-    def start(self, config):
-        command = capture_command(config)
+    def start(self, config, command=None):
+        if command is None:
+            command = capture_command(config)
         with self._lock:
             if self._running:
                 raise RuntimeError("A capture is already running")

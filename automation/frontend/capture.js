@@ -12,17 +12,17 @@ function standaloneConfiguration() {
   };
 }
 
-async function startStandaloneCapture() {
-  setRunning(true);
+async function startStandaloneCapture(preserveLog = false, config = standaloneConfiguration()) {
+  if (!isRunning) setRunning(true);
   stopButton.disabled = true;
   captureCursor = 0;
   const output = document.querySelector('#capture-log-output');
-  output.textContent = '';
+  if (!preserveLog) output.textContent = '';
   document.querySelector('#capture-log').hidden = false;
   status.classList.remove('error');
   status.textContent = 'Starting measurement…';
   try {
-    await window.pywebview.api.start_capture(standaloneConfiguration());
+    await window.pywebview.api.start_capture(config);
     displayMeterPower(null);
     captureInProgress = true;
     stopButton.disabled = false;
