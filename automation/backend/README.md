@@ -8,7 +8,7 @@
 | [file_picker.py](file_picker.py) | Native file dialogs returning full local paths |
 | [config.json](config.json) / [config.py](config.py) | Desktop defaults; `hub.cmd` selects the CLI executable, default `ykushcmd` |
 | [serial_ports.py](serial_ports.py) | Serial device enumeration through pyserial; no ports are opened |
-| [hub_discovery.py](hub_discovery.py) | YKUSH serial discovery through `ykushcmd -l` or `ykushcmd ykush3 -l` |
+| [hub_discovery.py](hub_discovery.py) | YKUSH serial discovery through the selected model subcommand, e.g. `ykushcmd ykush -l` |
 | [hub_control.py](hub_control.py) | Manual switching of the selected hub through existing HIL Hub drivers and state readback |
 | [relay_control.py](relay_control.py) | Manual switching through existing Numato and LCUS-2 drivers; closes COM after each command |
 | [capture.py](capture.py) | StandAlone CLI argument mapping, capture subprocess, log stream and STOP request |

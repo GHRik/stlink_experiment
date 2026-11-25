@@ -23,10 +23,11 @@ class HubControlTests(unittest.TestCase):
     def test_selected_legacy_hub_and_physical_socket(self, run, resolve):
         run.side_effect = ["", "Downstream port 2 is OFF"]
         result = HubControl().set_port("ykush", "ykushcmd", "YK21493", 2, False)
-        prefix = ["C:/tools/ykushcmd.exe", "-s", "YK21493"]
+        prefix = ["C:/tools/ykushcmd.exe", "ykush", "-s", "YK21493"]
         self.assertEqual(run.call_args_list, [call(prefix + ["-d", "2"], 15),
                                               call(prefix + ["-g", "2"], 15)])
-        self.assertEqual(result, {"serial": "YK21493", "port": 2, "enabled": False})
+        self.assertEqual(result, {"serial": "YK21493", "port": 2, "enabled": False,
+                                  "readback": "Downstream port 2 is OFF"})
 
     @patch("automation.backend.hub_control.resolve_command", return_value="ykushcmd")
     @patch("automation.HIL.hubs._run")

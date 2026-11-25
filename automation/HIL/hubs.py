@@ -36,7 +36,7 @@ class Hub(ABC):
 
 
 class Ykush(Hub):
-    def __init__(self, cmd, serial, ports, model_argument="", command_runner=None, event=None):
+    def __init__(self, cmd, serial, ports, model_argument="ykush", command_runner=None, event=None):
         super().__init__(ports)
         if any(port > 3 for port in ports):
             raise ValueError("YKUSH ports must be between 1 and 3")
@@ -51,9 +51,11 @@ class Ykush(Hub):
     def _set(self, port, enabled):
         response = self.run(self.command + ["-u" if enabled else "-d", str(port)], 15)
         status = self.run(self.command + ["-g", str(port)], 15)
-        self.event("ykush", port=port, enabled=enabled, response=response, status=status)
-        if not re.search(r"\b" + ("ON" if enabled else "OFF") + r"\b", status, re.I):
+        state = "ON" if enabled else "OFF"
+        if not re.search(rf"(?im)^\s*Downstream port\s+{port}\s+is\s+{state}\s*$", status):
             raise RuntimeError(f"YKUSH port {port} state not confirmed: {status}")
+        self.last_status = status.strip()
+        self.event("ykush", port=port, enabled=enabled, response=response, status=status)
 
 
 class Ykush3(Ykush):
@@ -77,9 +79,11 @@ class YkushXs(Hub):
     def _set(self, port, enabled):
         response = self.run(self.command + ["-u" if enabled else "-d"], 15)
         status = self.run(self.command + ["-g"], 15)
-        self.event("ykush", port=port, enabled=enabled, response=response, status=status)
-        if not re.search(r"\b" + ("ON" if enabled else "OFF") + r"\b", status, re.I):
+        state = "ON" if enabled else "OFF"
+        if not re.search(rf"(?im)^\s*Downstream port(?:\s+1)?\s+is\s+{state}\s*$", status):
             raise RuntimeError(f"YKUSH XS port state not confirmed: {status}")
+        self.last_status = status.strip()
+        self.event("ykush", port=port, enabled=enabled, response=response, status=status)
 
 
 def create_hub(config, command_runner=None, event=None):
@@ -94,6 +98,6 @@ def create_hub(config, command_runner=None, event=None):
             raise ValueError("YKUSH3 always uses the ykush3 CLI subcommand; remove model_argument")
         return Ykush3(*args, command_runner=command_runner, event=event)
     if driver == "ykush":
-        return Ykush(*args, model_argument=config.get("model_argument", ""),
+        return Ykush(*args, model_argument=config.get("model_argument", "ykush"),
                      command_runner=command_runner, event=event)
     raise ValueError(f"Unknown hub driver: {driver!r}; use ykush, ykush3 or ykushxs")

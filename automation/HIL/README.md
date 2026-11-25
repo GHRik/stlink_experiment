@@ -47,7 +47,7 @@ Copy [config.example.jsonc](config.example.jsonc) to `config.local.jsonc` in thi
 
 Three settings need distinguishing:
 
-- `hub.driver`: `"ykush3"` automatically uses `ykushcmd ykush3 -s SERIAL ...`. The `"ykush"` driver preserves the original hub syntax; only that driver optionally accepts `model_argument: "ykush"` for newer CLI builds.
+- `hub.driver`: `"ykush3"` uses `ykushcmd ykush3 -s SERIAL ...`; `"ykush"` uses `ykushcmd ykush -s SERIAL ...`. For older CLI builds, only the `"ykush"` driver accepts `model_argument: ""` to omit the subcommand. State verification checks both the physical port number and ON/OFF.
 - `relay_controller.channel_digits`: number formatting only: `1` sends channel `0`, `2` sends `00`, `3` sends `000`. It is not the relay count; use `1` for the standard 4-channel USB relay module.
 - `stlink.measurement.off_seconds`: STLINK OUT power-off time after calibration and before each repeat. At `1`, the meter waits one second with OUT off, then starts acquisition with automatic OUT power-on. USB/relay switching delays are configured separately under `timing`.
 

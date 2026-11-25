@@ -2,7 +2,7 @@
   // USB HUB: switches each board's USB connection during firmware upload.
   "hub": {
     // "ykush3": YKUSH3, CLI subcommand selected automatically.
-    // "ykush": original YKUSH, legacy CLI syntax by default.
+    // "ykush": original YKUSH, uses the explicit ykush CLI subcommand.
     "driver": "ykush",
     // Full executable path, without a trailing CMD prompt character (>).
     "cmd": "C:\\Program Files (x86)\\YEPKIT LDA\\ykushcmd\\ykushcmd.exe",

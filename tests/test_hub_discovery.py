@@ -21,7 +21,7 @@ class HubDiscoveryTests(unittest.TestCase):
             "Attached YKUSH Boards:\n1. Board found with serial number: YK17125\n"
             "2. Board found with serial number: YK21493\n3. Board found with serial number: YK17125\n"))
         self.assertEqual(available_hubs("ykush"), [{"serial": "YK17125"}, {"serial": "YK21493"}])
-        self.assertEqual(run.call_args.args[0], ["ykushcmd.exe", "-l"])
+        self.assertEqual(run.call_args.args[0], ["ykushcmd.exe", "ykush", "-l"])
         self.assertFalse(run.call_args.kwargs.get("shell", False))
 
     @patch("automation.backend.hub_discovery.shutil.which", return_value="C:/vendor tools/ykushcmd.exe")

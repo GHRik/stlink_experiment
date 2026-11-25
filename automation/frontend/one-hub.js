@@ -38,7 +38,8 @@ async function startOneHubCapture() {
     checkStop();
   };
   const switchHub = async enabled => {
-    await api.set_hub_port(hub.driver, hub.serial, hub.port, enabled);
+    const result = await api.set_hub_port(hub.driver, hub.serial, hub.port, enabled);
+    log(`Hub ${hub.serial}, physical port ${hub.port}: ${result?.readback || (enabled ? 'ON confirmed' : 'OFF confirmed')}`);
     hub2Switches[0].setAttribute('aria-pressed', String(enabled));
     hub2Switches[0].querySelector('.port-state').textContent = enabled ? 'ON' : 'OFF';
     updateConnectionFlows();

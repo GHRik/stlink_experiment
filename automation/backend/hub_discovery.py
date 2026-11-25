@@ -24,7 +24,7 @@ def available_hubs(driver, command="ykushcmd"):
     if driver not in ("ykush", "ykush3", "ykushxs"):
         raise ValueError("Expected ykush, ykush3 or ykushxs")
     executable = resolve_command(command)
-    args = [executable] + ([driver] if driver != "ykush" else []) + ["-l"]
+    args = [executable, driver, "-l"]
     result = subprocess.run(args, capture_output=True, text=True, errors="replace", timeout=10,
                             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     if result.returncode:

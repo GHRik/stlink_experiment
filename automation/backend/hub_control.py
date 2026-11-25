@@ -25,4 +25,5 @@ class HubControl:
                 hub.set(port, enabled)
             finally:
                 hub.close()
-        return {"serial": serial.strip(), "port": port, "enabled": enabled}
+        return {"serial": serial.strip(), "port": port, "enabled": enabled,
+                "readback": hub.last_status}

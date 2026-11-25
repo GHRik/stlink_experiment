@@ -38,12 +38,21 @@ class HubTests(unittest.TestCase):
             call(prefix + ["-d", "2"], 15), call(prefix + ["-g", "2"], 15),
             call(prefix + ["-u", "1"], 15), call(prefix + ["-g", "1"], 15)])
 
-    def test_original_ykush_retains_legacy_syntax(self):
+    def test_original_ykush_selects_model_explicitly(self):
         command = Mock(side_effect=["", "Downstream port 1 is ON"])
         hub = create_hub(dict(driver="ykush", cmd="ykushcmd", serial="SERIAL", ports=[1]), command)
         self.assertIsInstance(hub, Ykush)
         hub.set(1, True)
-        self.assertEqual(command.call_args_list[0], call(["ykushcmd", "-s", "SERIAL", "-u", "1"], 15))
+        self.assertEqual(command.call_args_list[0], call(["ykushcmd", "ykush", "-s", "SERIAL", "-u", "1"], 15))
+
+    def test_readback_for_wrong_port_is_rejected_even_if_state_matches(self):
+        for response in ('Downstream port 15 is OFF', 'Downstream port 1 is OFF', 'OFF'):
+            command = Mock(side_effect=['', response])
+            event = Mock()
+            hub = create_hub(dict(driver='ykush', cmd='ykushcmd', serial='TEST', ports=[3]), command, event)
+            with self.subTest(response=response), self.assertRaisesRegex(RuntimeError, 'not confirmed'):
+                hub.set(3, False)
+            event.assert_not_called()
 
     def test_failed_readback_invalid_port_and_cli_errors(self):
         command = Mock(side_effect=["", "Downstream port 1 is OFF"])
