@@ -101,7 +101,13 @@
       color: #e4eaf2;
       border-color: #52647d;
     }
-    [data-theme="dark"] .power-meter { background: #39252d; border-top-color: #e57379; }
+    [data-theme="dark"] .power-meter,
+    [data-theme="dark"] .measurement-settings { background: #39252d; border-top-color: #e57379; }
+    [data-theme="dark"] .dut-position-1 { background: #512b85; border-color: #b895ff; }
+    [data-theme="dark"] .dut-position-2 { background: #075568; border-color: #49d4ea; }
+    [data-theme="dark"] .dut-position-3 { background: #7a2856; border-color: #ff95cc; }
+    [data-theme="dark"] .dut small,
+    [data-theme="dark"] .dut label { color: #f0eafa; }
     [data-theme="dark"] .relay { background: #20392e; border-top-color: #59b78e; }
     [data-theme="dark"] .upload-hub { background: #21354e; border-top-color: #64a3e4; }
     [data-theme="dark"] .relay-contacts { background: #382e22; border-color: #896842; }
@@ -370,7 +376,8 @@
       left: 24px;
       top: 40px;
       width: 310px;
-      border-top: 3px solid #3479c3;
+      border-top: 3px solid #c84f55;
+      background: #fff4f4;
     }
     .measurement-fields {
       display: grid;
@@ -454,16 +461,26 @@
     .dut {
       left: 1040px;
       width: 260px;
-      border-top: 3px solid #26927d;
+      border-top-width: 3px;
     }
     .dut-position-1 {
       top: 40px;
+      border-color: #7340bb;
+      background: #d9baf5;
     }
     .dut-position-2 {
       top: 460px;
+      border-color: #087f96;
+      background: #8cdae7;
     }
     .dut-position-3 {
       top: 880px;
+      border-color: #ae386f;
+      background: #f0acd0;
+    }
+    .dut small,
+    .dut label {
+      color: #283449;
     }
     .relay-contacts {
       left: 670px;
