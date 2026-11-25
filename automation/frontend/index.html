@@ -95,8 +95,42 @@
       stroke: var(--connection-color);
       filter: drop-shadow(0 0 3px var(--connection-color));
     }
+    .wiring-connections path.external-power-wire {
+      stroke: #d4a017;
+      stroke-width: 3;
+      fill: none;
+      animation: external-power-pulse 2s ease-in-out infinite;
+    }
+    @keyframes external-power-pulse {
+      0%, 100% {
+        stroke: #d4a017;
+        filter: drop-shadow(0 0 2px #e9b626);
+      }
+      50% {
+        stroke: #f1c232;
+        filter: drop-shadow(0 0 7px #f1c232);
+      }
+    }
+    .external-power {
+      left: 24px;
+      top: 405px;
+      width: 155px;
+      border-color: #e2ba40;
+      background: #fff7cf;
+    }
+    .external-power-symbol {
+      display: block;
+      margin-bottom: 8px;
+      color: #ad7c00;
+      font-size: 28px;
+      line-height: 1;
+    }
     @media (prefers-reduced-motion: reduce) {
       .flow-dot { display: none; }
+      .wiring-connections path.external-power-wire {
+        animation: none;
+        filter: drop-shadow(0 0 3px #e9b626);
+      }
     }
     svg text {
       font: 12px system-ui, sans-serif;
@@ -257,7 +291,8 @@
     .power-meter {
       left: 405px;
       top: 360px;
-      border-top: 3px solid #3479c3;
+      border-top: 3px solid #c84f55;
+      background: #fff4f4;
     }
     .measurement-settings {
       left: 24px;
@@ -335,10 +370,14 @@
     .relay {
       left: 405px;
       top: 535px;
+      border-top: 3px solid #29876a;
+      background: #f1faf5;
     }
     .upload-hub {
       left: 405px;
       top: 780px;
+      border-top: 3px solid #3479c3;
+      background: #f0f6ff;
     }
     .dut {
       left: 1040px;
@@ -428,6 +467,8 @@
       <div class="wiring-diagram">
         <!-- USB, relay control and switched measurement wiring. -->
         <svg class="wiring-connections" viewBox="0 0 1360 1280" aria-hidden="true">
+          <path class="external-power-wire" d="M179 465 H240 V577"/>
+          <text x="190" y="452">Power</text>
           <path class="usb" d="M144 768 H170 V610 H195"/>
           <path class="usb" d="M330 680 H350 V430 H405"/>
           <path class="usb" d="M330 715 H370 V610 H405"/>
@@ -455,6 +496,11 @@
           <text id="upload-label" x="640" y="1050">USB upload · ports 1 / 2 / 3</text>
         </svg>
         <!-- Host and upstream USB hub. -->
+        <div class="device-card external-power">
+          <span class="external-power-symbol" aria-hidden="true">⚡</span>
+          <strong>External power</strong>
+          <small>5 V DC · &gt;2 A</small>
+        </div>
         <div class="device-card pc">
           <strong>PC</strong>
           <small>Host</small>
@@ -752,9 +798,9 @@
     const usbColor = '#8695aa';
     const powerColor = '#d67b22';
     addFlow('M144 768 H170 V610 H195', usbColor, () => hub1Switches.some(isOn));
-    addFlow('M330 680 H350 V430 H405', usbColor, () => isOn(hub1Switches[0]), null, 0);
-    addFlow('M330 715 H370 V610 H405', usbColor, () => isOn(hub1Switches[1]), null, 1);
-    addFlow('M330 750 H390 V813 H405', usbColor, () => isOn(hub1Switches[2]), null, 2);
+    addFlow('M330 680 H350 V430 H405', '#c84f55', () => isOn(hub1Switches[0]), null, 0);
+    addFlow('M330 715 H370 V610 H405', '#29876a', () => isOn(hub1Switches[1]), null, 1);
+    addFlow('M330 750 H390 V813 H405', '#3479c3', () => isOn(hub1Switches[2]), null, 2);
     addFlow('M595 610 H670', usbColor, () => isOn(hub1Switches[1]));
     const relayActive = index => index < Number(relayCount.value)
       && isOn(relaySwitches[index]) && isOn(hub1Switches[0]);
