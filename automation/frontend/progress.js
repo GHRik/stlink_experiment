@@ -65,6 +65,7 @@ function finishRunProgress(label) {
   runProgress.clock = null;
   runProgress.phase = label;
   renderRunProgress();
+  if (typeof refreshResults === 'function') refreshResults();
 }
 
 function renderRunProgress() {

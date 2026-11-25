@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HIL testbench</title>
   <link rel="stylesheet" href="modes.css">
+  <link rel="stylesheet" href="gallery.css">
   <style>
     :root {
       --instrument-font: "Cascadia Mono", "Consolas", "Liberation Mono", monospace;
@@ -1149,8 +1150,17 @@
       <h2>Measurement log</h2>
       <pre id="capture-log-output" role="log" aria-live="polite"></pre>
     </section>
+    <section class="results-section" aria-label="Saved measurement results">
+      <h2>Results</h2>
+      <label for="results-search">Search results</label>
+      <input id="results-search" type="search" placeholder="Session name or date..." autocomplete="off">
+      <p id="results-matches" role="status"></p>
+      <p id="results-note">Saved plots are available in the desktop launcher.</p>
+      <div id="results-gallery"></div>
+    </section>
   </main>
 <script src="modes.js"></script>
+<script src="gallery.js"></script>
 <script src="progress.js"></script>
 <script src="capture.js"></script>
 <script src="one-hub.js"></script>
@@ -1167,6 +1177,7 @@
       return;
     }
     desktopReady = true;
+    refreshResults();
     resetRelayStates();
     updateRelayControls();
     displayMeterPower(null);

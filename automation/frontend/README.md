@@ -57,6 +57,10 @@ The runner manages the DUT hub (Hub 2), relays, uploads and measurements. Hub 1 
 
 During a desktop Run, confirmed STLINK OUT, hub-port and relay-channel events update the diagram while controls stay locked. The **Run progress** panel tracks uploads, warm-up, calibrations, completed repeats and reports across DUTs. Remaining programmed time covers warm-up and acquisition only; compilation, calibration, switching, analysis and reports add variable overhead. STOP preserves the completed counters.
 
+## Results gallery
+
+The **Results** gallery at the bottom loads all English comparison/statistics plots under `results/`, including nested HIL sessions, sorted by session date descending (file modification time is used only for undated sessions). Each result set is collapsed by default; click its name to show the previews. **Search results** filters session names and dates as you type. The gallery refreshes after a Run finishes. Click either preview to open its full SVG in the system browser (PNG when SVG is unavailable). Existing measurements are included without regeneration.
+
 ## Browser preview
 
 Open [index.html](index.html) in a browser by double-clicking the local file. No installation or server is required. Browser file pickers expose filenames only; native full-path selection requires the desktop launcher.
