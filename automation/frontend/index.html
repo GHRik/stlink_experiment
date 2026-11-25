@@ -193,6 +193,18 @@
       outline: 3px solid #a8cefc;
       outline-offset: 2px;
     }
+    .stop {
+      margin-top: 8px;
+      background: #b83232;
+    }
+    .stop:hover {
+      background: #922626;
+    }
+    button:disabled, select:disabled, input:disabled,
+    [aria-disabled="true"] {
+      opacity: .5;
+      cursor: not-allowed;
+    }
     .pc {
       left: 24px;
       top: 710px;
@@ -447,6 +459,7 @@
           <strong>PC</strong>
           <small>Host</small>
           <button class="run" id="run" type="button">Run</button>
+          <button class="run stop" id="stop" type="button" hidden>STOP</button>
         </div>
         <div class="device-card primary-hub">
           <strong>Hub 1</strong>
@@ -677,6 +690,39 @@
   const selectors = [...document.querySelectorAll('select[data-default]')];
   const status = document.querySelector('#status');
   const relayCount = document.querySelector('#relay-count');
+  const runButton = document.querySelector('#run');
+  const stopButton = document.querySelector('#stop');
+  let isRunning = false;
+  let lockedControls = [];
+
+  function setRunning(running) {
+    if (running === isRunning) return;
+    isRunning = running;
+    if (running) {
+      document.querySelectorAll('.field-help[open]').forEach(help => { help.open = false; });
+      lockedControls = [...document.querySelectorAll('button, input, select, a, summary')]
+        .filter(control => control !== stopButton)
+        .map(control => {
+          const previous = {control, disabled: control.disabled, inert: control.inert,
+            ariaDisabled: control.getAttribute('aria-disabled')};
+          if ('disabled' in control) control.disabled = true;
+          control.inert = true;
+          control.setAttribute('aria-disabled', 'true');
+          return previous;
+        });
+    } else {
+      lockedControls.forEach(({control, disabled, inert, ariaDisabled}) => {
+        if ('disabled' in control) control.disabled = disabled;
+        control.inert = inert;
+        if (ariaDisabled === null) control.removeAttribute('aria-disabled');
+        else control.setAttribute('aria-disabled', ariaDisabled);
+      });
+      lockedControls = [];
+    }
+    stopButton.hidden = !running;
+    if (running) stopButton.focus();
+    else runButton.focus();
+  }
 
   // Animated dots visualize simulated connections, not measured current.
   const connectionFlows = [];
@@ -796,6 +842,7 @@
   }
 
   function handleRun() {
+    if (isRunning) return;
     validatePorts();
     if (status.classList.contains('error')) return;
     if (activePorts().some(select => !select.value)) {
@@ -803,7 +850,8 @@
       status.textContent = 'Select a serial port for each device before running.';
       return;
     }
-    status.textContent = 'Prototype only: Run is not connected to the HIL automation. No hardware actions were started.';
+    setRunning(true);
+    status.textContent = 'Running (prototype). Controls are locked. Press STOP to unlock; no hardware actions are started.';
   }
 
   // Initialize the local prototype and register UI events.
@@ -812,6 +860,7 @@
   // Hub and relay LEDs display simulated states only; no hardware commands are sent.
   document.querySelectorAll('.state-toggle').forEach(port => {
     port.addEventListener('click', () => {
+      if (isRunning) return;
       const enabled = port.getAttribute('aria-pressed') !== 'true';
       port.setAttribute('aria-pressed', String(enabled));
       port.querySelector('.port-state').textContent = enabled ? 'ON' : 'OFF';
@@ -819,7 +868,11 @@
     });
   });
 
-  document.querySelector('#run').addEventListener('click', handleRun);
+  runButton.addEventListener('click', handleRun);
+  stopButton.addEventListener('click', () => {
+    setRunning(false);
+    status.textContent = 'Stopped (prototype). Controls are unlocked.';
+  });
   relayCount.addEventListener('change', updateDeviceCount);
   updateDeviceCount();
   window.addEventListener('resize', alignSwitchConnections);

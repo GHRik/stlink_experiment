@@ -20,4 +20,6 @@ Relay contacts use the same clickable ON/OFF indicators for each visible channel
 
 Active connections glow in their wiring color and show a moving dot. Inactive connections are gray. Animations represent simulated switch states only.
 
+**Run** locks all controls, including profile links and help buttons, and reveals **STOP** below it. **STOP** restores editing without resetting selections. This is a frontend run state only.
+
 The panel above STLINK contains the existing measurement settings: sample rate, capture duration, repeats, OUT voltage, warm-up time and OUT off time. Defaults match the HIL example configuration; values remain in the browser.
