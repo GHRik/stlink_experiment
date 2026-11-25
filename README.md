@@ -17,6 +17,19 @@ py -m venv .venv
 
 ### 2. Connect
 
+```mermaid
+flowchart LR
+    PC[PC] -->|USB-C: power and data| Meter[STLINK-V3PWR]
+    Meter -->|OUT: 3.3 V| Power
+    Meter -->|GND| Ground
+    subgraph Board[NodeMCU — board under test]
+        Power[3V3]
+        Ground[G / GND]
+    end
+```
+
+For the default **3.3 V** supply, use NodeMCU's **3V3** pin. **VIN** feeds the onboard voltage regulator and is a different supply input.
+
 - Flash a [NodeMCU sketch](firmware/nodemcu_led_cycles/README.md), with STLINK output wiring disconnected.
 - Disconnect the board's USB. Connect STLINK **OUT → 3V3** and **GND → GND**; the default supply is **3.3 V**. For timed ESP8266 deep-sleep wakeup, also connect **D0 → RST**.
 - Close STM32CubeMonitor-Power and any terminal using the meter. Identify its **SMU** port:
