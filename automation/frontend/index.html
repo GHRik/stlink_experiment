@@ -42,6 +42,69 @@
       white-space: nowrap;
       font-size: 12px;
     }
+    :root { color-scheme: light; }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .theme-switch {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid #cbd5e1;
+      border-radius: 20px;
+    }
+    .theme-button {
+      padding: 6px 12px;
+      border: 0;
+      border-radius: 16px;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font: 12px system-ui, sans-serif;
+    }
+    .theme-button[aria-pressed="true"] {
+      background: #172538;
+      color: white;
+    }
+    .theme-button:focus-visible {
+      outline: 3px solid #a8cefc;
+      outline-offset: 2px;
+    }
+    :root[data-theme="dark"] { color-scheme: dark; }
+    [data-theme="dark"] body { background: #101722; color: #e4eaf2; }
+    [data-theme="dark"] .diagram-viewport { background: #151e2b; border-color: #36465b; }
+    [data-theme="dark"] .device-card { background: #202c3c; border-color: #43536a; }
+    [data-theme="dark"] p,
+    [data-theme="dark"] .device-card small,
+    [data-theme="dark"] .device-card label,
+    [data-theme="dark"] .state-toggle,
+    [data-theme="dark"] .sketch,
+    [data-theme="dark"] .wiring-legend { color: #adbbce; }
+    [data-theme="dark"] svg text { fill: #adbbce; }
+    [data-theme="dark"] select,
+    [data-theme="dark"] .measurement-fields input,
+    [data-theme="dark"] .sketch::file-selector-button {
+      background: #162131;
+      color: #e4eaf2;
+      border-color: #52647d;
+    }
+    [data-theme="dark"] .power-meter { background: #39252d; border-top-color: #e57379; }
+    [data-theme="dark"] .relay { background: #20392e; border-top-color: #59b78e; }
+    [data-theme="dark"] .upload-hub { background: #21354e; border-top-color: #64a3e4; }
+    [data-theme="dark"] .relay-contacts { background: #382e22; border-color: #896842; }
+    [data-theme="dark"] .relay-channel { color: #efbd82; border-bottom-color: #695139; }
+    [data-theme="dark"] .external-power { background: #3a341e; border-color: #bd9b33; }
+    [data-theme="dark"] .external-power-symbol { color: #f1c232; }
+    [data-theme="dark"] .badge,
+    [data-theme="dark"] .theme-switch { border-color: #52647d; }
+    [data-theme="dark"] .theme-button[aria-pressed="true"] { background: #dce7f5; color: #172538; }
+    [data-theme="dark"] .add-profile { color: #85b9f0; }
+    [data-theme="dark"] .field-help summary { color: #c4d3e5; border-color: #8b9db5; }
+    [data-theme="dark"] #status.error { color: #ff9494; }
     .relay-settings {
       margin-top: 14px;
     }
@@ -461,7 +524,13 @@
         <h1>HIL testbench</h1>
         <p>Assign serial ports to the meter, relay controller and boards.</p>
       </div>
-      <span class="badge">Interface prototype</span>
+      <div class="header-actions">
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button class="theme-button" type="button" data-theme-choice="light" aria-pressed="true">☀ Light</button>
+          <button class="theme-button" type="button" data-theme-choice="dark" aria-pressed="false">☾ Dark</button>
+        </div>
+        <span class="badge">Interface prototype</span>
+      </div>
     </header>
     <div class="diagram-viewport" tabindex="0" role="region" aria-label="HIL wiring diagram; scroll horizontally on smaller screens">
       <div class="wiring-diagram">
@@ -732,6 +801,24 @@
     <p>Sample COM ports only. This prototype does not connect to hardware or save configuration.</p>
   </main>
 <script>
+  // Theme preferences are local to this browser; file:// storage may be restricted.
+  function setTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    document.querySelectorAll('[data-theme-choice]').forEach(button => {
+      button.setAttribute('aria-pressed', String(button.dataset.themeChoice === theme));
+    });
+    try { localStorage.setItem('hil-theme', theme); } catch (_) { /* Keep session-only selection. */ }
+  }
+  function initializeTheme() {
+    let theme = 'light';
+    try { theme = localStorage.getItem('hil-theme') || theme; } catch (_) { /* Use the default theme. */ }
+    setTheme(theme === 'dark' ? 'dark' : 'light');
+    document.querySelectorAll('[data-theme-choice]').forEach(button => {
+      button.addEventListener('click', () => setTheme(button.dataset.themeChoice));
+    });
+  }
+  initializeTheme();
+
   // Port controls are separate from board-profile and relay-count selectors.
   const selectors = [...document.querySelectorAll('select[data-default]')];
   const status = document.querySelector('#status');
