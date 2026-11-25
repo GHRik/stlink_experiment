@@ -10,6 +10,7 @@ from threading import Lock
 import sys
 import json
 from .hil import hil_configuration
+from .results_gallery import ResultsGallery
 
 
 class DesktopApi:
@@ -20,6 +21,7 @@ class DesktopApi:
         self._capture = CaptureProcess()
         self._meter_power = MeterPower()
         self._meter_lock = Lock()
+        self._results_gallery = ResultsGallery()
         self._hub_command = (settings or {}).get("hub", {}).get("cmd", "ykushcmd")
 
     def _bind_window(self, window):
@@ -30,6 +32,15 @@ class DesktopApi:
 
     def list_ports(self):
         return available_ports()
+
+    def list_results(self):
+        return self._results_gallery.list_results()
+
+    def open_result(self, relative_path):
+        return self._results_gallery.open_result(relative_path)
+
+    def result_preview(self, relative_path):
+        return self._results_gallery.result_preview(relative_path)
 
     def list_hubs(self, driver):
         return available_hubs(driver, self._hub_command)
