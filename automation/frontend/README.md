@@ -1,5 +1,18 @@
 # HIL frontend prototype
 
+## Layouts
+
+The **HIL**, **StandAlone**, **One hub** and **One relay** tabs reposition the same device cards and retain their field values.
+
+| Layout | Connections |
+| --- | --- |
+| HIL | Two hubs, STLINK, relay controller and up to three DUTs |
+| StandAlone | PC → STLINK → one DUT |
+| One hub | PC → STLINK → one DUT (OUT + GND); separate PC power and data connections to one hub → the same DUT over USB |
+| One relay | PC → STLINK and relay controller; relay contacts → up to three DUTs |
+
+Only visible devices reserve COM ports and hub serials. Layout switching is disabled during Run. The layout code lives in [modes.js](modes.js) and [modes.css](modes.css); device cards remain in [index.html](index.html).
+
 ## Desktop launcher
 
 From the repository root, with the virtual environment activated:
