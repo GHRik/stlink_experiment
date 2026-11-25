@@ -4,7 +4,10 @@ let currentLayout = 'hil';
 function modeDutCount() {
   if (currentLayout === 'standalone') return 1;
   if (currentLayout === 'one-hub') return 1;
-  return Number(relayCount.value);
+  const count = Number(relayCount.value);
+  return currentLayout === 'hil'
+    ? Math.min(count, hubPortCount(document.querySelector('.upload-hub')))
+    : count;
 }
 
 function initializeModes() {
@@ -25,10 +28,22 @@ function initializeModes() {
     Object.entries(visibility).forEach(([selector, visible]) => {
       document.querySelector(selector).hidden = !visible;
     });
+    // HIL's upstream hub needs three sockets; its DUT hub may be single-port XS.
+    ['#hub1-model', '#hub-model'].forEach(selector => {
+      const model = document.querySelector(selector);
+      const xs = model.querySelector('option[value="ykushxs"]');
+      const unavailable = layout === 'hil' && selector === '#hub1-model';
+      xs.hidden = unavailable;
+      xs.disabled = unavailable;
+      if (unavailable && model.value === 'ykushxs') {
+        model.value = '';
+        model.dispatchEvent(new Event('change'));
+      }
+    });
     document.querySelectorAll('.dut').forEach((card, index) => {
       card.querySelector('small').textContent = layout === 'standalone' ? 'Board under test'
         : layout === 'one-hub' ? `USB port ${index + 1}`
-        : layout === 'one-relay' ? `Relay ${index + 1}`
+        : layout === 'one-relay' ? `Relay ${index + 1} · firmware uploaded separately`
         : `YKUSH port ${index + 1} · relay ${index + 1}`;
     });
     updateDeviceCount();
@@ -61,6 +76,8 @@ function routeModeConnections() {
   const paths = Array(12).fill(null);
   const hil = currentLayout === 'hil';
   const single = currentLayout === 'standalone';
+  const oneHub = currentLayout === 'one-hub';
+  const oneRelay = currentLayout === 'one-relay';
   const hasHub = hil || currentLayout === 'one-hub';
   const hasRelay = hil || currentLayout === 'one-relay';
   const pc = anchor('.pc');
@@ -70,12 +87,17 @@ function routeModeConnections() {
   if (hil) {
     paths[0] = pathVia(pc, anchor('.primary-hub', 'left'), 130);
     paths[1] = pathVia(anchor('.primary-hub', 'right', hub1Switches[0]), meter, 350);
-    paths[2] = pathVia(anchor('.primary-hub', 'right', hub1Switches[1]), anchor('.relay', 'left'), 370);
-    paths[3] = pathVia(anchor('.primary-hub', 'right', hub1Switches[2]), anchor('.upload-hub', 'left'), 390);
+    if (hubPortCount(document.querySelector('.primary-hub')) > 1) {
+      paths[2] = pathVia(anchor('.primary-hub', 'right', hub1Switches[1]), anchor('.relay', 'left'), 370);
+      paths[3] = pathVia(anchor('.primary-hub', 'right', hub1Switches[2]), anchor('.upload-hub', 'left'), 390);
+    }
   } else {
-    paths[1] = pathVia(pc, meter, 350);
-    if (hasRelay) paths[2] = pathVia(pc, anchor('.relay', 'left'), 300);
-    if (hasHub) paths[3] = pathVia(pc, anchor('.upload-hub', 'left'), 280);
+    paths[1] = pathVia({...pc, y: pc.y - (oneHub || oneRelay ? 30 : 0)}, meter, 350);
+    if (hasRelay) paths[2] = pathVia({...pc, y: pc.y + 30}, anchor('.relay', 'left'), 300);
+    if (hasHub) {
+      const hub = anchor('.upload-hub', 'left');
+      paths[3] = pathVia(pc, {...hub, y: hub.y - 25}, 280);
+    }
   }
   if (hasRelay) {
     paths[4] = pathVia(anchor('.relay'), anchor('.relay-contacts', 'left'), 630);
@@ -86,7 +108,7 @@ function routeModeConnections() {
   for (let index = 0; index < count; index++) {
     const target = anchor(`.dut-position-${index + 1}`, 'left');
     if (hasRelay) paths[6 + index * 2] = pathVia(anchor('.relay-contacts', 'right', relaySwitches[index]),
-      {...target, y: target.y - 55}, [900, 875, 850][index]);
+      {...target, y: target.y - (oneRelay ? 0 : 55)}, [900, 875, 850][index]);
     if (hasHub) {
       const source = anchor('.upload-hub', 'right', hub2Switches[index]);
       const end = {...target, y: target.y + 70};
@@ -112,7 +134,7 @@ function routeModeConnections() {
     if (y !== undefined) element.setAttribute('y', y);
     if (text !== undefined) element.textContent = text;
   }
-  label('#pc-usb-label', true, pc.x - 100, pc.y - 30, hil ? 'USB - Data line only' : 'USB');
+  label('#pc-usb-label', true, oneHub || oneRelay ? pc.x + 10 : pc.x - 100, pc.y - (oneHub || oneRelay ? 45 : 30), hil ? 'USB - Data line only' : 'USB');
   label('#relay-control-label', hasRelay, 610, anchor('.relay').y - 12);
   label('#meter-output-label', hasRelay || single || currentLayout === 'one-hub', output.x + 10, output.y - 12);
   const relayStart = anchor('.relay-contacts', 'right', relaySwitches[0]);
@@ -123,8 +145,9 @@ function routeModeConnections() {
   if (hil) external.setAttribute('d', 'M179 465 H240 V577');
   if (currentLayout === 'one-hub') {
     const hub = anchor('.upload-hub', 'left');
-    external.setAttribute('d', pathVia({...pc, y: pc.y - 18}, {...hub, y: hub.y - 30}, 240));
+    external.setAttribute('d', pathVia({...pc, y: pc.y + 30}, {...hub, y: hub.y + 25}, 240));
   }
-  label('#hub-power-label', currentLayout === 'one-hub', 145, pc.y - 35, 'USB · 5 V power');
-  label('#hub-data-label', currentLayout === 'one-hub', 300, pc.y + 40, 'USB · data');
+  const hubInput = anchor('.upload-hub', 'left');
+  label('#hub-power-label', oneHub, 250, hubInput.y + 13, 'USB · 5 V power');
+  label('#hub-data-label', oneHub, 290, hubInput.y - 37, 'USB · data');
 }

@@ -13,6 +13,8 @@ The **HIL**, **StandAlone**, **One hub** and **One relay** tabs reposition the s
 
 Only visible devices reserve COM ports and hub serials. Layout switching is disabled during Run. The layout code lives in [modes.js](modes.js) and [modes.css](modes.css); device cards remain in [index.html](index.html).
 
+**One relay** assumes firmware was uploaded separately. DUT upload ports, board profiles and sketch pickers are hidden and do not participate in COM assignment.
+
 ## Desktop launcher
 
 From the repository root, with the virtual environment activated:
@@ -47,6 +49,8 @@ Select **Relay channels** (1–3) in **Relay contacts** to show the matching num
 **Hub 2** provides a model selector for `ykush` and `ykush3`. Opening **Hub serial number** runs `ykushcmd -l` or `ykushcmd ykush3 -l` and lists attached serial numbers. The executable defaults to `ykushcmd`; override `hub.cmd` in [backend/config.json](../backend/config.json) if needed. Discovery does not switch hub ports.
 
 **Relay controller** provides a model selector for the supported `numato` and `lcus2` drivers. This selection is also frontend-only.
+
+**One hub** and **HIL Hub 2** also support **YKUSH XS** (`ykushxs`), showing only port 1 and one DUT. HIL Hub 1 requires three downstream sockets, so XS is unavailable there. Switching to HIL clears an incompatible Hub 1 XS selection. Discovery uses `ykushcmd ykushxs -l`; switching and readback use `-u`, `-d` and `-g` without a trailing port number.
 
 In the desktop launcher, select a **Hub 2 serial number** before switching its ports. Clicking ON/OFF calls the existing HIL Hub driver for that exact serial and physical socket, then verifies the state with `-g`. Until confirmed, the state is unknown (`?`). Model/serial changes reset displayed states. Hub controls are locked while a command is pending. No ports are switched automatically on selection or window close.
 

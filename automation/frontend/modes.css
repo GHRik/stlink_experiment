@@ -13,3 +13,5 @@
 .wiring-diagram[data-layout="one-hub"] .meter-stack,
 .wiring-diagram[data-layout="one-relay"] .meter-stack { top: 40px; }
 .wiring-diagram[data-layout="one-hub"] .upload-hub { top: 570px; }
+.wiring-diagram[data-layout="one-relay"] .dut .device-field,
+.wiring-diagram[data-layout="one-relay"] .dut .add-profile { display: none; }

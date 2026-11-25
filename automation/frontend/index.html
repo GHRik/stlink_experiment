@@ -743,10 +743,10 @@
       </div>
     </header>
     <nav class="layout-tabs" aria-label="Testbench layout">
-      <button type="button" data-layout="hil" aria-pressed="true">HIL</button>
       <button type="button" data-layout="standalone" aria-pressed="false">StandAlone</button>
       <button type="button" data-layout="one-hub" aria-pressed="false">One hub</button>
       <button type="button" data-layout="one-relay" aria-pressed="false">One relay</button>
+      <button type="button" data-layout="hil" aria-pressed="true">HIL</button>
     </nav>
     <div class="diagram-viewport" tabindex="0" role="region" aria-label="HIL wiring diagram; scroll horizontally on smaller screens">
       <div class="wiring-diagram">
@@ -800,6 +800,7 @@
               <option value="">Select a model</option>
               <option value="ykush">YKUSH</option>
               <option value="ykush3">YKUSH3</option>
+              <option value="ykushxs">YKUSH XS</option>
             </select>
           </div>
           <div class="device-field">
@@ -938,6 +939,7 @@
               <option value="">Select a model</option>
               <option value="ykush">YKUSH</option>
               <option value="ykush3">YKUSH3</option>
+              <option value="ykushxs">YKUSH XS</option>
             </select>
           </div>
           <div class="device-field hub-discovery-field">
@@ -1170,9 +1172,13 @@
   function hubConfigured(card) {
     const model = card.querySelector('select[id$="model"]');
     const serial = card.querySelector('select[id$="serial"]');
-    return ['ykush', 'ykush3'].includes(model.value) && Boolean(serial.value)
+    return ['ykush', 'ykush3', 'ykushxs'].includes(model.value) && Boolean(serial.value)
       && !serial.selectedOptions[0]?.disabled
       && !hubSelectors.some(other => other !== serial && !other.closest('.device-card').hidden && other.value === serial.value);
+  }
+
+  function hubPortCount(card) {
+    return card.querySelector('select[id$="model"]').value === 'ykushxs' ? 1 : 3;
   }
 
   function resetHubPortStates() {
@@ -1187,10 +1193,14 @@
   function updateHubControls() {
     document.querySelectorAll('.primary-hub, .upload-hub').forEach(card => {
       const configured = hubConfigured(card);
-      card.querySelectorAll('.hub-port').forEach(port => {
+      card.querySelectorAll('.hub-port').forEach((port, index) => {
+        port.hidden = index >= hubPortCount(card)
+          || (card.classList.contains('upload-hub') && index >= modeDutCount());
         port.disabled = isRunning || switchingHub || !configured;
       });
     });
+    document.querySelector('.upload-hub > small').textContent = hubPortCount(document.querySelector('.upload-hub')) === 1
+      ? 'Single switched USB port' : 'Switched USB ports 1–3';
   }
 
   async function switchHubPort(port) {
@@ -1473,7 +1483,8 @@
 
   // Only visible DUTs participate in port validation.
   function activePorts() {
-    return selectors.filter(select => !select.closest('.device-card')?.hidden);
+    return selectors.filter(select => !select.closest('.device-card')?.hidden
+      && !(currentLayout === 'one-relay' && select.closest('.dut')));
   }
 
   // Synchronize relay rows, DUT cards and their SVG connections.
@@ -1549,6 +1560,7 @@
     resetHubPortStates();
     updateHubControls();
     updateExclusiveChoices();
+    updateDeviceCount();
   }
   document.querySelector('#hub1-model').addEventListener('change', () => {
     const select = document.querySelector('#hub1-serial');
@@ -1556,6 +1568,7 @@
     else fillDemoHubs(select);
     resetDemoHubOne();
     updateExclusiveChoices();
+    updateDeviceCount();
   });
   function resetDemoHubOne() {
     hub1Switches.forEach(port => {
