@@ -7,6 +7,9 @@ function filterResults() {
     card.hidden = !card.dataset.name.includes(query);
     if (!card.hidden) matches++;
   });
+  document.querySelectorAll('#results-gallery .result-day').forEach(group => {
+    group.hidden = ![...group.querySelectorAll('.result-session')].some(card => !card.hidden);
+  });
   document.querySelector('#results-matches').textContent = query ? `${matches} of ${cards.length} result sets` : '';
 }
 
@@ -34,10 +37,19 @@ async function refreshResults() {
     // Keep the current set of locked controls intact until this Run finishes.
     if (isRunning) return;
     resultsPreviewObserver.disconnect();
-    const cards = sessions.map(session => {
+    const groups = new Map();
+    sessions.forEach(session => {
+      if (!groups.has(session.date)) {
+        const group = document.createElement('section');
+        group.className = 'result-day';
+        const heading = document.createElement('h3');
+        heading.textContent = session.date;
+        group.append(heading);
+        groups.set(session.date, group);
+      }
       const card = document.createElement('details');
       card.className = 'result-session';
-      card.dataset.name = session.name.toLowerCase();
+      card.dataset.name = `${session.name} ${session.date}`.toLowerCase();
       const title = document.createElement('summary');
       title.textContent = session.name === '.' ? 'results' : session.name;
       const plots = document.createElement('div');
@@ -62,9 +74,9 @@ async function refreshResults() {
         plots.append(button);
       }
       card.append(title, plots);
-      return card;
+      groups.get(session.date).append(card);
     });
-    document.querySelector('#results-gallery').replaceChildren(...cards);
+    document.querySelector('#results-gallery').replaceChildren(...groups.values());
     filterResults();
     note.textContent = sessions.length
       ? `${sessions.length} result sets · newest first. Click a preview to open the full plot (SVG when available).`

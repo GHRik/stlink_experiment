@@ -42,7 +42,11 @@ class ResultsGallery:
                     return match[1] + "_" + (match[2] or "000000")
             return datetime.fromtimestamp(session["modified"]).strftime("%Y%m%d_%H%M%S_%f")
 
-        return sorted(sessions, key=lambda session: (recorded_date(session), session["name"]), reverse=True)
+        sessions.sort(key=lambda session: (recorded_date(session), session["name"]), reverse=True)
+        for session in sessions:
+            date = recorded_date(session)
+            session["date"] = f"{date[6:8]}.{date[4:6]}.{date[:4]}"
+        return sessions
 
     def _plot(self, relative_path):
         path = (self._root / relative_path).resolve()

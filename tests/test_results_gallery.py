@@ -21,7 +21,9 @@ class ResultsGalleryTests(unittest.TestCase):
                 plot = folder / 'comparison_eng.png'
                 plot.touch()
                 os.utime(plot, (2000000000, 2000000000))
-            self.assertEqual([row['name'] for row in ResultsGallery(root).list_results()], list(reversed(names)))
+            rows = ResultsGallery(root).list_results()
+            self.assertEqual([row['name'] for row in rows], list(reversed(names)))
+            self.assertEqual([row['date'] for row in rows], ['25.11.2026', '17.11.2026', '15.11.2026'])
 
     def test_discovers_sessions_and_prefers_png_previews_with_svg_full_size(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -1,5 +1,7 @@
 .results-section { margin-top: 28px; }
 .results-section h2 { font-size: 18px; }
+.result-day { margin-top: 28px; }
+.result-day > h3 { padding-bottom: 8px; border-bottom: 2px solid var(--panel-border); font-size: 18px; letter-spacing: 1px; }
 .results-section > label { display: block; margin-bottom: 6px; }
 #results-search { width: min(100%, 480px); padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--panel-border); border-radius: 3px; background: #fff; color: inherit; font: inherit; }
 #results-matches:empty { display: none; }
