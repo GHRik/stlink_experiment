@@ -188,6 +188,45 @@
       top: 577px;
       width: 135px;
     }
+    .hub-ports {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .state-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      width: 100%;
+      padding: 5px 0;
+      border: 0;
+      background: transparent;
+      color: #65758b;
+      font: 11px system-ui, sans-serif;
+      text-align: left;
+      cursor: pointer;
+    }
+    .port-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+    }
+    .port-led {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #9aa6b5;
+    }
+    .state-toggle[aria-pressed="true"] .port-led {
+      background: #24a778;
+      box-shadow: 0 0 6px #24a77870;
+    }
+    .state-toggle:focus-visible {
+      outline: 3px solid #a8cefc;
+      outline-offset: 2px;
+    }
     .power-meter {
       left: 405px;
       top: 125px;
@@ -322,6 +361,11 @@
         <div class="device-card primary-hub">
           <strong>Hub 1</strong>
           <small>USB hub</small>
+          <div class="hub-ports" aria-label="Hub 1 output ports">
+            <button class="hub-port state-toggle" type="button" aria-pressed="true"><span>1 · STLINK</span><span class="port-indicator"><span class="port-state">ON</span><span class="port-led" aria-hidden="true"></span></span></button>
+            <button class="hub-port state-toggle" type="button" aria-pressed="true"><span>2 · Relay</span><span class="port-indicator"><span class="port-state">ON</span><span class="port-led" aria-hidden="true"></span></span></button>
+            <button class="hub-port state-toggle" type="button" aria-pressed="true"><span>3 · Hub 2</span><span class="port-indicator"><span class="port-state">ON</span><span class="port-led" aria-hidden="true"></span></span></button>
+          </div>
         </div>
         <!-- Meter, relay controller and switched upload hub. -->
         <section class="device-card power-meter">
@@ -334,15 +378,34 @@
         </section>
         <section class="device-card relay">
           <strong>Relay controller</strong>
-          <small>Numato / LCUS-2</small>
+          <small>USB relay module</small>
+          <div class="device-field">
+            <label for="relay-model">Relay model</label>
+            <select id="relay-model">
+              <option value="numato">Numato</option>
+              <option value="lcus2">LCUS-2</option>
+            </select>
+          </div>
           <div class="device-field">
             <label for="relay-port">Control port</label>
             <select id="relay-port" data-default="COM19"></select>
           </div>
         </section>
         <div class="device-card upload-hub">
-          <strong>Hub 2 · YKUSH</strong>
+          <strong>Hub 2</strong>
           <small>Switched USB ports 1–3</small>
+          <div class="device-field">
+            <label for="hub-model">Hub model</label>
+            <select id="hub-model">
+              <option value="ykush">YKUSH</option>
+              <option value="ykush3">YKUSH3</option>
+            </select>
+          </div>
+          <div class="hub-ports" aria-label="Hub 2 output ports">
+            <button class="hub-port state-toggle" data-port="1" type="button" aria-pressed="false"><span>1 · DUT 1</span><span class="port-indicator"><span class="port-state">OFF</span><span class="port-led" aria-hidden="true"></span></span></button>
+            <button class="hub-port state-toggle" data-port="2" type="button" aria-pressed="false"><span>2 · DUT 2</span><span class="port-indicator"><span class="port-state">OFF</span><span class="port-led" aria-hidden="true"></span></span></button>
+            <button class="hub-port state-toggle" data-port="3" type="button" aria-pressed="false"><span>3 · DUT 3</span><span class="port-indicator"><span class="port-state">OFF</span><span class="port-led" aria-hidden="true"></span></span></button>
+          </div>
         </div>
         <!-- Relay channel count controls DUT cards and wiring visibility. -->
         <div class="device-card relay-contacts">
@@ -357,15 +420,27 @@
               </select>
             </div>
           </div>
-          <div class="relay-channel">
-            Relay 1 → DUT 1
-          </div>
-          <div class="relay-channel">
-            Relay 2 → DUT 2
-          </div>
-          <div class="relay-channel">
-            Relay 3 → DUT 3
-          </div>
+          <button class="relay-channel state-toggle" type="button" aria-pressed="false">
+            <span>1 → DUT 1</span>
+            <span class="port-indicator">
+              <span class="port-state">OFF</span>
+              <span class="port-led" aria-hidden="true"></span>
+            </span>
+          </button>
+          <button class="relay-channel state-toggle" type="button" aria-pressed="false">
+            <span>2 → DUT 2</span>
+            <span class="port-indicator">
+              <span class="port-state">OFF</span>
+              <span class="port-led" aria-hidden="true"></span>
+            </span>
+          </button>
+          <button class="relay-channel state-toggle" type="button" aria-pressed="false">
+            <span>3 → DUT 3</span>
+            <span class="port-indicator">
+              <span class="port-state">OFF</span>
+              <span class="port-led" aria-hidden="true"></span>
+            </span>
+          </button>
         </div>
         <!-- DUT: upload port, board profile and local Arduino sketch. -->
         <section class="device-card dut dut-position-1">
@@ -456,6 +531,9 @@
     document.querySelectorAll('[data-dut]').forEach(group => {
       group.style.display = Number(group.dataset.dut) <= count ? '' : 'none';
     });
+    document.querySelectorAll('.hub-port[data-port]').forEach(port => {
+      port.hidden = Number(port.dataset.port) > count;
+    });
     document.querySelector('#upload-label').textContent = `USB upload · ${count === 1 ? 'port' : 'ports'} ${Array.from({length: count}, (_, index) => index + 1).join(' / ')}`;
     validatePorts();
   }
@@ -495,6 +573,15 @@
 
   // Initialize the local prototype and register UI events.
   initializePortSelectors();
+  // Hub and relay LEDs display simulated states only; no hardware commands are sent.
+  document.querySelectorAll('.state-toggle').forEach(port => {
+    port.addEventListener('click', () => {
+      const enabled = port.getAttribute('aria-pressed') !== 'true';
+      port.setAttribute('aria-pressed', String(enabled));
+      port.querySelector('.port-state').textContent = enabled ? 'ON' : 'OFF';
+    });
+  });
+
   document.querySelector('#run').addEventListener('click', handleRun);
   relayCount.addEventListener('change', updateDeviceCount);
   updateDeviceCount();
