@@ -287,6 +287,28 @@
       outline: 3px solid #a8cefc;
       outline-offset: 2px;
     }
+    .native-file-picker {
+      display: grid;
+      gap: 6px;
+    }
+    .native-file-picker button {
+      justify-self: start;
+      padding: 7px 10px;
+      border: 1px solid #8695aa;
+      border-radius: 3px;
+      background: transparent;
+      color: inherit;
+      font: 12px var(--instrument-font);
+      cursor: pointer;
+    }
+    .native-file-picker button:focus-visible {
+      outline: 3px solid #a8cefc;
+      outline-offset: 2px;
+    }
+    .selected-file-path {
+      font-size: 11px;
+      overflow-wrap: anywhere;
+    }
     .run {
       width: 100%;
       border: 0;
@@ -965,6 +987,41 @@
     <p>Sample COM ports only. This prototype does not connect to hardware or save configuration.</p>
   </main>
 <script>
+  // Desktop mode replaces browser uploads with native dialogs returning full paths.
+  window.addEventListener('pywebviewready', () => {
+    document.querySelectorAll('input[type="file"]').forEach(input => {
+      const picker = document.createElement('div');
+      picker.className = 'native-file-picker';
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = 'Choose file';
+      button.setAttribute('aria-label', `Choose ${input.id === 'measurement-controller' ? 'controller script' : 'Arduino sketch'}`);
+      const filename = document.createElement('span');
+      filename.className = 'selected-file-path';
+      filename.textContent = 'No file selected';
+      filename.setAttribute('aria-live', 'polite');
+      picker.append(button, filename);
+      input.hidden = true;
+      input.after(picker);
+      button.addEventListener('click', async () => {
+        if (isRunning) return;
+        const kind = input.id === 'measurement-controller' ? 'controller' : 'sketch';
+        try {
+          const path = await window.pywebview.api.pick_file(kind);
+          if (!path) return;
+          input.dataset.path = path;
+          filename.textContent = path;
+          input.dispatchEvent(new Event('change'));
+          alignSwitchConnections();
+        } catch (error) {
+          status.classList.add('error');
+          status.textContent = `File selection failed: ${error.message || error}`;
+        }
+      });
+    });
+    alignSwitchConnections();
+  });
+
   // Theme preferences are local to this browser; file:// storage may be restricted.
   function setTheme(theme) {
     document.documentElement.dataset.theme = theme;
@@ -1178,7 +1235,7 @@
   initializePortSelectors();
   const controllerScript = document.querySelector('#measurement-controller');
   function updateControllerConnection() {
-    document.querySelector('.meter-stack').classList.toggle('has-controller', controllerScript.files.length > 0);
+    document.querySelector('.meter-stack').classList.toggle('has-controller', Boolean(controllerScript.dataset.path) || controllerScript.files.length > 0);
   }
   controllerScript.addEventListener('change', updateControllerConnection);
   updateControllerConnection();

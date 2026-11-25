@@ -67,6 +67,10 @@ Automation: [upload and measurement sequence](automation/README.md) · [scripts 
 
 ## FAQ
 
+**How can I open the HIL desktop interface?**
+
+Install the optional GUI with `python -m pip install -e ".[gui]"`, then run `stlink-gui`. The [frontend](automation/frontend/README.md) opens in its own window with native file selection. Measurement execution is not connected yet.
+
 **How can I run custom actions during a STLINK measurement?**
 
 Use `--controller` to run a Python script alongside each capture. See the [controller README](automation/controllers/README.md).

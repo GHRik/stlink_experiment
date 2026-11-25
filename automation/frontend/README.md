@@ -1,6 +1,19 @@
 # HIL frontend prototype
 
-Open [index.html](index.html) in a browser by double-clicking the local file. No installation or server is required.
+## Desktop launcher
+
+From the repository root, with the virtual environment activated:
+
+```powershell
+python -m pip install -e ".[gui]"
+stlink-gui
+```
+
+Opens the existing HTML in a separate desktop window using pywebview. **Choose file** opens a native file dialog and displays the full local path for `.ino` sketches and the optional `.py` controller. Cancel keeps the previous selection. Run and hardware switches remain simulated; configuration generation and process execution are not connected yet.
+
+## Browser preview
+
+Open [index.html](index.html) in a browser by double-clicking the local file. No installation or server is required. Browser file pickers expose filenames only; native full-path selection requires the desktop launcher.
 
 Use **Light / Dark** in the page header to select a theme. The browser remembers the choice when local storage is available.
 
