@@ -368,7 +368,7 @@
     }
     .power-meter {
       left: 405px;
-      top: 360px;
+      top: 330px;
       border-top: 3px solid #c84f55;
       background: #fff4f4;
     }
@@ -638,24 +638,22 @@
           <path class="usb" d="M330 680 H350 V430 H405"/>
           <path class="usb" d="M330 715 H370 V610 H405"/>
           <path class="usb" d="M330 750 H390 V813 H405"/>
-          <text x="135" y="690">USB</text>
+          <text x="24" y="690">USB - Data line only</text>
           <path class="usb" d="M595 610 H670"/>
           <text x="611" y="599">Control</text>
           <path class="power" d="M595 420 H745 V521"/>
-          <text x="626" y="408">OUT + GND</text>
+          <text id="meter-output-label" x="610" y="408">OUT 3.3 V + GND</text>
           <g data-dut="1">
             <path class="power" d="M820 574 H900 V110 H1040"/>
-            <text x="930" y="98">3V3 + GND</text>
+            <text class="dut-supply-label" x="830" y="562">3.3 V + GND</text>
             <path class="usb upload" d="M595 948 H650 V915 H940 V175 H1040"/>
           </g>
           <g data-dut="2">
             <path class="power" d="M820 610 H1040"/>
-            <text x="930" y="598">3V3 + GND</text>
-            <path class="usb upload" d="M595 978 H965 V675 H1040"/>
+            <path class="usb upload" d="M595 978 H965 V740 H1040"/>
           </g>
           <g data-dut="3">
             <path class="power" d="M820 646 H875 V950 H1040"/>
-            <text x="930" y="938">3V3 + GND</text>
             <path class="usb upload" d="M595 1008 H990 V1015 H1040"/>
           </g>
           <text id="upload-label" x="640" y="1050">USB upload · ports 1 / 2 / 3</text>
@@ -759,6 +757,13 @@
             <label for="meter-port">SMU port</label>
             <select id="meter-port" data-default="COM18"></select>
           </div>
+          <button class="state-toggle" id="meter-output" type="button" aria-pressed="false">
+            <span id="meter-output-voltage">OUT 3.3 V + GND</span>
+            <span class="port-indicator">
+              <span class="port-state">OFF</span>
+              <span class="port-led" aria-hidden="true"></span>
+            </span>
+          </button>
         </section>
         <section class="device-card relay">
           <strong>Relay controller</strong>
@@ -921,8 +926,19 @@
   const relayCount = document.querySelector('#relay-count');
   const runButton = document.querySelector('#run');
   const stopButton = document.querySelector('#stop');
+  const outputVoltage = document.querySelector('#measurement-voltage');
   let isRunning = false;
   let lockedControls = [];
+
+  function updateSupplyLabels() {
+    const voltage = outputVoltage.valueAsNumber;
+    const label = Number.isFinite(voltage) ? `${voltage} V + GND` : '— V + GND';
+    document.querySelectorAll('.dut-supply-label').forEach(element => {
+      element.textContent = label;
+    });
+    document.querySelector('#meter-output-label').textContent = `OUT ${label}`;
+    document.querySelector('#meter-output-voltage').textContent = `OUT ${label}`;
+  }
 
   function setRunning(running) {
     if (running === isRunning) return;
@@ -958,12 +974,13 @@
   const hub1Switches = [...document.querySelectorAll('.primary-hub .state-toggle')];
   const hub2Switches = [...document.querySelectorAll('.upload-hub .state-toggle')];
   const relaySwitches = [...document.querySelectorAll('.relay-channel')];
+  const meterOutput = document.querySelector('#meter-output');
   const isOn = button => button.getAttribute('aria-pressed') === 'true';
 
   function initializeConnectionFlows() {
     const svg = document.querySelector('.wiring-connections');
     const namespace = 'http://www.w3.org/2000/svg';
-    function addFlow(path, color, active, relayIndex = null, hubIndex = null) {
+    function addFlow(path, color, active, relayIndex = null, hubIndex = null, uploadIndex = null) {
       const line = [...svg.querySelectorAll('path')].find(element => element.getAttribute('d') === path);
       line.style.setProperty('--connection-color', color);
       const dot = document.createElementNS(namespace, 'circle');
@@ -976,7 +993,7 @@
       motion.setAttribute('repeatCount', 'indefinite');
       dot.append(motion);
       svg.append(dot);
-      connectionFlows.push({dot, line, motion, active, relayIndex, hubIndex});
+      connectionFlows.push({dot, line, motion, active, relayIndex, hubIndex, uploadIndex});
     }
     const usbColor = '#8695aa';
     const powerColor = '#d67b22';
@@ -986,10 +1003,10 @@
     addFlow('M330 750 H390 V813 H405', '#3479c3', () => isOn(hub1Switches[2]), null, 2);
     addFlow('M595 610 H670', usbColor, () => isOn(hub1Switches[1]));
     const relayActive = index => index < Number(relayCount.value)
-      && isOn(relaySwitches[index]) && isOn(hub1Switches[0]);
-    addFlow('M595 420 H745 V521', powerColor, () => relaySwitches.some((_, index) => relayActive(index)));
+      && isOn(relaySwitches[index]) && isOn(hub1Switches[0]) && isOn(meterOutput);
+    addFlow('M595 420 H745 V521', powerColor, () => isOn(hub1Switches[0]) && isOn(meterOutput));
     const powerPaths = ['M820 574 H900 V110 H1040', 'M820 610 H1040', 'M820 646 H875 V950 H1040'];
-    const uploadHeights = [175, 675, 1015];
+    const uploadHeights = [175, 740, 1015];
     const uploadStarts = [948, 978, 1008];
     const uploadLanes = [940, 965, 990];
     powerPaths.forEach((path, index) => {
@@ -998,7 +1015,7 @@
         ? 'M595 948 H650 V915 H940 V175 H1040'
         : `M595 ${uploadStarts[index]} H${uploadLanes[index]} V${uploadHeights[index]} H1040`;
       addFlow(uploadPath, usbColor,
-        () => index < Number(relayCount.value) && isOn(hub1Switches[2]) && isOn(hub2Switches[index]));
+        () => index < Number(relayCount.value) && isOn(hub1Switches[2]) && isOn(hub2Switches[index]), null, null, index);
     });
   }
 
@@ -1014,8 +1031,11 @@
   // Anchor outgoing wires to their hub-port or relay-channel switches.
   function alignSwitchConnections() {
     const diagram = document.querySelector('.wiring-diagram').getBoundingClientRect();
-    connectionFlows.forEach(({line, motion, relayIndex, hubIndex}) => {
-      const source = hubIndex !== null ? hub1Switches[hubIndex] : relayIndex !== null ? relaySwitches[relayIndex] : null;
+    connectionFlows.forEach(({line, motion, relayIndex, hubIndex, uploadIndex}) => {
+      const isMeterOutput = line.getAttribute('d').endsWith('H745 V521');
+      const source = isMeterOutput ? meterOutput : uploadIndex !== null ? hub2Switches[uploadIndex]
+        : hubIndex !== null ? hub1Switches[hubIndex]
+        : relayIndex !== null ? relaySwitches[relayIndex] : null;
       if (!source || source.hidden) return;
       const card = source.closest('.device-card').getBoundingClientRect();
       const button = source.getBoundingClientRect();
@@ -1024,6 +1044,14 @@
       const path = line.getAttribute('d').replace(/^M[\d.]+ [\d.]+/, `M${x} ${y}`);
       line.setAttribute('d', path);
       motion.setAttribute('path', path);
+      if (isMeterOutput) {
+        document.querySelector('#meter-output-label').setAttribute('y', y - 12);
+      }
+      if (relayIndex === 0) {
+        const label = document.querySelector('.dut-supply-label');
+        label.setAttribute('x', x + 10);
+        label.setAttribute('y', y - 12);
+      }
     });
   }
 
@@ -1085,6 +1113,9 @@
 
   // Initialize the local prototype and register UI events.
   initializePortSelectors();
+  outputVoltage.addEventListener('input', updateSupplyLabels);
+  outputVoltage.addEventListener('change', updateSupplyLabels);
+  updateSupplyLabels();
   initializeConnectionFlows();
   // Hub and relay LEDs display simulated states only; no hardware commands are sent.
   document.querySelectorAll('.state-toggle').forEach(port => {
