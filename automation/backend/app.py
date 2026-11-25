@@ -1,17 +1,21 @@
 """Create the desktop window and connect its Python bridge."""
 from pathlib import Path
 
-from .file_picker import FilePicker
-
-
-def run_desktop(webview):
-    api = FilePicker(webview)
-    api._window = webview.create_window(
-        "STLINK power measurements",
+def run_desktop(webview, demo=False):
+    api = None
+    if not demo:
+        from .api import DesktopApi
+        from .config import load_settings
+        api = DesktopApi(webview, load_settings())
+    window = webview.create_window(
+        "STLINK power measurements" + (" — Demo" if demo else ""),
         url=str(Path(__file__).resolve().parents[1] / "frontend" / "index.html"),
         js_api=api,
         width=1440,
         height=960,
         min_size=(900, 600),
+        maximized=True,
     )
+    if api is not None:
+        api._bind_window(window)
     webview.start()

@@ -2,10 +2,11 @@
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from automation.backend.app import run_desktop
 from automation.backend.file_picker import FilePicker
+from automation.backend.launcher import main
 
 
 class FilePickerTests(unittest.TestCase):
@@ -36,6 +37,22 @@ class FilePickerTests(unittest.TestCase):
 
 
 class DesktopAppTests(unittest.TestCase):
+    @patch("automation.backend.api.DesktopApi")
+    def test_demo_does_not_create_or_expose_backend(self, api):
+        webview = Mock()
+        run_desktop(webview, demo=True)
+        api.assert_not_called()
+        self.assertIsNone(webview.create_window.call_args.kwargs["js_api"])
+        self.assertIn("Demo", webview.create_window.call_args.args[0])
+        webview.start.assert_called_once_with()
+
+    @patch("automation.backend.launcher.run_desktop")
+    def test_demo_option_reaches_window_launcher(self, run):
+        webview = Mock()
+        with patch.dict("sys.modules", {"webview": webview}):
+            self.assertEqual(main(["--demo"]), 0)
+        run.assert_called_once_with(webview, demo=True)
+
     def test_window_loads_frontend_and_binds_picker(self):
         webview = Mock()
         run_desktop(webview)
@@ -43,5 +60,6 @@ class DesktopAppTests(unittest.TestCase):
         self.assertEqual(Path(options["url"]),
                          Path(__file__).resolve().parents[1] / "automation/frontend/index.html")
         self.assertTrue(Path(options["url"]).is_file())
-        self.assertIs(options["js_api"]._window, webview.create_window.return_value)
+        self.assertTrue(options["maximized"])
+        self.assertIs(options["js_api"]._picker._window, webview.create_window.return_value)
         webview.start.assert_called_once_with()
