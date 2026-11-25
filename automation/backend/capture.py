@@ -9,8 +9,7 @@ from threading import Lock, Thread
 
 
 def capture_command(config):
-    notes = config.get("description", "").strip()
-    notes = f"{notes}; USB disconnected" if notes else "USB disconnected"
+    notes = config.get("description", "")
     command = [sys.executable, "-u", "-m", "automation.backend.capture_worker", "capture",
                "--port", config["port"], "--name", config["name"].strip(), "--notes", notes]
     flags = {"repeats": "--repeats", "seconds": "--seconds", "hz": "--hz",

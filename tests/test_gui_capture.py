@@ -20,14 +20,14 @@ class CaptureCommandTests(unittest.TestCase):
         command = capture_command(configuration())
         self.assertEqual(command[:5], [sys.executable, "-u", "-m", "automation.backend.capture_worker", "capture"])
         self.assertEqual(command[5:], ["--port", "COM18", "--name", "sleep_test", "--notes",
-                         "NodeMCU; deep sleep; USB disconnected", "--repeats", "10", "--seconds", "100",
+                         "NodeMCU; deep sleep", "--repeats", "10", "--seconds", "100",
                          "--hz", "1000", "--voltage", "3.3", "--warmup-seconds", "180", "--off-seconds", "1"])
 
     def test_controller_path_and_description_remain_single_arguments(self):
         config = dict(configuration(), controller="C:/folder with spaces/control.py", description='test; "quoted"')
         command = capture_command(config)
         self.assertEqual(command[-2:], ["--controller", config["controller"]])
-        self.assertEqual(command[command.index("--notes") + 1], 'test; "quoted"; USB disconnected')
+        self.assertEqual(command[command.index("--notes") + 1], 'test; "quoted"')
 
 
 class CaptureProcessTests(unittest.TestCase):
