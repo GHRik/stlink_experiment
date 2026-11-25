@@ -5,62 +5,290 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HIL testbench</title>
   <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; background: #eef2f6; color: #172538; font: 15px system-ui, sans-serif; }
-    main { max-width: 1440px; margin: auto; padding: 36px 24px; }
-    header { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
-    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: -.6px; }
-    p { color: #5c6c80; margin: 0 0 24px; line-height: 1.6; }
-    .configuration { margin-top: 14px; }
-    [hidden] { display: none !important; }
-    .badge { border: 1px solid #cbd5e1; border-radius: 20px; padding: 6px 12px; white-space: nowrap; font-size: 12px; }
-    .viewport { overflow-x: auto; border: 1px solid #d7dfe9; border-radius: 16px; background: white; }
-    .bench { position: relative; width: 1360px; height: 1280px; margin: auto; }
-    svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-    .usb { stroke: #8695aa; stroke-width: 2; fill: none; }
-    .upload { stroke-dasharray: 7 5; }
-    .power { stroke: #d67b22; stroke-width: 3; fill: none; }
-    svg text { font: 12px system-ui, sans-serif; fill: #65758b; }
-    .node { position: absolute; width: 190px; padding: 17px; border: 1px solid #d3dce7; border-radius: 12px; background: #fff; box-shadow: 0 4px 14px #17253808; }
-    .node strong { display: block; font-size: 15px; }
-    .node small { display: block; color: #65758b; font-size: 12px; margin: 5px 0 12px; }
-    .node label { display: block; font-size: 11px; font-weight: 600; color: #65758b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .7px; }
-    select { width: 100%; padding: 9px; border-radius: 6px; border: 1px solid #c4cfdd; background: #f8fafc; color: #172538; font: inherit; }
-    select:focus-visible { outline: 3px solid #a8cefc; outline-offset: 2px; }
-    .add-profile { display: inline-block; margin-top: 7px; color: #3479c3; font-size: 12px; text-decoration: none; }
-    .add-profile:hover { text-decoration: underline; }
-    .sketch-label { margin-top: 12px; }
-    .sketch { width: 100%; font: 12px system-ui, sans-serif; color: #65758b; }
-    .sketch::file-selector-button { display: block; margin-bottom: 6px; padding: 7px 10px; border: 1px solid #c4cfdd; border-radius: 6px; background: #f8fafc; color: #172538; cursor: pointer; }
-    .sketch:focus-visible { outline: 3px solid #a8cefc; outline-offset: 2px; }
-    .run { width: 100%; border: 0; border-radius: 6px; padding: 9px; background: #24745f; color: white; font: inherit; font-weight: 600; cursor: pointer; }
-    .run:hover { background: #195b49; }
-    .run:focus-visible { outline: 3px solid #a8cefc; outline-offset: 2px; }
-    .pc { left: 24px; top: 552px; width: 120px; }
-    .hub1 { left: 195px; top: 577px; width: 135px; }
-    .meter { left: 405px; top: 125px; border-top: 3px solid #3479c3; }
-    .relay { left: 405px; top: 535px; }
-    .hub2 { left: 405px; top: 997px; }
-    .dut { left: 1040px; width: 260px; border-top: 3px solid #26927d; }
-    .dut1 { top: 40px; } .dut2 { top: 460px; } .dut3 { top: 880px; }
-    .contacts { left: 670px; top: 521px; width: 150px; background: #fff9f1; border-color: #e9cda7; }
-    .contact { padding: 9px 0; color: #a45913; font-size: 12px; border-bottom: 1px solid #efdcc3; }
-    .contact:last-child { border: 0; }
-    footer { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; margin: 18px 0; color: #65758b; font-size: 12px; }
-    .key::before { content: ''; display: inline-block; width: 28px; border-top: 2px solid #8695aa; vertical-align: middle; margin-right: 8px; }
-    .key.dashed::before { border-top-style: dashed; }
-    .key.orange::before { border-color: #d67b22; border-top-width: 3px; }
-    #status { min-height: 24px; font-size: 13px; }
-    #status.error { color: #b83232; }
-    @media (max-width: 600px) { main { padding: 22px 12px; } header { display: block; } .badge { display: inline-block; margin-bottom: 18px; } }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: #eef2f6;
+      color: #172538;
+      font: 15px system-ui, sans-serif;
+    }
+    main {
+      max-width: 1440px;
+      margin: auto;
+      padding: 36px 24px;
+    }
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: -.6px;
+    }
+    p {
+      color: #5c6c80;
+      margin: 0 0 24px;
+      line-height: 1.6;
+    }
+    .badge {
+      border: 1px solid #cbd5e1;
+      border-radius: 20px;
+      padding: 6px 12px;
+      white-space: nowrap;
+      font-size: 12px;
+    }
+    .relay-settings {
+      margin-top: 14px;
+    }
+    .relay-settings select {
+      width: 100%;
+    }
+    [hidden] {
+      display: none !important;
+    }
+    .diagram-viewport {
+      overflow-x: auto;
+      border: 1px solid #d7dfe9;
+      border-radius: 16px;
+      background: white;
+    }
+    .wiring-diagram {
+      position: relative;
+      width: 1360px;
+      height: 1280px;
+      margin: auto;
+    }
+    svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .usb {
+      stroke: #8695aa;
+      stroke-width: 2;
+      fill: none;
+    }
+    .upload {
+      stroke-dasharray: 7 5;
+    }
+    .power {
+      stroke: #d67b22;
+      stroke-width: 3;
+      fill: none;
+    }
+    svg text {
+      font: 12px system-ui, sans-serif;
+      fill: #65758b;
+    }
+    .device-card {
+      position: absolute;
+      width: 190px;
+      padding: 17px;
+      border: 1px solid #d3dce7;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 4px 14px #17253808;
+    }
+    .device-card strong {
+      display: block;
+      font-size: 15px;
+    }
+    .device-card small {
+      display: block;
+      color: #65758b;
+      font-size: 12px;
+      margin: 5px 0 12px;
+    }
+    .device-card label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #65758b;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+    }
+    select {
+      width: 100%;
+      padding: 9px;
+      border-radius: 6px;
+      border: 1px solid #c4cfdd;
+      background: #f8fafc;
+      color: #172538;
+      font: inherit;
+    }
+    select:focus-visible {
+      outline: 3px solid #a8cefc;
+      outline-offset: 2px;
+    }
+    .add-profile {
+      display: inline-block;
+      margin-top: 7px;
+      color: #3479c3;
+      font-size: 12px;
+      text-decoration: none;
+    }
+    .add-profile:hover {
+      text-decoration: underline;
+    }
+    .sketch-label {
+      margin-top: 12px;
+    }
+    .sketch {
+      width: 100%;
+      font: 12px system-ui, sans-serif;
+      color: #65758b;
+    }
+    .sketch::file-selector-button {
+      display: block;
+      margin-bottom: 6px;
+      padding: 7px 10px;
+      border: 1px solid #c4cfdd;
+      border-radius: 6px;
+      background: #f8fafc;
+      color: #172538;
+      cursor: pointer;
+    }
+    .sketch:focus-visible {
+      outline: 3px solid #a8cefc;
+      outline-offset: 2px;
+    }
+    .run {
+      width: 100%;
+      border: 0;
+      border-radius: 6px;
+      padding: 9px;
+      background: #24745f;
+      color: white;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .run:hover {
+      background: #195b49;
+    }
+    .run:focus-visible {
+      outline: 3px solid #a8cefc;
+      outline-offset: 2px;
+    }
+    .pc {
+      left: 24px;
+      top: 552px;
+      width: 120px;
+    }
+    .primary-hub {
+      left: 195px;
+      top: 577px;
+      width: 135px;
+    }
+    .power-meter {
+      left: 405px;
+      top: 125px;
+      border-top: 3px solid #3479c3;
+    }
+    .relay {
+      left: 405px;
+      top: 535px;
+    }
+    .upload-hub {
+      left: 405px;
+      top: 997px;
+    }
+    .dut {
+      left: 1040px;
+      width: 260px;
+      border-top: 3px solid #26927d;
+    }
+    .dut-position-1 {
+      top: 40px;
+    }
+    .dut-position-2 {
+      top: 460px;
+    }
+    .dut-position-3 {
+      top: 880px;
+    }
+    .relay-contacts {
+      left: 670px;
+      top: 521px;
+      width: 150px;
+      background: #fff9f1;
+      border-color: #e9cda7;
+    }
+    .relay-channel {
+      padding: 9px 0;
+      color: #a45913;
+      font-size: 12px;
+      border-bottom: 1px solid #efdcc3;
+    }
+    .relay-channel:last-child {
+      border: 0;
+    }
+    footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      align-items: center;
+      margin: 18px 0;
+      color: #65758b;
+      font-size: 12px;
+    }
+    .key::before {
+      content: '';
+      display: inline-block;
+      width: 28px;
+      border-top: 2px solid #8695aa;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    .key.dashed::before {
+      border-top-style: dashed;
+    }
+    .key.orange::before {
+      border-color: #d67b22;
+      border-top-width: 3px;
+    }
+    #status {
+      min-height: 24px;
+      font-size: 13px;
+    }
+    #status.error {
+      color: #b83232;
+    }
+    @media (max-width: 600px) {
+      main {
+        padding: 22px 12px;
+      }
+      header {
+        display: block;
+      }
+      .badge {
+        display: inline-block;
+        margin-bottom: 18px;
+      }
+    }
   </style>
 </head>
 <body>
-<main>
-  <header><div><h1>HIL testbench</h1><p>Assign serial ports to the meter, relay controller and boards.</p></div><span class="badge">Interface prototype</span></header>
-  <div class="viewport" tabindex="0" role="region" aria-label="HIL wiring diagram; scroll horizontally on smaller screens">
-    <div class="bench">
-      <svg viewBox="0 0 1360 1280" aria-hidden="true">
+  <main class="testbench-page">
+    <header class="page-header">
+      <div class="page-intro">
+        <h1>HIL testbench</h1>
+        <p>Assign serial ports to the meter, relay controller and boards.</p>
+      </div>
+      <span class="badge">Interface prototype</span>
+    </header>
+    <div class="diagram-viewport" tabindex="0" role="region" aria-label="HIL wiring diagram; scroll horizontally on smaller screens">
+      <div class="wiring-diagram">
+        <!-- USB, relay control and switched measurement wiring. -->
+        <svg class="wiring-connections" viewBox="0 0 1360 1280" aria-hidden="true">
           <path class="usb" d="M144 610 H195 M330 610 H365 V195 H405 M365 610 H405 M365 610 V1030 H405"/>
           <text x="155" y="598">USB</text>
           <path class="usb" d="M595 610 H670"/>
@@ -85,21 +313,130 @@
           <path class="usb upload" id="upload-trunk" d="M595 1030 H1000 V175"/>
           <text id="upload-label" x="640" y="1054">USB upload · ports 1 / 2 / 3</text>
         </svg>
-      <div class="node pc"><strong>PC</strong><small>Host</small><button class="run" id="run" type="button">Run</button></div>
-      <div class="node hub1"><strong>Hub 1</strong><small>USB hub</small></div>
-      <section class="node meter"><strong>STLINK-V3PWR</strong><small>Current measurement</small><label for="meter-port">SMU port</label><select id="meter-port" data-default="COM18"></select></section>
-      <section class="node relay"><strong>Relay controller</strong><small>Numato / LCUS-2</small><label for="relay-port">Control port</label><select id="relay-port" data-default="COM19"></select></section>
-      <div class="node hub2"><strong>Hub 2 · YKUSH</strong><small>Switched USB ports 1–3</small></div>
-      <div class="node contacts"><strong>Relay contacts</strong><div class="configuration"><label for="relay-count">Relay channels</label><select id="relay-count"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option></select></div><div class="contact">Relay 1 → DUT 1</div><div class="contact">Relay 2 → DUT 2</div><div class="contact">Relay 3 → DUT 3</div></div>
-      <section class="node dut dut1"><strong>Device Under Test 1</strong><small>YKUSH port 1 · relay 1</small><label for="dut1-port">Upload port</label><select id="dut1-port" data-default="COM7"></select><label class="sketch-label" for="dut1-profile">Board profile</label><select id="dut1-profile" class="board-profile"><option value="nodemcu">nodemcu</option></select><a class="add-profile" href="../HIL/board_profiles.json" target="_blank" rel="noopener">Add profile ↗</a><label class="sketch-label" for="dut1-sketch">Arduino sketch</label><input class="sketch" id="dut1-sketch" type="file" accept=".ino"></section>
-      <section class="node dut dut2"><strong>Device Under Test 2</strong><small>YKUSH port 2 · relay 2</small><label for="dut2-port">Upload port</label><select id="dut2-port" data-default="COM8"></select><label class="sketch-label" for="dut2-profile">Board profile</label><select id="dut2-profile" class="board-profile"><option value="nodemcu">nodemcu</option></select><a class="add-profile" href="../HIL/board_profiles.json" target="_blank" rel="noopener">Add profile ↗</a><label class="sketch-label" for="dut2-sketch">Arduino sketch</label><input class="sketch" id="dut2-sketch" type="file" accept=".ino"></section>
-      <section class="node dut dut3"><strong>Device Under Test 3</strong><small>YKUSH port 3 · relay 3</small><label for="dut3-port">Upload port</label><select id="dut3-port" data-default="COM9"></select><label class="sketch-label" for="dut3-profile">Board profile</label><select id="dut3-profile" class="board-profile"><option value="nodemcu">nodemcu</option></select><a class="add-profile" href="../HIL/board_profiles.json" target="_blank" rel="noopener">Add profile ↗</a><label class="sketch-label" for="dut3-sketch">Arduino sketch</label><input class="sketch" id="dut3-sketch" type="file" accept=".ino"></section>
+        <!-- Host and upstream USB hub. -->
+        <div class="device-card pc">
+          <strong>PC</strong>
+          <small>Host</small>
+          <button class="run" id="run" type="button">Run</button>
+        </div>
+        <div class="device-card primary-hub">
+          <strong>Hub 1</strong>
+          <small>USB hub</small>
+        </div>
+        <!-- Meter, relay controller and switched upload hub. -->
+        <section class="device-card power-meter">
+          <strong>STLINK-V3PWR</strong>
+          <small>Current measurement</small>
+          <div class="device-field">
+            <label for="meter-port">SMU port</label>
+            <select id="meter-port" data-default="COM18"></select>
+          </div>
+        </section>
+        <section class="device-card relay">
+          <strong>Relay controller</strong>
+          <small>Numato / LCUS-2</small>
+          <div class="device-field">
+            <label for="relay-port">Control port</label>
+            <select id="relay-port" data-default="COM19"></select>
+          </div>
+        </section>
+        <div class="device-card upload-hub">
+          <strong>Hub 2 · YKUSH</strong>
+          <small>Switched USB ports 1–3</small>
+        </div>
+        <!-- Relay channel count controls DUT cards and wiring visibility. -->
+        <div class="device-card relay-contacts">
+          <strong>Relay contacts</strong>
+          <div class="relay-settings">
+            <div class="device-field">
+              <label for="relay-count">Relay channels</label>
+              <select id="relay-count">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+              </select>
+            </div>
+          </div>
+          <div class="relay-channel">
+            Relay 1 → DUT 1
+          </div>
+          <div class="relay-channel">
+            Relay 2 → DUT 2
+          </div>
+          <div class="relay-channel">
+            Relay 3 → DUT 3
+          </div>
+        </div>
+        <!-- DUT: upload port, board profile and local Arduino sketch. -->
+        <section class="device-card dut dut-position-1">
+          <strong>Device Under Test 1</strong>
+          <small>YKUSH port 1 · relay 1</small>
+          <div class="device-field">
+            <label for="dut1-port">Upload port</label>
+            <select id="dut1-port" data-default="COM7"></select>
+          </div>
+          <div class="device-field">
+            <label class="sketch-label" for="dut1-profile">Board profile</label>
+            <select id="dut1-profile" class="board-profile">
+              <option value="nodemcu">nodemcu</option>
+            </select>
+          </div>
+          <a class="add-profile" href="../HIL/board_profiles.json" target="_blank" rel="noopener">Add profile ↗</a>
+          <div class="device-field">
+            <label class="sketch-label" for="dut1-sketch">Arduino sketch</label>
+            <input class="sketch" id="dut1-sketch" type="file" accept=".ino">
+          </div>
+        </section>
+        <!-- DUT: upload port, board profile and local Arduino sketch. -->
+        <section class="device-card dut dut-position-2">
+          <strong>Device Under Test 2</strong>
+          <small>YKUSH port 2 · relay 2</small>
+          <div class="device-field">
+            <label for="dut2-port">Upload port</label>
+            <select id="dut2-port" data-default="COM8"></select>
+          </div>
+          <div class="device-field">
+            <label class="sketch-label" for="dut2-profile">Board profile</label>
+            <select id="dut2-profile" class="board-profile">
+              <option value="nodemcu">nodemcu</option>
+            </select>
+          </div>
+          <a class="add-profile" href="../HIL/board_profiles.json" target="_blank" rel="noopener">Add profile ↗</a>
+          <div class="device-field">
+            <label class="sketch-label" for="dut2-sketch">Arduino sketch</label>
+            <input class="sketch" id="dut2-sketch" type="file" accept=".ino">
+          </div>
+        </section>
+        <!-- DUT: upload port, board profile and local Arduino sketch. -->
+        <section class="device-card dut dut-position-3">
+          <strong>Device Under Test 3</strong>
+          <small>YKUSH port 3 · relay 3</small>
+          <div class="device-field">
+            <label for="dut3-port">Upload port</label>
+            <select id="dut3-port" data-default="COM9"></select>
+          </div>
+          <div class="device-field">
+            <label class="sketch-label" for="dut3-profile">Board profile</label>
+            <select id="dut3-profile" class="board-profile">
+              <option value="nodemcu">nodemcu</option>
+            </select>
+          </div>
+          <a class="add-profile" href="../HIL/board_profiles.json" target="_blank" rel="noopener">Add profile ↗</a>
+          <div class="device-field">
+            <label class="sketch-label" for="dut3-sketch">Arduino sketch</label>
+            <input class="sketch" id="dut3-sketch" type="file" accept=".ino">
+          </div>
+        </section>
+      </div>
     </div>
-  </div>
-  <footer><span class="key">USB / control</span><span class="key dashed">USB firmware upload</span><span class="key orange">Switched OUT + GND · two contacts per DUT</span></footer>
-  <p id="status" role="status"></p>
-  <p>Sample COM ports only. This prototype does not connect to hardware or save configuration.</p>
-</main>
+    <footer class="wiring-legend">
+      <span class="key">USB / control</span>
+      <span class="key dashed">USB firmware upload</span>
+      <span class="key orange">Switched OUT + GND · two contacts per DUT</span>
+    </footer>
+    <p id="status" role="status"> </p>
+    <p>Sample COM ports only. This prototype does not connect to hardware or save configuration.</p>
+  </main>
 <script>
   // Port controls are separate from board-profile and relay-count selectors.
   const selectors = [...document.querySelectorAll('select[data-default]')];
@@ -115,7 +452,7 @@
   function updateDeviceCount() {
     const count = Number(relayCount.value);
     document.querySelectorAll('.dut').forEach((dut, index) => { dut.hidden = index >= count; });
-    document.querySelectorAll('.contact').forEach((contact, index) => { contact.hidden = index >= count; });
+    document.querySelectorAll('.relay-channel').forEach((contact, index) => { contact.hidden = index >= count; });
     document.querySelectorAll('[data-dut]').forEach(group => {
       group.style.display = Number(group.dataset.dut) <= count ? '' : 'none';
     });
