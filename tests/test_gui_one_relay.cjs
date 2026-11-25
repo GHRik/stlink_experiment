@@ -28,6 +28,7 @@ function setup({driver = 'numato', failedCapture = false, stopDuringCapture = fa
   context = vm.createContext({
     window: {pywebview: {api}}, document: {querySelector: selector => fields[selector.slice(1)]},
     standaloneConfiguration: () => config, relaySwitches: buttons, captureInProgress: false,
+    beginRunProgress() {}, applyRunEvents() {}, finishRunProgress() {},
     setRunning(value) {calls.push(['locked', value]);},
     stopButton: {}, status: {classList: {remove() {}, toggle() {}}},
     displayMeterPower() {}, updateConnectionFlows() {}, updateMeterControls() {}, updateRelayControls() {},

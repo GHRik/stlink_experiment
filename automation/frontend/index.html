@@ -1137,12 +1137,21 @@
       <span class="key orange">Switched OUT + GND · two contacts per DUT</span>
     </footer>
     <p id="status" role="status"> </p>
+    <section class="capture-log" id="run-progress" aria-label="Run progress" hidden>
+      <h2>Run progress</h2>
+      <p id="run-stage" role="status"></p>
+      <progress id="run-bar" value="0" max="1" style="width:100%"></progress>
+      <p><span id="run-count"></span><br><span id="run-time"></span><br>
+        <small>Time covers warm-up and acquisition. Upload, calibration, switching, analysis and reports add extra time.</small></p>
+      <ul id="run-done"></ul>
+    </section>
     <section class="capture-log" id="capture-log" aria-label="Measurement log" hidden>
       <h2>Measurement log</h2>
       <pre id="capture-log-output" role="log" aria-live="polite"></pre>
     </section>
   </main>
 <script src="modes.js"></script>
+<script src="progress.js"></script>
 <script src="capture.js"></script>
 <script src="one-hub.js"></script>
 <script src="one-relay.js"></script>

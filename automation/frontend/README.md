@@ -53,6 +53,10 @@ Generate a configuration from the GUI and launch the existing [HIL runner](../HI
 
 The runner manages the DUT hub (Hub 2), relays, uploads and measurements. Hub 1 remains under manual control and must keep the STLINK, relay controller and Hub 2 connected. Logs appear in the GUI; the runner saves its configuration and results under `results/automation_...`. STOP delegates interruption and cleanup to `run.py`.
 
+## Run progress
+
+During a desktop Run, confirmed STLINK OUT, hub-port and relay-channel events update the diagram while controls stay locked. The **Run progress** panel tracks uploads, warm-up, calibrations, completed repeats and reports across DUTs. Remaining programmed time covers warm-up and acquisition only; compilation, calibration, switching, analysis and reports add variable overhead. STOP preserves the completed counters.
+
 ## Browser preview
 
 Open [index.html](index.html) in a browser by double-clicking the local file. No installation or server is required. Browser file pickers expose filenames only; native full-path selection requires the desktop launcher.

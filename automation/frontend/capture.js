@@ -13,6 +13,8 @@ function standaloneConfiguration() {
 }
 
 async function startStandaloneCapture(preserveLog = false, config = standaloneConfiguration(), startMethod = 'start_capture') {
+  if (!preserveLog) beginRunProgress(config, startMethod === 'start_hil'
+    ? config.boards.map(board => `${config.name.trim()}_${board.upload_profile}-relay${board.relay + 1}`) : [config.name], startMethod === 'start_hil');
   if (!isRunning) setRunning(true);
   stopButton.disabled = true;
   captureCursor = 0;
@@ -35,6 +37,7 @@ async function startStandaloneCapture(preserveLog = false, config = standaloneCo
     updateMeterControls();
     status.classList.add('error');
     status.textContent = `Could not start capture: ${error.message || error}`;
+    finishRunProgress('Failed to start');
   }
 }
 
@@ -42,6 +45,7 @@ async function pollCapture() {
   if (!captureInProgress) return;
   try {
     const result = await window.pywebview.api.capture_status(captureCursor);
+    applyRunEvents(result);
     captureCursor = result.cursor;
     const output = document.querySelector('#capture-log-output');
     if (result.lines.length) {
@@ -58,6 +62,7 @@ async function pollCapture() {
       status.textContent = result.stopping ? 'Measurement stopped.'
         : result.returncode === 0 ? 'Measurement completed. Results location is in the log.'
         : `Capture exited with code ${result.returncode}. See the log below.`;
+      finishRunProgress(result.stopping ? 'Stopped' : result.returncode === 0 ? 'Completed' : 'Failed');
       return;
     }
   } catch (error) {

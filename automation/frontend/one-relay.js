@@ -8,6 +8,7 @@ async function startOneRelayCapture() {
   const driver = document.querySelector('#relay-model').value;
   const port = document.querySelector('#relay-port').value;
   const channels = relaySwitches.filter(button => !button.hidden).map(button => Number(button.dataset.channel));
+  beginRunProgress(config, channels.map(channel => `${config.name.trim()}_relay${channel + 1}`));
   const totalChannels = driver === 'lcus2' ? 2 : 4;
   const output = document.querySelector('#capture-log-output');
   output.textContent = '';
@@ -47,6 +48,7 @@ async function startOneRelayCapture() {
     displayMeterPower(false);
     for (const channel of channels) {
       checkStop();
+      let cursor = 0;
       try {
         log(`Relay ${channel + 1} ON. Waiting 2 seconds...`);
         await switchRelayChannel(channel, true);
@@ -56,9 +58,9 @@ async function startOneRelayCapture() {
         await api.start_capture(measurement);
         captureInProgress = true;
         displayMeterPower(null);
-        let cursor = 0;
         while (true) {
           const result = await api.capture_status(cursor);
+          applyRunEvents(result);
           cursor = result.cursor;
           if (result.lines.length) {
             output.textContent = (output.textContent + result.lines.join('\n') + '\n').slice(-100000);
@@ -77,9 +79,14 @@ async function startOneRelayCapture() {
         // Capture cleanup must finish before disconnecting the DUT.
         if (captureInProgress) {
           await api.stop_capture();
-          while ((await api.capture_status()).running) {
+          let cleanup;
+          do {
+            cleanup = await api.capture_status(cursor);
+            cursor = cleanup.cursor;
+            applyRunEvents(cleanup);
+            if (!cleanup.running) break;
             await new Promise(resolve => setTimeout(resolve, 500));
-          }
+          } while (cleanup.running);
           captureInProgress = false;
         }
         await switchRelayChannel(channel, false);
@@ -88,9 +95,11 @@ async function startOneRelayCapture() {
       await pause();
     }
     log('Relay sequence completed. Results locations are in the log.');
+    finishRunProgress('Completed');
   } catch (error) {
     status.classList.toggle('error', !relaySequenceCancelled);
     log(relaySequenceCancelled ? 'Relay sequence stopped.' : `Relay sequence failed: ${error.message || error}`);
+    finishRunProgress(relaySequenceCancelled ? 'Stopped' : 'Failed');
   } finally {
     relaySequenceRunning = false;
     setRunning(false);

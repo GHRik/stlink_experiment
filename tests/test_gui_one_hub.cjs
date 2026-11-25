@@ -29,6 +29,7 @@ function setup({failUpload = false, failedReconnects = 0, cancelPrompt = false} 
     window: {pywebview: {api}},
     document: {querySelector(selector) {return fields[selector.slice(1)] || {}; }},
     hub2Switches: [button], hubConfigured: () => true,
+    beginRunProgress() {}, applyRunEvents() {}, finishRunProgress() {},
     standaloneConfiguration: () => config,
     setRunning(value) {calls.push(['locked', value]);},
     stopButton: {}, status: {classList: {add() {}, toggle() {}}},

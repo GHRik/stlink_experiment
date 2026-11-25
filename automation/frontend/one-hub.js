@@ -17,6 +17,7 @@ async function startOneHubCapture() {
   const board = value('dut1-profile');
   const uploadPort = value('dut1-port');
   oneHubPreparing = true;
+  beginRunProgress(config, [config.name], true);
   oneHubCancelled = false;
   setRunning(true);
   stopButton.disabled = false;
@@ -68,10 +69,12 @@ async function startOneHubCapture() {
     await switchHub(true);
     await pause(2000);
     log('Compiling and uploading firmware...');
+    applyRunEvents({events: [{type: 'upload', name: config.name, state: 'started'}]});
     await api.start_upload(board, uploadPort, sketch);
     let cursor = 0;
     while (true) {
       const result = await api.capture_status(cursor);
+      applyRunEvents(result);
       cursor = result.cursor;
       if (result.lines.length) {
         output.textContent = (output.textContent + result.lines.join('\n') + '\n').slice(-100000);
@@ -85,6 +88,7 @@ async function startOneHubCapture() {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
     await switchHub(false);
+    applyRunEvents({events: [{type: 'upload', name: config.name, state: 'completed'}]});
     await confirm('Firmware uploaded. The DUT USB port is now OFF. Please connect STLINK to the PC, then click OK.');
     for (let attempt = 1; attempt <= 3; attempt++) {
       checkStop();
@@ -108,6 +112,7 @@ async function startOneHubCapture() {
     updateMeterControls();
     status.classList.toggle('error', !oneHubCancelled);
     log(oneHubCancelled ? 'Setup stopped. Measurement was not started.' : `One hub setup failed: ${error.message || error}`);
+    finishRunProgress(oneHubCancelled ? 'Stopped' : 'Failed');
   }
 }
 
