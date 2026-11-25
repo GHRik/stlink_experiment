@@ -15,6 +15,7 @@ def run_desktop(webview, demo=False):
         height=960,
         min_size=(900, 600),
         maximized=True,
+        text_select=True,
     )
     if api is not None:
         api._bind_window(window)
