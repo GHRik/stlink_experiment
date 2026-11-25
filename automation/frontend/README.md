@@ -9,7 +9,11 @@ python -m pip install -e ".[gui]"
 stlink-gui
 ```
 
-Opens the existing HTML in a separate desktop window using pywebview. **Choose file** opens a native file dialog and displays the full local path for `.ino` sketches and the optional `.py` controller. Cancel keeps the previous selection. Run and hardware switches remain simulated; configuration generation and process execution are not connected yet.
+For the frontend alone, use `stlink-gui --demo`. It opens sample COM ports and simulated switches without exposing the Python hardware API. **Demo mode** is shown in the header.
+
+Both Hub 1 and Hub 2 have model and serial selectors. Demo mode provides `YK17125`, `YK21493` and `YK30001`. A serial selected for one hub is hidden from the other hub's choices. Assigned COM ports are likewise hidden from other active devices and become available again when released. Hub 1 switching remains frontend-only.
+
+Opens the existing HTML in a separate desktop window using pywebview. **Choose file** opens a native file dialog and displays the full local path for `.ino` sketches and the optional `.py` controller. Cancel keeps the previous selection. Hub 2 supports real manual switching; Run and the other hardware switches remain simulated.
 
 ## Browser preview
 
@@ -17,7 +21,9 @@ Open [index.html](index.html) in a browser by double-clicking the local file. No
 
 Use **Light / Dark** in the page header to select a theme. The browser remembers the choice when local storage is available.
 
-The wiring diagram provides sample COM port selectors for STLINK, the relay controller and three DUTs. Duplicate assignments are flagged. The Run button beside the PC validates port assignments and displays a prototype message. Hardware access and configuration persistence are not implemented.
+In the desktop launcher, opening a COM selector rescans serial ports and device descriptions. Choose each device explicitly; no roles are assigned automatically. Existing choices are retained, and disconnected choices are marked until reconnected or replaced. Discovery does not open serial ports. Browser preview keeps sample COM ports.
+
+Duplicate assignments are flagged. The Run button beside the PC validates port assignments and displays a prototype message. Measurement execution and configuration persistence are not implemented.
 
 Each DUT has a local `.ino` file picker showing the selected filename. Files stay in the browser; they are not uploaded or flashed.
 
@@ -25,15 +31,17 @@ Each DUT also has a board profile selector. The prototype lists the currently co
 
 Select **Relay channels** (1–3) in **Relay contacts** to show the matching number of relay contacts, DUT cards and wiring branches. Only visible devices participate in port validation; selections are retained when a DUT is hidden.
 
-**Hub 2** provides a model selector for the supported `ykush` and `ykush3` drivers. The selection is local to the prototype and does not query hardware.
+**Hub 2** provides a model selector for `ykush` and `ykush3`. Opening **Hub serial number** runs `ykushcmd -l` or `ykushcmd ykush3 -l` and lists attached serial numbers. The executable defaults to `ykushcmd`; override `hub.cmd` in [backend/config.json](../backend/config.json) if needed. Discovery does not switch hub ports.
 
 **Relay controller** provides a model selector for the supported `numato` and `lcus2` drivers. This selection is also frontend-only.
 
-Both hubs show output-port LEDs with ON/OFF labels. Click a port row to toggle its simulated state. Hub 2 shows ports for the selected DUT count; these indicators do not read or control hardware.
+In the desktop launcher, select a **Hub 2 serial number** before switching its ports. Clicking ON/OFF calls the existing HIL Hub driver for that exact serial and physical socket, then verifies the state with `-g`. Until confirmed, the state is unknown (`?`). Model/serial changes reset displayed states. Hub controls are locked while a command is pending. No ports are switched automatically on selection or window close.
 
-Relay contacts use the same clickable ON/OFF indicators for each visible channel. Hub and relay switches are independent in this prototype.
+Hub 1 and all browser-preview switches remain simulated. Hub 2 shows ports for the selected DUT count.
 
-Active connections glow in their wiring color and show a moving dot. Inactive connections are gray. Animations represent simulated switch states only.
+Relay contacts use simulated clickable ON/OFF indicators for each visible channel. They are independent of real Hub 2 switching.
+
+Active connections glow in their wiring color and show a moving dot. Inactive connections are gray. Hub 2 reflects confirmed CLI states; the remaining connections reflect simulated states.
 
 **Run** locks all controls, including profile links and help buttons, and reveals **STOP** below it. **STOP** restores editing without resetting selections. This is a frontend run state only.
 
