@@ -13,5 +13,13 @@
 .wiring-diagram[data-layout="one-hub"] .meter-stack,
 .wiring-diagram[data-layout="one-relay"] .meter-stack { top: 40px; }
 .wiring-diagram[data-layout="one-hub"] .upload-hub { top: 570px; }
+.wiring-diagram[data-layout="one-hub"] .dut-position-1 { top: 400px; left: 900px; }
+.wiring-diagram[data-layout="one-relay"] { height: 1050px; }
+.wiring-diagram[data-layout="one-relay"] .dut { left: 1040px; }
+.wiring-diagram[data-layout="one-relay"] .dut-position-1 { top: 480px; }
+.wiring-diagram[data-layout="one-relay"] .dut-position-2 { top: 610px; }
+.wiring-diagram[data-layout="one-relay"] .dut-position-3 { top: 740px; }
 .wiring-diagram[data-layout="one-relay"] .dut .device-field,
-.wiring-diagram[data-layout="one-relay"] .dut .add-profile { display: none; }
+.wiring-diagram[data-layout="one-relay"] .dut .add-profile,
+.wiring-diagram[data-layout="standalone"] .dut .device-field,
+.wiring-diagram[data-layout="standalone"] .dut .add-profile { display: none; }

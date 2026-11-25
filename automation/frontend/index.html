@@ -1484,7 +1484,7 @@
   // Only visible DUTs participate in port validation.
   function activePorts() {
     return selectors.filter(select => !select.closest('.device-card')?.hidden
-      && !(currentLayout === 'one-relay' && select.closest('.dut')));
+      && !(['one-relay', 'standalone'].includes(currentLayout) && select.closest('.dut')));
   }
 
   // Synchronize relay rows, DUT cards and their SVG connections.
@@ -1616,6 +1616,17 @@
     status.textContent = 'Stopped (prototype). Controls are unlocked.';
   });
   relayCount.addEventListener('change', updateDeviceCount);
+  function updateRelayCapacity() {
+    const limit = document.querySelector('#relay-model').value === 'lcus2' ? 2 : 3;
+    [...relayCount.options].forEach(option => {
+      option.hidden = Number(option.value) > limit;
+      option.disabled = Number(option.value) > limit;
+    });
+    if (Number(relayCount.value) > limit) relayCount.value = String(limit);
+    updateDeviceCount();
+  }
+  document.querySelector('#relay-model').addEventListener('change', updateRelayCapacity);
+  updateRelayCapacity();
   updateDeviceCount();
   resetDemoHubOne();
   updateHubControls();

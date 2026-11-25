@@ -4,7 +4,8 @@ let currentLayout = 'standalone';
 function modeDutCount() {
   if (currentLayout === 'standalone') return 1;
   if (currentLayout === 'one-hub') return 1;
-  const count = Number(relayCount.value);
+  const relayLimit = document.querySelector('#relay-model').value === 'lcus2' ? 2 : 3;
+  const count = Math.min(Number(relayCount.value), relayLimit);
   return currentLayout === 'hil'
     ? Math.min(count, hubPortCount(document.querySelector('.upload-hub')))
     : count;
@@ -41,7 +42,7 @@ function initializeModes() {
       }
     });
     document.querySelectorAll('.dut').forEach((card, index) => {
-      card.querySelector('small').textContent = layout === 'standalone' ? 'Board under test'
+      card.querySelector('small').textContent = layout === 'standalone' ? 'Firmware uploaded separately'
         : layout === 'one-hub' ? `USB port ${index + 1}`
         : layout === 'one-relay' ? `Relay ${index + 1} · firmware uploaded separately`
         : `YKUSH port ${index + 1} · relay ${index + 1}`;
@@ -107,12 +108,18 @@ function routeModeConnections() {
   }
   for (let index = 0; index < count; index++) {
     const target = anchor(`.dut-position-${index + 1}`, 'left');
-    if (hasRelay) paths[6 + index * 2] = pathVia(anchor('.relay-contacts', 'right', relaySwitches[index]),
-      {...target, y: target.y - (oneRelay ? 0 : 55)}, [900, 875, 850][index]);
+    if (hasRelay) {
+      const source = anchor('.relay-contacts', 'right', relaySwitches[index]);
+      if (oneRelay) {
+        paths[6 + index * 2] = pathVia(source, target, [900, 925, 950][index]);
+      } else {
+        paths[6 + index * 2] = pathVia(source, {...target, y: target.y - 55}, [900, 875, 850][index]);
+      }
+    }
     if (hasHub) {
       const source = anchor('.upload-hub', 'right', hub2Switches[index]);
       const end = {...target, y: target.y + 70};
-      paths[7 + index * 2] = index === 0
+      paths[7 + index * 2] = oneHub ? pathVia(source, end, 820) : index === 0
         ? `M${source.x} ${source.y} H650 V${source.y - 35} H940 V${end.y} H${end.x}`
         : pathVia(source, end, [940, 965, 990][index]);
     }
@@ -139,7 +146,8 @@ function routeModeConnections() {
   label('#meter-output-label', hasRelay || single || currentLayout === 'one-hub', output.x + 10, output.y - 12);
   const relayStart = anchor('.relay-contacts', 'right', relaySwitches[0]);
   label('.dut-supply-label', hasRelay, relayStart.x + 10, relayStart.y - 12);
-  label('#upload-label', hasHub, 640, anchor('.upload-hub', 'right', hub2Switches[2]).y + 40);
+  const uploadLabel = anchor('.upload-hub', 'right', hub2Switches[Math.max(0, count - 1)]);
+  label('#upload-label', hasHub, uploadLabel.x + 15, uploadLabel.y - 12);
   const external = document.querySelector('.external-power-wire');
   external.style.display = hil || currentLayout === 'one-hub' ? '' : 'none';
   if (hil) external.setAttribute('d', 'M179 465 H240 V577');
