@@ -1,5 +1,33 @@
 # Sequential upload and measurement
 
+```mermaid
+flowchart LR
+    PC["PC"] -->|USB| HUB1["Hub 1"]
+    HUB1 -->|USB| STLINK["STLINK-V3PWR"]
+    HUB1 -->|USB control| RELAY["Relay controller"]
+    HUB1 -->|USB| HUB2["Hub 2 — YKUSH"]
+
+    HUB2 -.->|USB port 1: firmware upload| DUT1["Device Under Test 1"]
+    HUB2 -.->|USB port 2: firmware upload| DUT2["Device Under Test 2"]
+    HUB2 -.->|USB port 3: firmware upload| DUT3["Device Under Test 3"]
+
+    STLINK ==>|OUT + GND| CONTACTS
+
+    subgraph CONTACTS["Relay contacts"]
+        R1["Relay 1"]
+        R2["Relay 2"]
+        R3["Relay 3"]
+    end
+
+    RELAY -->|Control| CONTACTS
+
+    R1 ==>|3V3 + GND| DUT1
+    R2 ==>|3V3 + GND| DUT2
+    R3 ==>|3V3 + GND| DUT3
+```
+
+Dashed lines: USB firmware upload. Thick lines: measurement supply and return. Each relay branch switches both OUT and GND, requiring two contacts per DUT. Relay labels 1–3 identify physical branches; configuration channels are zero-based. Hub 1 keeps the meter and relay controller connected while Hub 2 switches the DUT USB connections.
+
 Flash 1–3 ESP8266 boards through YKUSH, then measure each board through a separate relay channel (Numato or LCUS-2). The existing STLINK capture script is unchanged. USB hub and relay drivers are selected independently.
 
 ## Configure
