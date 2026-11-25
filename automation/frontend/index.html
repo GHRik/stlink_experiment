@@ -257,6 +257,54 @@
       outline: 3px solid #a8cefc;
       outline-offset: 2px;
     }
+    .field-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 5px;
+      margin-bottom: 5px;
+    }
+    .field-heading label {
+      margin: 2px 0 0;
+    }
+    .field-help {
+      position: relative;
+      flex: 0 0 auto;
+    }
+    .field-help summary {
+      display: grid;
+      place-items: center;
+      width: 17px;
+      height: 17px;
+      border: 1px solid #8695aa;
+      border-radius: 50%;
+      color: #52667f;
+      font: 600 11px Georgia, serif;
+      cursor: pointer;
+      list-style: none;
+    }
+    .field-help summary::-webkit-details-marker {
+      display: none;
+    }
+    .field-help summary:focus-visible {
+      outline: 3px solid #a8cefc;
+      outline-offset: 2px;
+    }
+    .field-help .help-text {
+      position: absolute;
+      top: 23px;
+      left: 0;
+      z-index: 10;
+      width: 235px;
+      padding: 12px;
+      border: 1px solid #c4cfdd;
+      border-radius: 8px;
+      background: #172538;
+      color: white;
+      font-size: 12px;
+      line-height: 1.5;
+      box-shadow: 0 4px 14px #17253826;
+    }
     .relay {
       left: 405px;
       top: 535px;
@@ -397,7 +445,13 @@
           <strong id="measurement-settings-title">Measurement configuration</strong>
           <div class="measurement-fields">
             <div class="device-field">
-              <label for="measurement-hz">Sampling rate [Hz]</label>
+              <div class="field-heading">
+                <label for="measurement-hz">Sampling rate [Hz]</label>
+                <details class="field-help">
+                  <summary aria-label="About Sampling rate [Hz]">i</summary>
+                  <span class="help-text">Number of current samples recorded per second. Higher rates resolve shorter events and produce larger files.</span>
+                </details>
+              </div>
               <select id="measurement-hz" name="hz">
                 <option>1</option><option>2</option><option>5</option><option>10</option>
                 <option>20</option><option>50</option><option>100</option><option>200</option>
@@ -406,23 +460,53 @@
               </select>
             </div>
             <div class="device-field">
-              <label for="measurement-seconds">Capture time [s]</label>
+              <div class="field-heading">
+                <label for="measurement-seconds">Capture time [s]</label>
+                <details class="field-help">
+                  <summary aria-label="About Capture time [s]">i</summary>
+                  <span class="help-text">Duration of each independent capture, up to 3600 seconds. Duration multiplied by sampling rate must give a whole number of samples.</span>
+                </details>
+              </div>
               <input id="measurement-seconds" name="seconds" type="number" min="0.00005" max="3600" step="any" value="100">
             </div>
             <div class="device-field">
-              <label for="measurement-repeats">Repeats</label>
+              <div class="field-heading">
+                <label for="measurement-repeats">Repeats</label>
+                <details class="field-help">
+                  <summary aria-label="About Repeats">i</summary>
+                  <span class="help-text">Number of independent captures per board. Each repeat includes calibration and a target power cycle.</span>
+                </details>
+              </div>
               <input id="measurement-repeats" name="repeats" type="number" min="1" step="1" value="10">
             </div>
             <div class="device-field">
-              <label for="measurement-voltage">OUT voltage [V]</label>
+              <div class="field-heading">
+                <label for="measurement-voltage">OUT voltage [V]</label>
+                <details class="field-help">
+                  <summary aria-label="About OUT voltage [V]">i</summary>
+                  <span class="help-text">Voltage supplied by STLINK OUT to the board: 1.6 to 3.6 V in 0.1 V steps. Choose a voltage suitable for the board supply input.</span>
+                </details>
+              </div>
               <input id="measurement-voltage" name="voltage" type="number" min="1.6" max="3.6" step="0.1" value="3.3">
             </div>
             <div class="device-field">
-              <label for="measurement-warmup">Warm-up [s]</label>
+              <div class="field-heading">
+                <label for="measurement-warmup">Warm-up [s]</label>
+                <details class="field-help">
+                  <summary aria-label="About Warm-up [s]">i</summary>
+                  <span class="help-text">Time with OUT powered before the measurement series for each board. The board runs during warm-up. Set 0 to skip; maximum 3600 seconds.</span>
+                </details>
+              </div>
               <input id="measurement-warmup" name="warmup_seconds" type="number" min="0" max="3600" step="any" value="180" title="OUT stays powered during warm-up before the series.">
             </div>
             <div class="device-field">
-              <label for="measurement-off">OUT off time [s]</label>
+              <div class="field-heading">
+                <label for="measurement-off">OUT off time [s]</label>
+                <details class="field-help">
+                  <summary aria-label="About OUT off time [s]">i</summary>
+                  <span class="help-text">Time with OUT switched off after calibration, before each capture. Acquisition starts with automatic OUT power-on. Minimum 0.1 seconds; separate from USB and relay switching delays.</span>
+                </details>
+              </div>
               <input id="measurement-off" name="off_seconds" type="number" min="0.1" step="any" value="1" title="Power-off interval after calibration, before each capture.">
             </div>
           </div>
