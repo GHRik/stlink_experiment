@@ -17,3 +17,5 @@ Select **Relay channels** (1–3) in **Relay contacts** to show the matching num
 Both hubs show output-port LEDs with ON/OFF labels. Click a port row to toggle its simulated state. Hub 2 shows ports for the selected DUT count; these indicators do not read or control hardware.
 
 Relay contacts use the same clickable ON/OFF indicators for each visible channel. Hub and relay switches are independent in this prototype.
+
+The panel above STLINK contains the existing measurement settings: sample rate, capture duration, repeats, OUT voltage, warm-up time and OUT off time. Defaults match the HIL example configuration; values remain in the browser.

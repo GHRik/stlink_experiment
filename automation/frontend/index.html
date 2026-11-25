@@ -180,7 +180,7 @@
     }
     .pc {
       left: 24px;
-      top: 552px;
+      top: 710px;
       width: 120px;
     }
     .primary-hub {
@@ -229,8 +229,33 @@
     }
     .power-meter {
       left: 405px;
-      top: 125px;
+      top: 360px;
       border-top: 3px solid #3479c3;
+    }
+    .measurement-settings {
+      left: 24px;
+      top: 40px;
+      width: 310px;
+      border-top: 3px solid #3479c3;
+    }
+    .measurement-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .measurement-fields input {
+      width: 100%;
+      padding: 9px;
+      border-radius: 6px;
+      border: 1px solid #c4cfdd;
+      background: #f8fafc;
+      color: #172538;
+      font: inherit;
+    }
+    .measurement-fields input:focus-visible {
+      outline: 3px solid #a8cefc;
+      outline-offset: 2px;
     }
     .relay {
       left: 405px;
@@ -328,12 +353,12 @@
       <div class="wiring-diagram">
         <!-- USB, relay control and switched measurement wiring. -->
         <svg class="wiring-connections" viewBox="0 0 1360 1280" aria-hidden="true">
-          <path class="usb" d="M144 610 H195 M330 610 H365 V195 H405 M365 610 H405 M365 610 V1030 H405"/>
-          <text x="155" y="598">USB</text>
+          <path class="usb" d="M144 768 H170 V610 H195 M330 610 H365 V430 H405 M365 610 H405 M365 610 V1030 H405"/>
+          <text x="135" y="690">USB</text>
           <path class="usb" d="M595 610 H670"/>
           <text x="611" y="599">Control</text>
-          <path class="power" d="M595 185 H745 V521"/>
-          <text x="626" y="173">OUT + GND</text>
+          <path class="power" d="M595 420 H745 V521"/>
+          <text x="626" y="408">OUT + GND</text>
           <g data-dut="1">
             <path class="power" d="M820 574 H900 V110 H1040"/>
             <text x="930" y="98">3V3 + GND</text>
@@ -368,6 +393,40 @@
           </div>
         </div>
         <!-- Meter, relay controller and switched upload hub. -->
+        <section class="device-card measurement-settings" aria-labelledby="measurement-settings-title">
+          <strong id="measurement-settings-title">Measurement configuration</strong>
+          <div class="measurement-fields">
+            <div class="device-field">
+              <label for="measurement-hz">Sampling rate [Hz]</label>
+              <select id="measurement-hz" name="hz">
+                <option>1</option><option>2</option><option>5</option><option>10</option>
+                <option>20</option><option>50</option><option>100</option><option>200</option>
+                <option>500</option><option selected>1000</option><option>2000</option>
+                <option>5000</option><option>10000</option><option>20000</option>
+              </select>
+            </div>
+            <div class="device-field">
+              <label for="measurement-seconds">Capture time [s]</label>
+              <input id="measurement-seconds" name="seconds" type="number" min="0.00005" max="3600" step="any" value="100">
+            </div>
+            <div class="device-field">
+              <label for="measurement-repeats">Repeats</label>
+              <input id="measurement-repeats" name="repeats" type="number" min="1" step="1" value="10">
+            </div>
+            <div class="device-field">
+              <label for="measurement-voltage">OUT voltage [V]</label>
+              <input id="measurement-voltage" name="voltage" type="number" min="1.6" max="3.6" step="0.1" value="3.3">
+            </div>
+            <div class="device-field">
+              <label for="measurement-warmup">Warm-up [s]</label>
+              <input id="measurement-warmup" name="warmup_seconds" type="number" min="0" max="3600" step="any" value="180" title="OUT stays powered during warm-up before the series.">
+            </div>
+            <div class="device-field">
+              <label for="measurement-off">OUT off time [s]</label>
+              <input id="measurement-off" name="off_seconds" type="number" min="0.1" step="any" value="1" title="Power-off interval after calibration, before each capture.">
+            </div>
+          </div>
+        </section>
         <section class="device-card power-meter">
           <strong>STLINK-V3PWR</strong>
           <small>Current measurement</small>
