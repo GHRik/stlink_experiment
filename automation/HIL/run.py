@@ -12,12 +12,12 @@ import subprocess
 import sys
 import time
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from automation.relays import create_relay
-from automation.hubs import create_hub
+from automation.HIL.relays import create_relay
+from automation.HIL.hubs import create_hub
 
 
 def read_config(path):
@@ -84,11 +84,11 @@ def load_config(path):
             raise ValueError("Board ykush_usb_port is not in hub.ports")
         if type(board["relay"]) is not int or not 0 <= board["relay"] < count:
             raise ValueError("Board relay must be a zero-based controller channel")
-    from automation.upload import load_profiles
+    from automation.HIL.upload import load_profiles
     profiles = load_profiles()
     for board in boards:
         if board.get("upload_profile") not in profiles:
-            raise ValueError(f"Board {board['name']}: upload_profile must match a profile in automation/board_profiles.json")
+            raise ValueError(f"Board {board['name']}: upload_profile must match a profile in automation/HIL/board_profiles.json")
     for field in ("step_delay_s", "port_timeout_s", "flash_timeout_s"):
         if not math.isfinite(config[field]) or config[field] <= 0:
             raise ValueError(f"{field} must be positive and finite")
@@ -163,7 +163,7 @@ class Hardware:
     def flash(self, board):
         self.event("flash", board=board["name"], port=board["com"])
         with (self.directory / f"{board['name']}_upload.log").open("w", encoding="utf-8") as log:
-            run_command([sys.executable, "-u", str(ROOT / "automation/upload.py"),
+            run_command([sys.executable, "-u", str(ROOT / "automation/HIL/upload.py"),
                          board["upload_profile"], board["com"], board["sketch"],
                          "--cli", self.config["arduino_cli"]],
                         self.config["flash_timeout_s"], log)

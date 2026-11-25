@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from automation import upload
+from automation.HIL import upload
 
 
 class UploadTests(unittest.TestCase):

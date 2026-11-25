@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from automation import run
+from automation.HIL import run
 
 
 class FakeHardware:
@@ -68,10 +68,10 @@ class AutomationTests(unittest.TestCase):
             self.assertEqual(run.read_config(path), {"value": "https://example.org/a//b"})
 
     def config(self):
-        return run.load_config(run.ROOT / "automation/config.example.jsonc")
+        return run.load_config(run.ROOT / "automation/HIL/config.example.jsonc")
 
     def test_legacy_numato_config_remains_supported(self):
-        data = run.read_config(run.ROOT / "automation/config.example.jsonc")
+        data = run.read_config(run.ROOT / "automation/HIL/config.example.jsonc")
         relay = data.pop("relay_controller")
         data["numato"] = dict(controller_port=relay["port"], ports=relay["channels"],
                               channel_digits=relay["channel_digits"])
@@ -131,7 +131,7 @@ class AutomationTests(unittest.TestCase):
             self.assertEqual(command.call_args_list[1].args[0], expected + ["-g", "2"])
 
     def test_legacy_ykush_section_and_ykush3_driver(self):
-        data = run.read_config(run.ROOT / "automation/config.example.jsonc")
+        data = run.read_config(run.ROOT / "automation/HIL/config.example.jsonc")
         hub = data.pop("hub")
         hub.pop("driver")
         hub["model_argument"] = "ykush3"
@@ -147,7 +147,7 @@ class AutomationTests(unittest.TestCase):
             self.assertEqual(command.call_args_list[0].args[0][1], "ykush3")
 
     def test_lcus2_configuration_selects_individual_channels(self):
-        config = run.load_config(run.ROOT / "automation/config.lcus2.json")
+        config = run.load_config(run.ROOT / "automation/HIL/config.lcus2.json")
         self.assertEqual(config["relay_controller"]["driver"], "lcus2")
         self.assertEqual(config["relay_controller"]["channels"], 2)
         hardware = FakeHardware()
@@ -164,7 +164,7 @@ class AutomationTests(unittest.TestCase):
             with patch.object(run, "run_command") as command:
                 hardware.flash(config["connected_boards"][0])
             args = command.call_args.args[0]
-            self.assertEqual(args[:6], [sys.executable, "-u", str(run.ROOT / "automation/upload.py"), "nodemcu", "COM7", config["connected_boards"][0]["sketch"]])
+            self.assertEqual(args[:6], [sys.executable, "-u", str(run.ROOT / "automation/HIL/upload.py"), "nodemcu", "COM7", config["connected_boards"][0]["sketch"]])
 
     def test_measurement_uses_src_module_from_repository_root(self):
         config = self.config()
@@ -177,7 +177,7 @@ class AutomationTests(unittest.TestCase):
             self.assertEqual(command.call_args.kwargs["cwd"], run.ROOT)
 
     def test_sketch_is_selected_and_resolved_per_board(self):
-        data = run.read_config(run.ROOT / "automation/config.example.jsonc")
+        data = run.read_config(run.ROOT / "automation/HIL/config.example.jsonc")
         data["connected_boards"][0]["sketch"] = "first/first.ino"
         data["connected_boards"][1]["sketch"] = "second/second.ino"
         with tempfile.TemporaryDirectory() as folder:

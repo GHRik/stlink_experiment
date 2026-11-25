@@ -2,7 +2,7 @@ import subprocess
 import unittest
 from unittest.mock import Mock, call
 
-from automation.hubs import Hub, Ykush, Ykush3, create_hub
+from automation.HIL.hubs import Hub, Ykush, Ykush3, create_hub
 
 
 class HubTests(unittest.TestCase):
