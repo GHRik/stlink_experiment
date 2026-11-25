@@ -2,7 +2,7 @@
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from automation.backend.app import run_desktop
 from automation.backend.file_picker import FilePicker
@@ -54,7 +54,7 @@ class DesktopAppTests(unittest.TestCase):
         run.assert_called_once_with(webview, demo=True)
 
     def test_window_loads_frontend_and_binds_picker(self):
-        webview = Mock()
+        webview = MagicMock()
         run_desktop(webview)
         options = webview.create_window.call_args.kwargs
         self.assertEqual(Path(options["url"]),

@@ -18,4 +18,5 @@ def run_desktop(webview, demo=False):
     )
     if api is not None:
         api._bind_window(window)
+        window.events.closing += api._on_closing
     webview.start()

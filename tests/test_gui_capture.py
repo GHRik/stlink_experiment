@@ -1,0 +1,101 @@
+"""GUI capture delegates arguments and diagnostics to the measurement CLI."""
+import io
+from pathlib import Path
+import sys
+import time
+import unittest
+from unittest.mock import Mock, patch
+
+from automation.backend.capture import CaptureProcess, capture_command
+
+
+def configuration():
+    return {"port": "COM18", "name": "sleep_test", "description": "NodeMCU; deep sleep",
+            "repeats": "10", "seconds": "100", "hz": "1000", "voltage": "3.3",
+            "warmup_seconds": "180", "off_seconds": "1"}
+
+
+class CaptureCommandTests(unittest.TestCase):
+    def test_maps_gui_fields_to_existing_cli_arguments(self):
+        command = capture_command(configuration())
+        self.assertEqual(command[:5], [sys.executable, "-u", "-m", "automation.backend.capture_worker", "capture"])
+        self.assertEqual(command[5:], ["--port", "COM18", "--name", "sleep_test", "--notes",
+                         "NodeMCU; deep sleep; USB disconnected", "--repeats", "10", "--seconds", "100",
+                         "--hz", "1000", "--voltage", "3.3", "--warmup-seconds", "180", "--off-seconds", "1"])
+
+    def test_controller_path_and_description_remain_single_arguments(self):
+        config = dict(configuration(), controller="C:/folder with spaces/control.py", description='test; "quoted"')
+        command = capture_command(config)
+        self.assertEqual(command[-2:], ["--controller", config["controller"]])
+        self.assertEqual(command[command.index("--notes") + 1], 'test; "quoted"; USB disconnected')
+
+
+class CaptureProcessTests(unittest.TestCase):
+    @patch("automation.backend.capture.subprocess.Popen")
+    def test_streams_output_and_preserves_exit_status(self, popen):
+        process = popen.return_value
+        process.stdout = io.StringIO("first line\nCLI error\n")
+        process.wait.return_value = 1
+        runner = CaptureProcess()
+        runner.start(configuration())
+        runner._thread.join(timeout=2)
+        result = runner.status(after=1)
+        self.assertFalse(result["running"])
+        self.assertEqual(result["returncode"], 1)
+        self.assertEqual(result["lines"], ["CLI error"])
+        self.assertEqual(result["cursor"], 2)
+        self.assertEqual(popen.call_args.kwargs["cwd"], Path(__file__).resolve().parents[1])
+        self.assertNotIn("shell", popen.call_args.kwargs)
+
+    @patch("automation.backend.capture.Thread")
+    @patch("automation.backend.capture.subprocess.Popen")
+    def test_rejects_concurrent_capture_and_stop_requests_cleanup(self, popen, thread):
+        popen.return_value.poll.return_value = None
+        runner = CaptureProcess()
+        runner.start(configuration())
+        with self.assertRaisesRegex(RuntimeError, "already running"):
+            runner.start(configuration())
+        runner.stop()
+        runner.stop()
+        self.assertTrue(runner._stop_file.exists())
+        self.assertTrue(runner.status()["stopping"])
+        thread.call_args.kwargs["args"][1].cleanup()
+
+    def test_real_cli_validation_errors_reach_the_gui_without_accessing_hardware(self):
+        runner = CaptureProcess()
+        runner.start(dict(configuration(), name="invalid test name"))
+        runner._thread.join(timeout=20)
+        result = runner.status()
+        self.assertFalse(result["running"])
+        self.assertEqual(result["returncode"], 1)
+        self.assertIn("--name", "\n".join(result["lines"]))
+        self.assertIn("ERROR:", "\n".join(result["lines"]))
+
+    def test_stop_runs_worker_cleanup_without_hardware(self):
+        code = """import sys, time
+from automation.backend import capture_worker
+def fake_measurement():
+    print('READY', flush=True)
+    try:
+        while True:
+            time.sleep(0.1)
+    finally:
+        print('CLEANED', flush=True)
+capture_worker.measure_main = fake_measurement
+sys.exit(capture_worker.main())
+"""
+        runner = CaptureProcess()
+        with patch("automation.backend.capture.capture_command", return_value=[sys.executable, "-u", "-c", code]):
+            runner.start(configuration())
+        try:
+            deadline = time.monotonic() + 15
+            while "READY" not in runner.status()["lines"] and time.monotonic() < deadline:
+                time.sleep(0.05)
+            self.assertIn("READY", runner.status()["lines"])
+            runner.stop()
+            runner._thread.join(timeout=10)
+            self.assertFalse(runner.status()["running"])
+            self.assertEqual(runner.status()["returncode"], 130)
+            self.assertIn("CLEANED", runner.status()["lines"])
+        finally:
+            runner.close()
