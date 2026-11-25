@@ -1,5 +1,5 @@
 // Layouts reuse the existing cards, form fields, switches and animated SVG paths.
-let currentLayout = 'hil';
+let currentLayout = 'standalone';
 
 function modeDutCount() {
   if (currentLayout === 'standalone') return 1;
@@ -49,7 +49,7 @@ function initializeModes() {
     updateDeviceCount();
   }
   tabs.forEach(tab => tab.addEventListener('click', () => activate(tab.dataset.layout)));
-  activate('hil');
+  activate('standalone');
 }
 
 function modeConnectionActive(index, hilActive) {
