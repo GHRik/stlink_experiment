@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HIL testbench</title>
+  <link rel="stylesheet" href="modes.css">
   <style>
     :root {
       --instrument-font: "Cascadia Mono", "Consolas", "Liberation Mono", monospace;
@@ -729,7 +730,7 @@
   <main class="testbench-page">
     <header class="page-header">
       <div class="page-intro">
-        <h1>HIL testbench</h1>
+        <h1>Power measurement testbench</h1>
         <p>Assign serial ports to the meter, relay controller and boards.</p>
       </div>
       <div class="header-actions">
@@ -741,6 +742,12 @@
         <span id="port-discovery-status" role="status"></span>
       </div>
     </header>
+    <nav class="layout-tabs" aria-label="Testbench layout">
+      <button type="button" data-layout="hil" aria-pressed="true">HIL</button>
+      <button type="button" data-layout="standalone" aria-pressed="false">StandAlone</button>
+      <button type="button" data-layout="one-hub" aria-pressed="false">One hub</button>
+      <button type="button" data-layout="one-relay" aria-pressed="false">One relay</button>
+    </nav>
     <div class="diagram-viewport" tabindex="0" role="region" aria-label="HIL wiring diagram; scroll horizontally on smaller screens">
       <div class="wiring-diagram">
         <!-- USB, relay control and switched measurement wiring. -->
@@ -750,9 +757,11 @@
           <path class="usb" d="M330 680 H350 V430 H405"/>
           <path class="usb" d="M330 715 H370 V610 H405"/>
           <path class="usb" d="M330 750 H390 V813 H405"/>
-          <text x="8" y="690" style="font-size: 10px">USB - Data line only</text>
+          <text id="pc-usb-label" x="8" y="690" style="font-size: 10px">USB - Data line only</text>
           <path class="usb" d="M595 610 H670"/>
-          <text x="611" y="599">Control</text>
+          <text id="relay-control-label" x="611" y="599">Control</text>
+          <text id="hub-power-label" hidden>USB · 5 V power</text>
+          <text id="hub-data-label" hidden>USB · data</text>
           <path class="power" d="M595 420 H745 V521"/>
           <text id="meter-output-label" x="610" y="408">OUT 3.3 V + GND</text>
           <g data-dut="1">
@@ -1046,6 +1055,7 @@
     <p id="status" role="status"> </p>
     <p id="prototype-note">Sample COM ports only. This prototype does not connect to hardware or save configuration.</p>
   </main>
+<script src="modes.js"></script>
 <script>
   // Desktop mode replaces browser uploads with native dialogs returning full paths.
   window.addEventListener('pywebviewready', () => {
@@ -1128,7 +1138,7 @@
 
   // Reserve assigned devices across active cards, without discarding selections.
   function updateExclusiveChoices() {
-    [activePorts(), hubSelectors].forEach(group => {
+    [activePorts(), hubSelectors.filter(select => !select.closest('.device-card').hidden)].forEach(group => {
       group.forEach(select => {
         const reserved = new Set(group.filter(other => other !== select).map(other => other.value).filter(Boolean));
         [...select.options].forEach(option => {
@@ -1162,7 +1172,7 @@
     const serial = card.querySelector('select[id$="serial"]');
     return ['ykush', 'ykush3'].includes(model.value) && Boolean(serial.value)
       && !serial.selectedOptions[0]?.disabled
-      && !hubSelectors.some(other => other !== serial && other.value === serial.value);
+      && !hubSelectors.some(other => other !== serial && !other.closest('.device-card').hidden && other.value === serial.value);
   }
 
   function resetHubPortStates() {
@@ -1450,48 +1460,25 @@
 
   function updateConnectionFlows() {
     alignSwitchConnections();
-    connectionFlows.forEach(({dot, line, active}) => {
-      const enabled = active();
+    connectionFlows.forEach(({dot, line, active, modeVisible}, index) => {
+      const enabled = modeVisible && modeConnectionActive(index, active);
       dot.style.visibility = enabled ? 'visible' : 'hidden';
       line.classList.toggle('is-active', enabled);
     });
   }
 
-  // Anchor outgoing wires to their hub-port or relay-channel switches.
   function alignSwitchConnections() {
-    const diagram = document.querySelector('.wiring-diagram').getBoundingClientRect();
-    connectionFlows.forEach(({line, motion, relayIndex, hubIndex, uploadIndex}) => {
-      const isMeterOutput = line.getAttribute('d').endsWith('H745 V521');
-      const source = isMeterOutput ? meterOutput : uploadIndex !== null ? hub2Switches[uploadIndex]
-        : hubIndex !== null ? hub1Switches[hubIndex]
-        : relayIndex !== null ? relaySwitches[relayIndex] : null;
-      if (!source || source.hidden) return;
-      const card = source.closest('.device-card').getBoundingClientRect();
-      const button = source.getBoundingClientRect();
-      const x = card.right - diagram.left;
-      const y = button.top + button.height / 2 - diagram.top;
-      const path = line.getAttribute('d').replace(/^M[\d.]+ [\d.]+/, `M${x} ${y}`);
-      line.setAttribute('d', path);
-      motion.setAttribute('path', path);
-      if (isMeterOutput) {
-        document.querySelector('#meter-output-label').setAttribute('y', y - 12);
-      }
-      if (relayIndex === 0) {
-        const label = document.querySelector('.dut-supply-label');
-        label.setAttribute('x', x + 10);
-        label.setAttribute('y', y - 12);
-      }
-    });
+    routeModeConnections();
   }
 
   // Only visible DUTs participate in port validation.
   function activePorts() {
-    return selectors.filter(select => !select.closest('.dut')?.hidden);
+    return selectors.filter(select => !select.closest('.device-card')?.hidden);
   }
 
   // Synchronize relay rows, DUT cards and their SVG connections.
   function updateDeviceCount() {
-    const count = Number(relayCount.value);
+    const count = modeDutCount();
     document.querySelectorAll('.dut').forEach((dut, index) => { dut.hidden = index >= count; });
     document.querySelectorAll('.relay-channel').forEach((contact, index) => { contact.hidden = index >= count; });
     document.querySelectorAll('[data-dut]').forEach(group => {
@@ -1621,6 +1608,7 @@
   updateHubControls();
   window.addEventListener('resize', alignSwitchConnections);
   document.fonts.ready.then(alignSwitchConnections);
+  initializeModes();
 </script>
 </body>
 </html>
