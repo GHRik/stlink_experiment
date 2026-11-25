@@ -60,13 +60,13 @@ Results are saved in `results/<name>_<timestamp>/`. To regenerate reports, use t
 
 Firmware and results: [idle scenarios](firmware/nodemcu_nocode_cycles/README.md) · [LED cycles](firmware/nodemcu_led_cycles/README.md).
 
-Automation: [upload and measurement sequence](automation/README.md) · [scripts running during acquisition](controllers/README.md).
+Automation: [upload and measurement sequence](automation/README.md) · [scripts running during acquisition](automation/controllers/README.md).
 
 ## FAQ
 
 **How can I run custom actions during a STLINK measurement?**
 
-Use `--controller` to run a Python script alongside each capture. See the [controller README](controllers/README.md).
+Use `--controller` to run a Python script alongside each capture. See the [controller README](automation/controllers/README.md).
 
 **How can I automate firmware uploads and switch between boards for measurement?**
 

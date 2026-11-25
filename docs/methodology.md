@@ -23,11 +23,11 @@
 | `--voltage` | 3.3 V |
 | `--warmup-seconds` | 180 seconds with OUT enabled before the series; `0` skips the delay |
 | `--off-seconds` | 1 second with target power off before acquisition |
-| `--controller` | Optional Python script running during each capture; [example and interface](../controllers/README.md) |
+| `--controller` | Optional Python script running during each capture; [example and interface](../automation/controllers/README.md) |
 
 Change `--name` and `--notes` to match the flashed sketch. Keep voltage and sampling frequency identical across comparisons.
 
-Optional actions during acquisition: [measurement controllers](../controllers/README.md). Sequential upload and board selection: [automation](../automation/README.md).
+Optional actions during acquisition: [measurement controllers](../automation/controllers/README.md). Sequential upload and board selection: [automation](../automation/README.md).
 
 ## Warm-up, calibration, and temperature
 
