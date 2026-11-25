@@ -406,6 +406,21 @@
       resize: vertical;
       min-height: 78px;
     }
+    .capture-log {
+      margin-top: 20px;
+      padding: 16px;
+      border: 1px solid var(--panel-border);
+    }
+    .capture-log h2 { margin: 0 0 12px; font-size: 14px; }
+    .capture-log pre {
+      max-height: 280px;
+      overflow: auto;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      margin: 0;
+      font: 12px var(--instrument-font);
+      line-height: 1.6;
+    }
     .test-details input:focus-visible, .test-details textarea:focus-visible {
       outline: 3px solid #a8cefc;
       outline-offset: 2px;
@@ -847,9 +862,9 @@
             <select id="hub1-serial"><option value="">Select a hub</option></select>
           </div>
           <div class="hub-ports" aria-label="Hub 1 output ports">
-            <button class="hub-port state-toggle" type="button" aria-pressed="true"><span>1 · STLINK</span><span class="port-indicator"><span class="port-state">ON</span><span class="port-led" aria-hidden="true"></span></span></button>
-            <button class="hub-port state-toggle" type="button" aria-pressed="true"><span>2 · Relay</span><span class="port-indicator"><span class="port-state">ON</span><span class="port-led" aria-hidden="true"></span></span></button>
-            <button class="hub-port state-toggle" type="button" aria-pressed="true"><span>3 · Hub 2</span><span class="port-indicator"><span class="port-state">ON</span><span class="port-led" aria-hidden="true"></span></span></button>
+            <button class="hub-port state-toggle" data-port="1" type="button" aria-pressed="true"><span>1 · STLINK</span><span class="port-indicator"><span class="port-state">ON</span><span class="port-led" aria-hidden="true"></span></span></button>
+            <button class="hub-port state-toggle" data-port="2" type="button" aria-pressed="true"><span>2 · Relay</span><span class="port-indicator"><span class="port-state">ON</span><span class="port-led" aria-hidden="true"></span></span></button>
+            <button class="hub-port state-toggle" data-port="3" type="button" aria-pressed="true"><span>3 · Hub 2</span><span class="port-indicator"><span class="port-state">ON</span><span class="port-led" aria-hidden="true"></span></span></button>
           </div>
         </div>
         <!-- Meter, relay controller and switched upload hub. -->
@@ -1094,9 +1109,15 @@
       <span class="key orange">Switched OUT + GND · two contacts per DUT</span>
     </footer>
     <p id="status" role="status"> </p>
+    <section class="capture-log" id="capture-log" aria-label="Measurement log" hidden>
+      <h2>Measurement log</h2>
+      <pre id="capture-log-output" role="log" aria-live="polite"></pre>
+    </section>
     <p id="prototype-note">Sample COM ports only. This prototype does not connect to hardware or save configuration.</p>
   </main>
 <script src="modes.js"></script>
+<script src="capture.js"></script>
+<script src="meter.js"></script>
 <script>
   // Desktop mode replaces browser uploads with native dialogs returning full paths.
   window.addEventListener('pywebviewready', () => {
@@ -1106,11 +1127,13 @@
       return;
     }
     desktopReady = true;
+    displayMeterPower(null);
+    updateMeterControls();
     resetHubPortStates();
     updateHubControls();
     // Discard sample assignments before populating real ports; never guess device roles.
     selectors.forEach(select => { select.replaceChildren(new Option('Select a port', '')); });
-    document.querySelector('#prototype-note').textContent = 'Hub 2 switches control the selected physical YKUSH. Hub 1, relay, STLINK OUT and Run remain simulated.';
+    document.querySelector('#prototype-note').textContent = 'StandAlone Run, STLINK OUT and both hubs use the local backend. Other layout Run actions and relays remain simulated.';
     selectors.forEach(select => initializeLiveChoice(select, refreshSerialPorts));
     hubSelectors.forEach(select => select.replaceChildren(new Option('Select a hub', '')));
     initializeLiveChoice(document.querySelector('#hub-serial'), () => refreshHubs());
@@ -1220,8 +1243,8 @@
     return card.querySelector('select[id$="model"]').value === 'ykushxs' ? 1 : 3;
   }
 
-  function resetHubPortStates() {
-    hub2Switches.forEach(port => {
+  function resetHubPortStates(card = document.querySelector('.upload-hub')) {
+    card.querySelectorAll('.hub-port').forEach(port => {
       port.setAttribute('aria-pressed', desktopReady ? 'mixed' : 'false');
       port.querySelector('.port-state').textContent = desktopReady ? '?' : 'OFF';
       port.title = desktopReady ? 'State unknown until a switching command is confirmed' : 'Simulated port state';
@@ -1243,14 +1266,15 @@
   }
 
   async function switchHubPort(port) {
-    if (isRunning || switchingHub || !selectedHubAvailable()) return;
-    const serial = document.querySelector('#hub-serial').value;
-    const driver = document.querySelector('#hub-model').value;
+    const card = port.closest('.device-card');
+    if (isRunning || switchingHub || !hubConfigured(card)) return;
+    const serial = card.querySelector('select[id$="serial"]').value;
+    const driver = card.querySelector('select[id$="model"]').value;
     const socket = Number(port.dataset.port);
     const enabled = port.getAttribute('aria-pressed') !== 'true';
     switchingHub = true;
     document.dispatchEvent(new Event('close-device-menus'));
-    const locked = [...document.querySelectorAll('.upload-hub button, .upload-hub input, .upload-hub select'), runButton]
+    const locked = [...document.querySelectorAll('.primary-hub button, .primary-hub select, .upload-hub button, .upload-hub select'), runButton]
       .map(control => ({control, disabled: control.disabled}));
     locked.forEach(({control}) => { control.disabled = true; });
     port.setAttribute('aria-busy', 'true');
@@ -1271,7 +1295,7 @@
       switchingHub = false;
       port.removeAttribute('aria-busy');
       locked.forEach(({control, disabled}) => { control.disabled = disabled; });
-      runButton.disabled = isRunning || refreshingPorts;
+      runButton.disabled = isRunning || refreshingPorts || meterBusy;
       updateHubControls();
       updateConnectionFlows();
     }
@@ -1385,6 +1409,7 @@
         select.dispatchEvent(new Event('options-updated'));
       });
       updateExclusiveChoices();
+      updateMeterControls();
       discoveryStatus.textContent = ports.length ? `${ports.length} serial ports detected` : 'No serial ports detected';
       validatePorts();
     } catch (error) {
@@ -1392,7 +1417,7 @@
       throw error;
     } finally {
       refreshingPorts = false;
-      runButton.disabled = isRunning || switchingHub;
+      runButton.disabled = isRunning || switchingHub || meterBusy;
     }
   }
 
@@ -1534,7 +1559,7 @@
     document.querySelectorAll('[data-dut]').forEach(group => {
       group.style.display = Number(group.dataset.dut) <= count ? '' : 'none';
     });
-    document.querySelectorAll('.hub-port[data-port]').forEach(port => {
+    document.querySelectorAll('.upload-hub .hub-port[data-port]').forEach(port => {
       port.hidden = Number(port.dataset.port) > count;
     });
     document.querySelector('#upload-label').textContent = `USB upload · ${count === 1 ? 'port' : 'ports'} ${Array.from({length: count}, (_, index) => index + 1).join(' / ')}`;
@@ -1572,12 +1597,16 @@
   }
 
   function handleRun() {
-    if (isRunning || refreshingPorts || switchingHub) return;
+    if (isRunning || refreshingPorts || switchingHub || meterBusy) return;
     validatePorts();
     if (status.classList.contains('error')) return;
     if (activePorts().some(select => !select.value)) {
       status.classList.add('error');
       status.textContent = 'Select a serial port for each device before running.';
+      return;
+    }
+    if (desktopReady && currentLayout === 'standalone') {
+      startStandaloneCapture();
       return;
     }
     setRunning(true);
@@ -1586,6 +1615,10 @@
 
   // Initialize the local prototype and register UI events.
   initializePortSelectors();
+  document.querySelector('#meter-port').addEventListener('change', () => {
+    if (desktopReady) displayMeterPower(null);
+    updateMeterControls();
+  });
   hubSelectors.forEach(select => {
     fillDemoHubs(select);
     select.addEventListener('change', updateExclusiveChoices);
@@ -1605,19 +1638,15 @@
     const select = document.querySelector('#hub1-serial');
     if (desktopReady) select.replaceChildren(new Option('Select a hub', ''));
     else fillDemoHubs(select);
-    resetDemoHubOne();
+    resetHubOneStates();
     updateExclusiveChoices();
     updateDeviceCount();
   });
-  function resetDemoHubOne() {
-    hub1Switches.forEach(port => {
-      port.setAttribute('aria-pressed', 'false');
-      port.querySelector('.port-state').textContent = 'OFF';
-    });
-    updateConnectionFlows();
+  function resetHubOneStates() {
+    resetHubPortStates(document.querySelector('.primary-hub'));
     updateHubControls();
   }
-  document.querySelector('#hub1-serial').addEventListener('change', resetDemoHubOne);
+  document.querySelector('#hub1-serial').addEventListener('change', resetHubOneStates);
   document.querySelector('#hub-model').addEventListener('change', resetHubSelection);
   document.querySelector('#hub-serial').addEventListener('change', () => {
     resetHubPortStates();
@@ -1633,12 +1662,16 @@
   outputVoltage.addEventListener('change', updateSupplyLabels);
   updateSupplyLabels();
   initializeConnectionFlows();
-  // Only desktop Hub 2 toggles send commands; the other switches remain simulated.
+  // Both desktop hubs share the same backend call; the clicked card supplies its serial.
   document.querySelectorAll('.state-toggle').forEach(port => {
     port.addEventListener('click', () => {
       if (isRunning) return;
+      if (desktopReady && port.id === 'meter-output') {
+        switchMeterPower();
+        return;
+      }
       if (port.classList.contains('hub-port') && !hubConfigured(port.closest('.device-card'))) return;
-      if (desktopReady && port.matches('.upload-hub .hub-port')) {
+      if (desktopReady && port.classList.contains('hub-port')) {
         switchHubPort(port);
         return;
       }
@@ -1651,6 +1684,10 @@
 
   runButton.addEventListener('click', handleRun);
   stopButton.addEventListener('click', () => {
+    if (captureInProgress) {
+      stopStandaloneCapture();
+      return;
+    }
     setRunning(false);
     status.textContent = 'Stopped (prototype). Controls are unlocked.';
   });
@@ -1667,7 +1704,7 @@
   document.querySelector('#relay-model').addEventListener('change', updateRelayCapacity);
   updateRelayCapacity();
   updateDeviceCount();
-  resetDemoHubOne();
+  resetHubOneStates();
   updateHubControls();
   window.addEventListener('resize', alignSwitchConnections);
   document.fonts.ready.then(alignSwitchConnections);
