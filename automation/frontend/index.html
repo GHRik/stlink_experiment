@@ -383,9 +383,38 @@
       cursor: not-allowed;
     }
     .pc {
-      left: 8px;
-      top: 710px;
-      width: 110px;
+      left: 24px;
+      top: 1000px;
+      width: 300px;
+    }
+    .test-details {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .test-details input, .test-details textarea {
+      width: 100%;
+      border: 1px solid #8695aa;
+      border-bottom-width: 2px;
+      border-radius: 3px;
+      padding: 9px;
+      background: #f8fafc;
+      color: #172538;
+      font: 12px var(--instrument-font);
+    }
+    .test-details textarea {
+      resize: vertical;
+      min-height: 78px;
+    }
+    .test-details input:focus-visible, .test-details textarea:focus-visible {
+      outline: 3px solid #a8cefc;
+      outline-offset: 2px;
+    }
+    [data-theme="dark"] .test-details input,
+    [data-theme="dark"] .test-details textarea {
+      background: #162131;
+      color: #e4eaf2;
+      border-color: #52647d;
     }
     .primary-hub {
       left: 140px;
@@ -788,6 +817,16 @@
         <div class="device-card pc">
           <strong>PC</strong>
           <small>Host</small>
+          <div class="test-details">
+            <div class="device-field">
+              <label for="test-name">Test name</label>
+              <input id="test-name" name="test_name" type="text" placeholder="e.g. nodemcu_deep_sleep">
+            </div>
+            <div class="device-field">
+              <label for="test-description">Description</label>
+              <textarea id="test-description" name="description" rows="3" placeholder="Board, firmware and measurement conditions"></textarea>
+            </div>
+          </div>
           <button class="run" id="run" type="button">Run</button>
           <button class="run stop" id="stop" type="button" hidden>STOP</button>
         </div>
@@ -1394,7 +1433,7 @@
     if (running) {
       document.dispatchEvent(new Event('close-device-menus'));
       document.querySelectorAll('.field-help[open]').forEach(help => { help.open = false; });
-      lockedControls = [...document.querySelectorAll('button, input, select, a, summary')]
+      lockedControls = [...document.querySelectorAll('button, input, textarea, select, a, summary')]
         .filter(control => control !== stopButton)
         .map(control => {
           const previous = {control, disabled: control.disabled, inert: control.inert,
@@ -1633,6 +1672,7 @@
   window.addEventListener('resize', alignSwitchConnections);
   document.fonts.ready.then(alignSwitchConnections);
   initializeModes();
+  new ResizeObserver(alignSwitchConnections).observe(document.querySelector('.pc'));
 </script>
 </body>
 </html>

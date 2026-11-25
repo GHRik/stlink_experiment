@@ -86,18 +86,20 @@ function routeModeConnections() {
   const output = anchor('.power-meter', 'right', meterOutput);
   const count = modeDutCount();
   if (hil) {
-    paths[0] = pathVia(pc, anchor('.primary-hub', 'left'), 130);
+    const hub = anchor('.primary-hub', 'left');
+    const pcTop = document.querySelector('.pc').offsetTop;
+    paths[0] = `M${pc.x} ${pc.y} H365 V${pcTop - 30} H120 V${hub.y} H${hub.x}`;
     paths[1] = pathVia(anchor('.primary-hub', 'right', hub1Switches[0]), meter, 350);
     if (hubPortCount(document.querySelector('.primary-hub')) > 1) {
       paths[2] = pathVia(anchor('.primary-hub', 'right', hub1Switches[1]), anchor('.relay', 'left'), 370);
       paths[3] = pathVia(anchor('.primary-hub', 'right', hub1Switches[2]), anchor('.upload-hub', 'left'), 390);
     }
   } else {
-    paths[1] = pathVia({...pc, y: pc.y - (oneHub || oneRelay ? 30 : 0)}, meter, 350);
-    if (hasRelay) paths[2] = pathVia({...pc, y: pc.y + 30}, anchor('.relay', 'left'), 300);
+    paths[1] = pathVia({...pc, y: pc.y - (oneHub || oneRelay ? 30 : 0)}, meter, 390);
+    if (hasRelay) paths[2] = pathVia({...pc, y: pc.y + 30}, anchor('.relay', 'left'), 350);
     if (hasHub) {
       const hub = anchor('.upload-hub', 'left');
-      paths[3] = pathVia(pc, {...hub, y: hub.y - 25}, 280);
+      paths[3] = pathVia(pc, {...hub, y: hub.y - 25}, 370);
     }
   }
   if (hasRelay) {
@@ -153,9 +155,9 @@ function routeModeConnections() {
   if (hil) external.setAttribute('d', 'M179 465 H240 V577');
   if (currentLayout === 'one-hub') {
     const hub = anchor('.upload-hub', 'left');
-    external.setAttribute('d', pathVia({...pc, y: pc.y + 30}, {...hub, y: hub.y + 25}, 240));
+    external.setAttribute('d', pathVia({...pc, y: pc.y + 30}, {...hub, y: hub.y + 25}, 350));
   }
   const hubInput = anchor('.upload-hub', 'left');
-  label('#hub-power-label', oneHub, 250, hubInput.y + 13, 'USB · 5 V power');
-  label('#hub-data-label', oneHub, 290, hubInput.y - 37, 'USB · data');
+  label('#hub-power-label', oneHub, pc.x + 10, pc.y + 52, 'USB · 5 V power');
+  label('#hub-data-label', oneHub, pc.x + 10, pc.y - 10, 'USB · data');
 }
