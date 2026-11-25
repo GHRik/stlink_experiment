@@ -440,6 +440,10 @@
       border: 1px solid var(--panel-border);
     }
     .capture-log h2 { margin: 0 0 12px; font-size: 14px; }
+    #run-time { margin: 12px 0; font-size: clamp(22px, 2.5vw, 32px); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.3; color: #172538; }
+    [data-theme="dark"] #run-time { color: #e4eaf2; }
+    #capture-log > summary { cursor: pointer; font-weight: 700; }
+    #capture-log[open] > summary { margin-bottom: 12px; }
     .capture-log pre {
       max-height: 280px;
       overflow: auto;
@@ -1150,14 +1154,16 @@
       <h2>Run progress</h2>
       <p id="run-stage" role="status"></p>
       <progress id="run-bar" value="0" max="1" style="width:100%"></progress>
-      <p><span id="run-count"></span><br><span id="run-time"></span><br>
+      <p id="run-count"></p>
+      <p id="run-time"></p>
+      <p>
         <small>Time covers warm-up and acquisition. Upload, calibration, switching, analysis and reports add extra time.</small></p>
       <ul id="run-done"></ul>
     </section>
-    <section class="capture-log" id="capture-log" aria-label="Measurement log" hidden>
-      <h2>Measurement log</h2>
+    <details class="capture-log" id="capture-log" aria-label="Measurement log" hidden>
+      <summary>Show more · CLI output</summary>
       <pre id="capture-log-output" role="log" aria-live="polite"></pre>
-    </section>
+    </details>
     <section class="results-section" aria-label="Saved measurement results">
       <h2>Results</h2>
       <label for="results-search">Search results</label>
@@ -1520,7 +1526,7 @@
       document.dispatchEvent(new Event('close-device-menus'));
       document.querySelectorAll('.field-help[open]').forEach(help => { help.open = false; });
       lockedControls = [...document.querySelectorAll('button, input, textarea, select, a, summary')]
-        .filter(control => control !== stopButton)
+        .filter(control => control !== stopButton && !control.closest('#capture-log'))
         .map(control => {
           const previous = {control, disabled: control.disabled, inert: control.inert,
             ariaDisabled: control.getAttribute('aria-disabled')};

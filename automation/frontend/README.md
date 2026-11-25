@@ -57,6 +57,8 @@ The runner manages the DUT hub (Hub 2), relays, uploads and measurements. Hub 1 
 
 During a desktop Run, confirmed STLINK OUT, hub-port and relay-channel events update the diagram while controls stay locked. The **Run progress** panel tracks uploads, warm-up, calibrations, completed repeats and reports across DUTs. Remaining programmed time covers warm-up and acquisition only; compilation, calibration, switching, analysis and reports add variable overhead. STOP preserves the completed counters.
 
+The remaining-time counter is displayed prominently. CLI output stays collapsed under **Show more**; this read-only log can be expanded during a Run.
+
 ## Live current
 
 The local canvas shows the last 30 seconds of the active acquisition, resetting for each repeat and DUT. The mean line and minimum–maximum envelope use approximately 50 ms bins (one sample per bin at low rates), delivered about every 0.5 seconds. Full-resolution samples and report statistics are unaffected. The final trace stays visible after completion or STOP.
