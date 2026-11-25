@@ -164,7 +164,7 @@ class AutomationTests(unittest.TestCase):
             with patch.object(run, "run_command") as command:
                 hardware.flash(config["connected_boards"][0])
             args = command.call_args.args[0]
-            self.assertEqual(args[:6], [sys.executable, "-u", str(run.ROOT / "upload.py"), "nodemcu", "COM7", config["connected_boards"][0]["sketch"]])
+            self.assertEqual(args[:6], [sys.executable, "-u", str(run.ROOT / "automation/upload.py"), "nodemcu", "COM7", config["connected_boards"][0]["sketch"]])
 
     def test_sketch_is_selected_and_resolved_per_board(self):
         data = run.read_config(run.ROOT / "automation/config.example.jsonc")

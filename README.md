@@ -65,7 +65,7 @@ Then capture the full series:
 
 For sequential firmware upload and measurements on up to three boards, see [YKUSH / relay automation](automation/README.md).
 
-Standalone upload: `python upload.py nodemcu COM22 path/to/sketch.ino`. Board profiles are defined in [automation/board_profiles.json](automation/board_profiles.json); compiler and uploader diagnostics come directly from Arduino CLI.
+Standalone upload: `python automation/upload.py nodemcu COM22 path/to/sketch.ino`. Board profiles are defined in [automation/board_profiles.json](automation/board_profiles.json); compiler and uploader diagnostics come directly from Arduino CLI.
 
 Change `--name` and `--notes` to match the flashed sketch. Keep voltage and sampling frequency identical across comparisons.
 

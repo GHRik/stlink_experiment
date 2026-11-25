@@ -84,7 +84,7 @@ def load_config(path):
             raise ValueError("Board ykush_usb_port is not in hub.ports")
         if type(board["relay"]) is not int or not 0 <= board["relay"] < count:
             raise ValueError("Board relay must be a zero-based controller channel")
-    from upload import load_profiles
+    from automation.upload import load_profiles
     profiles = load_profiles()
     for board in boards:
         if board.get("upload_profile") not in profiles:
@@ -163,7 +163,7 @@ class Hardware:
     def flash(self, board):
         self.event("flash", board=board["name"], port=board["com"])
         with (self.directory / f"{board['name']}_upload.log").open("w", encoding="utf-8") as log:
-            run_command([sys.executable, "-u", str(ROOT / "upload.py"),
+            run_command([sys.executable, "-u", str(ROOT / "automation/upload.py"),
                          board["upload_profile"], board["com"], board["sketch"],
                          "--cli", self.config["arduino_cli"]],
                         self.config["flash_timeout_s"], log)

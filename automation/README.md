@@ -54,7 +54,7 @@ Results: `results/automation_<timestamp>/` contains the configuration snapshot, 
 ## Standalone upload
 
 ```powershell
-.\.venv\Scripts\python.exe upload.py nodemcu COM22 automation/example/example.ino
+.\.venv\Scripts\python.exe automation/upload.py nodemcu COM22 automation/example/example.ino
 ```
 
 This command only compiles/uploads; it does not switch USB, relays or meter power. The last argument is a local `.ino` path or sketch directory, not an HTTP URL. Pass `--cli "C:\path\to\arduino-cli.exe"` if Arduino CLI is not on PATH, or set `ARDUINO_CLI`. Compiler and uploader output is passed through unchanged with verbose logging and the original CLI exit code. Batch runs save this output in each board's upload log. No Python wrapper library is required.

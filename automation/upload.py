@@ -8,7 +8,7 @@ import sys
 
 
 def load_profiles():
-    path = Path(__file__).resolve().parent / "automation" / "board_profiles.json"
+    path = Path(__file__).resolve().with_name("board_profiles.json")
     return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
