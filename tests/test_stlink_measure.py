@@ -6,9 +6,8 @@ import unittest
 from unittest.mock import patch
 
 import numpy as np
-import stlink_protocol as app
-import results
-import stlink_measure
+from src import stlink_protocol as app
+from src import results, stlink_measure
 
 
 class FakeDevice:

@@ -2,7 +2,7 @@
 """NodeMCU experiment: power-on -> acquisition -> saved data -> comparison.
 
 Example:
-    py stlink_measure.py capture --port COM18 --name modem --notes "NodeMCU; test firmware" --repeats 10
+    py -m src.stlink_measure capture --port COM18 --name modem --notes "NodeMCU; test firmware" --repeats 10
 
 Defaults: 3.3 V, 1000 Hz, 100 s per capture, 10 repeats.
 Upload the appropriate NodeMCU firmware before running this script.
@@ -10,10 +10,10 @@ Upload the appropriate NodeMCU firmware before running this script.
 from pathlib import Path
 import sys
 
-from options import read_options
-from results import analyze_run, report, demo
-from storage import save_json
-from stlink_protocol import (
+from .options import read_options
+from .results import analyze_run, report, demo
+from .storage import save_json
+from .stlink_protocol import (
     Device, validate_settings, create_session, identify_device,
     configure_device, save_session_settings, capture_one, warm_up,
 )

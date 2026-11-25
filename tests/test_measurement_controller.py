@@ -7,8 +7,8 @@ import time
 import unittest
 from unittest.mock import patch
 
-from measurement_controller import MeasurementController
-import stlink_protocol
+from src.measurement_controller import MeasurementController
+from src import stlink_protocol
 from tests.test_stlink_measure import FakeDevice
 
 

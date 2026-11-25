@@ -26,7 +26,7 @@
     "channel_digits": 1
   },
 
-  // CURRENT METER: settings passed to the existing stlink_measure.py capture.
+  // CURRENT METER: settings passed to python -m src.stlink_measure capture.
   "stlink": {
     // STLINK-V3PWR SMU port, not its debug UART port.
     "com": "COM18",

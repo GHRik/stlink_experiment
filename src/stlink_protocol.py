@@ -8,8 +8,8 @@ import math
 import re
 import time
 import csv
-from storage import save_json
-from measurement_controller import MeasurementController
+from .storage import save_json
+from .measurement_controller import MeasurementController
 
 SAMPLE = re.compile(r"^(\d{4})([+-])(\d{1,2})$")
 SOURCE = "https://www.st.com/resource/en/user_manual/um3291-getting-started-with-stlinkv3pwr-firmware-stmicroelectronics.pdf"

@@ -11,8 +11,8 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.offsetbox import AnchoredOffsetbox, HPacker
 from scipy.stats import t as student_t
-from storage import save_json, write_csv
-from plot_annotations import (extrema, mark_extrema, trace_captions, statistics_captions,
+from .storage import save_json, write_csv
+from .plot_annotations import (extrema, mark_extrema, trace_captions, statistics_captions,
                               MIN_COLOR, MAX_COLOR)
 
 # Display split chosen to include the measured NodeMCU power-on transient and a short margin.

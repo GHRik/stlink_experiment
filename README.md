@@ -32,7 +32,7 @@ py -m venv .venv
 ### 3. Find the SMU port
 
 ```powershell
-.\.venv\Scripts\python.exe stlink_measure.py ports
+.\.venv\Scripts\python.exe -m src.stlink_measure ports
 ```
 
 Use the **SMU port**, not the debug UART. Replace `COM18` below.
@@ -42,13 +42,13 @@ Use the **SMU port**, not the debug UART. Replace `COM18` below.
 After flashing `00_no_code`, run a short check:
 
 ```powershell
-.\.venv\Scripts\python.exe stlink_measure.py capture --port COM18 --name no_code --notes "NodeMCU V3; Core 3.1.2; CPU 80 MHz; 00_no_code; USB disconnected" --repeats 1 --seconds 15 --out test_results
+.\.venv\Scripts\python.exe -m src.stlink_measure capture --port COM18 --name no_code --notes "NodeMCU V3; Core 3.1.2; CPU 80 MHz; 00_no_code; USB disconnected" --repeats 1 --seconds 15 --out test_results
 ```
 
 Then capture the full series:
 
 ```powershell
-.\.venv\Scripts\python.exe stlink_measure.py capture --port COM18 --name no_code --notes "NodeMCU V3; Core 3.1.2; CPU 80 MHz; 00_no_code; USB disconnected" --repeats 10 --seconds 100 --hz 1000
+.\.venv\Scripts\python.exe -m src.stlink_measure capture --port COM18 --name no_code --notes "NodeMCU V3; Core 3.1.2; CPU 80 MHz; 00_no_code; USB disconnected" --repeats 10 --seconds 100 --hz 1000
 ```
 
 | Option | Why / default |
@@ -74,7 +74,7 @@ Change `--name` and `--notes` to match the flashed sketch. Keep voltage and samp
 Replace the example directory with your run directory:
 
 ```powershell
-.\.venv\Scripts\python.exe stlink_measure.py analyze --root results/no_code_20261114_183000_123456
+.\.venv\Scripts\python.exe -m src.stlink_measure analyze --root results/no_code_20261114_183000_123456
 ```
 
 Optional analysis window: append `--from-s 4 --to-s 8`. Reports and plots are regenerated; raw sample CSV files are preserved.
@@ -145,7 +145,7 @@ Warm-up and manual calibration do not disable automatic calibration. Calibration
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -t . -v
-.\.venv\Scripts\python.exe stlink_measure.py demo
+.\.venv\Scripts\python.exe -m src.stlink_measure demo
 ```
 
 Demo creates **synthetic data** in `demo_results/`.

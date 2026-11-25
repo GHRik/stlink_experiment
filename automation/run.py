@@ -93,7 +93,7 @@ def load_config(path):
         if not math.isfinite(config[field]) or config[field] <= 0:
             raise ValueError(f"{field} must be positive and finite")
     # Use the existing measurement validator before switching any hardware.
-    from stlink_protocol import validate_settings
+    from src.stlink_protocol import validate_settings
     m = config["measurement"]
     for board in boards:
         validate_settings(argparse.Namespace(name=board["name"], repeats=m["repeats"],
@@ -104,11 +104,11 @@ def load_config(path):
     return config
 
 
-def run_command(command, timeout, log=None):
+def run_command(command, timeout, log=None, cwd=None):
     """Terminate the process tree on timeout or interruption before disconnecting power."""
     process = subprocess.Popen(command, stdout=log or subprocess.PIPE,
                                stderr=subprocess.STDOUT, text=True,
-                               start_new_session=os.name != "nt")
+                               start_new_session=os.name != "nt", cwd=cwd)
     try:
         output, _ = process.communicate(timeout=timeout)
     except BaseException:
@@ -170,7 +170,7 @@ class Hardware:
 
     def measure(self, board):
         self.event("measure", board=board["name"])
-        command = [sys.executable, str(ROOT / "stlink_measure.py"), "capture",
+        command = [sys.executable, "-m", "src.stlink_measure", "capture",
                    "--port", self.config["stlink_com"], "--name", board["name"],
                    "--notes", board["notes"], "--out", str(self.directory / "measurements")]
         m = self.config["measurement"]
@@ -178,7 +178,7 @@ class Hardware:
             command += ["--" + key.replace("_", "-"), str(m[key])]
         timeout = m["warmup_seconds"] + m["repeats"] * (m["seconds"] + m["off_seconds"] + 90) + 300
         with (self.directory / f"{board['name']}_measurement.log").open("w", encoding="utf-8") as log:
-            run_command(command, timeout, log)
+            run_command(command, timeout, log, cwd=ROOT)
 
     def close(self):
         try:

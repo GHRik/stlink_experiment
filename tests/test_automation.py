@@ -166,6 +166,16 @@ class AutomationTests(unittest.TestCase):
             args = command.call_args.args[0]
             self.assertEqual(args[:6], [sys.executable, "-u", str(run.ROOT / "automation/upload.py"), "nodemcu", "COM7", config["connected_boards"][0]["sketch"]])
 
+    def test_measurement_uses_src_module_from_repository_root(self):
+        config = self.config()
+        with tempfile.TemporaryDirectory() as folder:
+            hardware = run.Hardware(config, Path(folder))
+            with patch.object(run, "run_command") as command:
+                hardware.measure(config["connected_boards"][0])
+            self.assertEqual(command.call_args.args[0][:4],
+                             [sys.executable, "-m", "src.stlink_measure", "capture"])
+            self.assertEqual(command.call_args.kwargs["cwd"], run.ROOT)
+
     def test_sketch_is_selected_and_resolved_per_board(self):
         data = run.read_config(run.ROOT / "automation/config.example.jsonc")
         data["connected_boards"][0]["sketch"] = "first/first.ino"

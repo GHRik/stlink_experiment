@@ -3,7 +3,7 @@
 Run any Python script alongside each capture:
 
 ```powershell
-.\.venv\Scripts\python.exe stlink_measure.py capture --port COM18 --name controller_test --notes "Custom controller experiment" --repeats 1 --seconds 10 --controller controllers/example.py
+.\.venv\Scripts\python.exe -m src.stlink_measure capture --port COM18 --name controller_test --notes "Custom controller experiment" --repeats 1 --seconds 10 --controller controllers/example.py
 ```
 
 A new process starts after `ack start`, after warm-up and calibration. The sample-count limit requests shutdown before sending `stop`; errors and Ctrl+C also request shutdown. The script inherits the working directory and uses the same Python interpreter as the measurement tool. Output goes to `controller.log` in the repeat directory.
