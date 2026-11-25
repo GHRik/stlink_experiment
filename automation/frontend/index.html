@@ -83,6 +83,13 @@
       stroke-width: 3;
       fill: none;
     }
+    .flow-dot {
+      stroke: white;
+      stroke-width: 1;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .flow-dot { display: none; }
+    }
     svg text {
       font: 12px system-ui, sans-serif;
       fill: #65758b;
@@ -661,6 +668,54 @@
   const status = document.querySelector('#status');
   const relayCount = document.querySelector('#relay-count');
 
+  // Animated dots visualize simulated connections, not measured current.
+  const connectionFlows = [];
+  const hub1Switches = [...document.querySelectorAll('.primary-hub .state-toggle')];
+  const hub2Switches = [...document.querySelectorAll('.upload-hub .state-toggle')];
+  const relaySwitches = [...document.querySelectorAll('.relay-channel')];
+  const isOn = button => button.getAttribute('aria-pressed') === 'true';
+
+  function initializeConnectionFlows() {
+    const svg = document.querySelector('.wiring-connections');
+    const namespace = 'http://www.w3.org/2000/svg';
+    function addFlow(path, color, active) {
+      const dot = document.createElementNS(namespace, 'circle');
+      dot.setAttribute('class', 'flow-dot');
+      dot.setAttribute('r', '4');
+      dot.setAttribute('fill', color);
+      const motion = document.createElementNS(namespace, 'animateMotion');
+      motion.setAttribute('path', path);
+      motion.setAttribute('dur', '3s');
+      motion.setAttribute('repeatCount', 'indefinite');
+      dot.append(motion);
+      svg.append(dot);
+      connectionFlows.push({dot, active});
+    }
+    const usbColor = '#8695aa';
+    const powerColor = '#d67b22';
+    addFlow('M144 768 H170 V610 H195', usbColor, () => hub1Switches.some(isOn));
+    addFlow('M330 610 H365 V430 H405', usbColor, () => isOn(hub1Switches[0]));
+    addFlow('M330 610 H405', usbColor, () => isOn(hub1Switches[1]));
+    addFlow('M330 610 H365 V1030 H405', usbColor, () => isOn(hub1Switches[2]));
+    addFlow('M595 610 H670', usbColor, () => isOn(hub1Switches[1]));
+    const relayActive = index => index < Number(relayCount.value)
+      && isOn(relaySwitches[index]) && isOn(hub1Switches[0]);
+    addFlow('M595 420 H745 V521', powerColor, () => relaySwitches.some((_, index) => relayActive(index)));
+    const powerPaths = ['M820 574 H900 V110 H1040', 'M820 610 H1040', 'M820 646 H875 V950 H1040'];
+    const uploadHeights = [175, 675, 1015];
+    powerPaths.forEach((path, index) => {
+      addFlow(path, powerColor, () => relayActive(index));
+      addFlow(`M595 1030 H1000 V${uploadHeights[index]} H1040`, usbColor,
+        () => index < Number(relayCount.value) && isOn(hub1Switches[2]) && isOn(hub2Switches[index]));
+    });
+  }
+
+  function updateConnectionFlows() {
+    connectionFlows.forEach(({dot, active}) => {
+      dot.style.visibility = active() ? 'visible' : 'hidden';
+    });
+  }
+
   // Only visible DUTs participate in port validation.
   function activePorts() {
     return selectors.filter(select => !select.closest('[hidden]'));
@@ -679,6 +734,7 @@
     });
     document.querySelector('#upload-label').textContent = `USB upload · ${count === 1 ? 'port' : 'ports'} ${Array.from({length: count}, (_, index) => index + 1).join(' / ')}`;
     validatePorts();
+    updateConnectionFlows();
   }
 
   function validatePorts() {
@@ -716,12 +772,14 @@
 
   // Initialize the local prototype and register UI events.
   initializePortSelectors();
+  initializeConnectionFlows();
   // Hub and relay LEDs display simulated states only; no hardware commands are sent.
   document.querySelectorAll('.state-toggle').forEach(port => {
     port.addEventListener('click', () => {
       const enabled = port.getAttribute('aria-pressed') !== 'true';
       port.setAttribute('aria-pressed', String(enabled));
       port.querySelector('.port-state').textContent = enabled ? 'ON' : 'OFF';
+      updateConnectionFlows();
     });
   });
 
