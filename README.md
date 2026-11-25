@@ -2,7 +2,7 @@
 
 Measure board current with **STLINK-V3PWR**. Save raw samples, generate current traces, and compare repeat results with mean ± SD.
 
-[NodeMCU firmware & results](nodemcu_led_cycles/README.md) · [Quick start](#quick-start) · [Measurement procedure](#warm-up-calibration-and-temperature) · [Citation](#citation)
+[NodeMCU firmware & results](firmware/nodemcu_led_cycles/README.md) · [Quick start](#quick-start) · [Measurement procedure](#warm-up-calibration-and-temperature) · [Citation](#citation)
 
 ## Requirements
 
@@ -24,7 +24,7 @@ py -m venv .venv
 
 ### 2. Flash and connect
 
-- Flash one [NodeMCU sketch](nodemcu_led_cycles/README.md); disconnect STLINK output wiring while flashing over USB.
+- Flash one [NodeMCU sketch](firmware/nodemcu_led_cycles/README.md); disconnect STLINK output wiring while flashing over USB.
 - For measurement, disconnect NodeMCU USB. Connect **OUT → 3V3**, **GND → GND**. Default supply: **3.3 V**.
 - For deep sleep, also connect **D0 → RST**. All sketches use **GPIO2 / D4** for the LED.
 - Release control in STM32CubeMonitor-Power and close it and any serial terminal using the meter.
@@ -92,7 +92,7 @@ Optional analysis window: append `--from-s 4 --to-s 8`. Reports and plots are re
 | `session_config.json`, `warmup.json` | Setup and warm-up temperatures |
 | `excluded_runs.json` | Excluded measurements and reasons |
 
-Plots are saved as PNG and SVG. CSV uses semicolons and decimal points. New result directories are ignored by Git; the documented [baseline dataset](nodemcu_led_cycles/README.md) is explicitly included. Back up raw measurements separately.
+Plots are saved as PNG and SVG. CSV uses semicolons and decimal points. New result directories are ignored by Git; the documented [baseline dataset](firmware/nodemcu_led_cycles/README.md) is explicitly included. Back up raw measurements separately.
 
 ## Warm-up, calibration, and temperature
 
