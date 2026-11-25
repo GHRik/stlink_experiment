@@ -417,20 +417,19 @@
           <g data-dut="1">
             <path class="power" d="M820 574 H900 V110 H1040"/>
             <text x="930" y="98">3V3 + GND</text>
-            <path class="usb upload" d="M1000 175 H1040"/>
+            <path class="usb upload" d="M595 1165 H940 V175 H1040"/>
           </g>
           <g data-dut="2">
             <path class="power" d="M820 610 H1040"/>
             <text x="930" y="598">3V3 + GND</text>
-            <path class="usb upload" d="M1000 675 H1040"/>
+            <path class="usb upload" d="M595 1195 H965 V675 H1040"/>
           </g>
           <g data-dut="3">
             <path class="power" d="M820 646 H875 V950 H1040"/>
             <text x="930" y="938">3V3 + GND</text>
-            <path class="usb upload" d="M1000 1015 H1040"/>
+            <path class="usb upload" d="M595 1225 H990 V1015 H1040"/>
           </g>
-          <path class="usb upload" id="upload-trunk" d="M595 1030 H1000 V175"/>
-          <text id="upload-label" x="640" y="1054">USB upload · ports 1 / 2 / 3</text>
+          <text id="upload-label" x="640" y="1260">USB upload · ports 1 / 2 / 3</text>
         </svg>
         <!-- Host and upstream USB hub. -->
         <div class="device-card pc">
@@ -703,9 +702,11 @@
     addFlow('M595 420 H745 V521', powerColor, () => relaySwitches.some((_, index) => relayActive(index)));
     const powerPaths = ['M820 574 H900 V110 H1040', 'M820 610 H1040', 'M820 646 H875 V950 H1040'];
     const uploadHeights = [175, 675, 1015];
+    const uploadStarts = [1165, 1195, 1225];
+    const uploadLanes = [940, 965, 990];
     powerPaths.forEach((path, index) => {
       addFlow(path, powerColor, () => relayActive(index));
-      addFlow(`M595 1030 H1000 V${uploadHeights[index]} H1040`, usbColor,
+      addFlow(`M595 ${uploadStarts[index]} H${uploadLanes[index]} V${uploadHeights[index]} H1040`, usbColor,
         () => index < Number(relayCount.value) && isOn(hub1Switches[2]) && isOn(hub2Switches[index]));
     });
   }
