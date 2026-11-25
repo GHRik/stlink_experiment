@@ -143,7 +143,9 @@ function routeModeConnections() {
     if (y !== undefined) element.setAttribute('y', y);
     if (text !== undefined) element.textContent = text;
   }
-  label('#pc-usb-label', true, oneHub || oneRelay ? pc.x + 10 : pc.x - 100, pc.y - (oneHub || oneRelay ? 45 : 30), hil ? 'USB - Data line only' : 'USB');
+  label('#pc-usb-label', true, oneHub || oneRelay ? pc.x + 10 : pc.x - 100,
+    hil ? document.querySelector('.pc').offsetTop - 45 : pc.y - (oneHub || oneRelay ? 45 : 30),
+    hil ? 'USB - Data line only' : 'USB');
   label('#relay-control-label', hasRelay, 610, anchor('.relay').y - 12);
   label('#meter-output-label', hasRelay || single || currentLayout === 'one-hub', output.x + 10, output.y - 12);
   const relayStart = anchor('.relay-contacts', 'right', relaySwitches[0]);
