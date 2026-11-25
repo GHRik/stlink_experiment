@@ -272,6 +272,9 @@ def main():
     if args.dry_run:
         sequence(config, DryRun(config, None))
         return
+    if config["arduino_cli"] == "arduino-cli":
+        from automation.HIL.upload import default_arduino_cli
+        config["arduino_cli"] = default_arduino_cli()
     for key, executable in (("hub.cmd", config["hub"]["cmd"]), ("arduino_cli", config["arduino_cli"])):
         if not shutil.which(executable):
             raise ValueError(f"{key}: executable not found: {executable}")
