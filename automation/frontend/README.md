@@ -25,3 +25,5 @@ Active connections glow in their wiring color and show a moving dot. Inactive co
 **Run** locks all controls, including profile links and help buttons, and reveals **STOP** below it. **STOP** restores editing without resetting selections. This is a frontend run state only.
 
 The panel above STLINK contains the existing measurement settings: sample rate, capture duration, repeats, OUT voltage, warm-up time and OUT off time. Defaults match the HIL example configuration; values remain in the browser.
+
+The optional **Controller script** card above STLINK accepts a local `.py` file. Its connecting wire lights up when a file is selected. The help icon explains the acquisition lifecycle; the prototype does not execute the selected script.
