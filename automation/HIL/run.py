@@ -176,6 +176,8 @@ class Hardware:
         m = self.config["measurement"]
         for key in ("repeats", "seconds", "hz", "voltage", "warmup_seconds", "off_seconds"):
             command += ["--" + key.replace("_", "-"), str(m[key])]
+        if m.get("controller"):
+            command += ["--controller", m["controller"]]
         timeout = m["warmup_seconds"] + m["repeats"] * (m["seconds"] + m["off_seconds"] + 90) + 300
         with (self.directory / f"{board['name']}_measurement.log").open("w", encoding="utf-8") as log:
             run_command(command, timeout, log, cwd=ROOT)

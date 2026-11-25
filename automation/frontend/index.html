@@ -1146,6 +1146,7 @@
 <script src="capture.js"></script>
 <script src="one-hub.js"></script>
 <script src="one-relay.js"></script>
+<script src="hil.js"></script>
 <script src="meter.js"></script>
 <script src="relay.js"></script>
 <script src="mappings.js"></script>
@@ -1646,6 +1647,10 @@
     }
     if (desktopReady && currentLayout === 'one-relay') {
       startOneRelayCapture();
+      return;
+    }
+    if (desktopReady && currentLayout === 'hil') {
+      startHilCapture();
       return;
     }
     setRunning(true);

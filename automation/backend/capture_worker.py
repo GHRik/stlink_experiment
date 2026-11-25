@@ -8,7 +8,7 @@ from threading import Event, Thread
 from src.stlink_measure import main as measure_main
 
 
-def main():
+def main(entrypoint=None):
     finished = Event()
     stop_file = Path(os.environ["STLINK_GUI_STOP_FILE"])
 
@@ -20,7 +20,7 @@ def main():
 
     Thread(target=watch_stop, daemon=True).start()
     try:
-        return measure_main()
+        return (entrypoint or measure_main)()
     except KeyboardInterrupt:
         return 130
     finally:

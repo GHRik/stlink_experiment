@@ -12,7 +12,7 @@ function standaloneConfiguration() {
   };
 }
 
-async function startStandaloneCapture(preserveLog = false, config = standaloneConfiguration()) {
+async function startStandaloneCapture(preserveLog = false, config = standaloneConfiguration(), startMethod = 'start_capture') {
   if (!isRunning) setRunning(true);
   stopButton.disabled = true;
   captureCursor = 0;
@@ -22,7 +22,7 @@ async function startStandaloneCapture(preserveLog = false, config = standaloneCo
   status.classList.remove('error');
   status.textContent = 'Starting measurement…';
   try {
-    await window.pywebview.api.start_capture(config);
+    await window.pywebview.api[startMethod](config);
     displayMeterPower(null);
     captureInProgress = true;
     stopButton.disabled = false;

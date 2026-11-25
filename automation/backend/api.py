@@ -8,6 +8,8 @@ from .meter_power import MeterPower
 from .relay_control import RelayControl
 from threading import Lock
 import sys
+import json
+from .hil import hil_configuration
 
 
 class DesktopApi:
@@ -58,6 +60,15 @@ class DesktopApi:
             self._meter_power.close()
             return self._capture.start({}, command=[sys.executable, "-u", "-m",
                 "automation.HIL.upload", board, port, sketch])
+
+    def start_hil(self, config):
+        with self._meter_lock:
+            if self._capture.status()["running"]:
+                raise RuntimeError("A capture or upload is already running")
+            configuration = hil_configuration(config, self._hub_command)
+            self._meter_power.close()
+            return self._capture.start({}, command=[sys.executable, "-u", "-m",
+                "automation.backend.hil_worker", json.dumps(configuration)])
 
     def confirm_connection(self, message):
         return self._picker._window.create_confirmation_dialog("One hub setup", message)
