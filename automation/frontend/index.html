@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HIL testbench</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #eef2f6; color: #172538; font: 15px system-ui, sans-serif; }
+    main { max-width: 1240px; margin: auto; padding: 36px 24px; }
+    header { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: -.6px; }
+    p { color: #5c6c80; margin: 0 0 24px; line-height: 1.6; }
+    .badge { border: 1px solid #cbd5e1; border-radius: 20px; padding: 6px 12px; white-space: nowrap; font-size: 12px; }
+    .viewport { overflow-x: auto; border: 1px solid #d7dfe9; border-radius: 16px; background: white; }
+    .bench { position: relative; width: 1120px; height: 630px; margin: auto; }
+    svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .usb { stroke: #8695aa; stroke-width: 2; fill: none; }
+    .upload { stroke-dasharray: 7 5; }
+    .power { stroke: #d67b22; stroke-width: 3; fill: none; }
+    svg text { font: 12px system-ui, sans-serif; fill: #65758b; }
+    .node { position: absolute; width: 190px; padding: 17px; border: 1px solid #d3dce7; border-radius: 12px; background: #fff; box-shadow: 0 4px 14px #17253808; }
+    .node strong { display: block; font-size: 15px; }
+    .node small { display: block; color: #65758b; font-size: 12px; margin: 5px 0 12px; }
+    .node label { display: block; font-size: 11px; font-weight: 600; color: #65758b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .7px; }
+    select { width: 100%; padding: 9px; border-radius: 6px; border: 1px solid #c4cfdd; background: #f8fafc; color: #172538; font: inherit; }
+    select:focus-visible { outline: 3px solid #a8cefc; outline-offset: 2px; }
+    .pc { left: 24px; top: 270px; width: 120px; }
+    .hub1 { left: 195px; top: 270px; width: 135px; }
+    .meter { left: 405px; top: 40px; border-top: 3px solid #3479c3; }
+    .relay { left: 405px; top: 265px; }
+    .hub2 { left: 405px; top: 500px; }
+    .dut { left: 880px; border-top: 3px solid #26927d; }
+    .dut1 { top: 40px; } .dut2 { top: 265px; } .dut3 { top: 465px; }
+    .contacts { left: 670px; top: 250px; width: 150px; background: #fff9f1; border-color: #e9cda7; }
+    .contact { padding: 9px 0; color: #a45913; font-size: 12px; border-bottom: 1px solid #efdcc3; }
+    .contact:last-child { border: 0; }
+    footer { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; margin: 18px 0; color: #65758b; font-size: 12px; }
+    .key::before { content: ''; display: inline-block; width: 28px; border-top: 2px solid #8695aa; vertical-align: middle; margin-right: 8px; }
+    .key.dashed::before { border-top-style: dashed; }
+    .key.orange::before { border-color: #d67b22; border-top-width: 3px; }
+    #status { min-height: 24px; font-size: 13px; }
+    #status.error { color: #b83232; }
+    @media (max-width: 600px) { main { padding: 22px 12px; } header { display: block; } .badge { display: inline-block; margin-bottom: 18px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header><div><h1>HIL testbench</h1><p>Assign serial ports to the meter, relay controller and boards.</p></div><span class="badge">Interface prototype</span></header>
+  <div class="viewport" tabindex="0" role="region" aria-label="HIL wiring diagram; scroll horizontally on smaller screens">
+    <div class="bench">
+      <svg viewBox="0 0 1120 630" aria-hidden="true">
+        <path class="usb" d="M144 312 H195 M330 312 H365 V110 H405 M365 312 H405 M365 312 V540 H405"/>
+        <text x="155" y="300">USB</text>
+        <path class="usb" d="M595 340 H670"/><text x="611" y="329">Control</text>
+        <path class="power" d="M595 100 H745 V250"/><text x="626" y="88">OUT + GND</text>
+        <path class="power" d="M820 300 H845 V110 H880 M820 340 H880 M820 380 H845 V510 H880"/>
+        <text x="833" y="200">3V3 + GND</text><text x="833" y="438">3V3 + GND</text>
+        <path class="usb upload" d="M595 550 H860 V175 H880 M860 385 H880 M860 585 H880"/>
+        <text x="640" y="574">USB upload · ports 1 / 2 / 3</text>
+      </svg>
+      <div class="node pc"><strong>PC</strong><small>Host</small></div>
+      <div class="node hub1"><strong>Hub 1</strong><small>USB hub</small></div>
+      <section class="node meter"><strong>STLINK-V3PWR</strong><small>Current measurement</small><label for="meter-port">SMU port</label><select id="meter-port" data-default="COM18"></select></section>
+      <section class="node relay"><strong>Relay controller</strong><small>Numato / LCUS-2</small><label for="relay-port">Control port</label><select id="relay-port" data-default="COM19"></select></section>
+      <div class="node hub2"><strong>Hub 2 · YKUSH</strong><small>Switched USB ports 1–3</small></div>
+      <div class="node contacts"><strong>Relay contacts</strong><div class="contact">Relay 1 → DUT 1</div><div class="contact">Relay 2 → DUT 2</div><div class="contact">Relay 3 → DUT 3</div></div>
+      <section class="node dut dut1"><strong>Device Under Test 1</strong><small>YKUSH port 1 · relay 1</small><label for="dut1-port">Upload port</label><select id="dut1-port" data-default="COM7"></select></section>
+      <section class="node dut dut2"><strong>Device Under Test 2</strong><small>YKUSH port 2 · relay 2</small><label for="dut2-port">Upload port</label><select id="dut2-port" data-default="COM8"></select></section>
+      <section class="node dut dut3"><strong>Device Under Test 3</strong><small>YKUSH port 3 · relay 3</small><label for="dut3-port">Upload port</label><select id="dut3-port" data-default="COM9"></select></section>
+    </div>
+  </div>
+  <footer><span class="key">USB / control</span><span class="key dashed">USB firmware upload</span><span class="key orange">Switched OUT + GND · two contacts per DUT</span></footer>
+  <p id="status" role="status"></p>
+  <p>Sample COM ports only. This prototype does not connect to hardware or save configuration.</p>
+</main>
+<script>
+  const selectors = [...document.querySelectorAll('select')];
+  const status = document.querySelector('#status');
+  function validatePorts() {
+    const assigned = selectors.map(select => select.value).filter(Boolean);
+    const duplicates = [...new Set(assigned.filter((port, index) => assigned.indexOf(port) !== index))];
+    status.classList.toggle('error', duplicates.length > 0);
+    status.textContent = duplicates.length
+      ? `Port assigned more than once: ${duplicates.join(', ')}. Choose a separate port for each device.`
+      : `${assigned.length} of 5 serial ports assigned.`;
+  }
+  selectors.forEach(select => {
+    select.add(new Option('Select a port', ''));
+    for (let number = 1; number <= 32; number++) {
+      const port = `COM${number}`;
+      select.add(new Option(port, port));
+    }
+    select.value = select.dataset.default;
+    select.addEventListener('change', validatePorts);
+  });
+  validatePorts();
+</script>
+</body>
+</html>

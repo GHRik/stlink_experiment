@@ -1,0 +1,5 @@
+# HIL frontend prototype
+
+Open [index.html](index.html) in a browser by double-clicking the local file. No installation or server is required.
+
+The wiring diagram provides sample COM port selectors for STLINK, the relay controller and three DUTs. Duplicate assignments are flagged. Hardware access and configuration persistence are not implemented.
