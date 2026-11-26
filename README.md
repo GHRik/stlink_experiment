@@ -1,8 +1,24 @@
 # STLINK power measurements
 
-Measure board current with **STLINK-V3PWR** and save raw samples for analysis. Generate current traces, estimate energy, and compare repeated measurements using mean ± SD.
+Capture board current with **STLINK-V3PWR** through the CLI or [desktop GUI](#desktop-gui). Save raw samples, generate current traces, estimate energy, and compare repeated measurements using mean ± SD.
 
 [![Example: NodeMCU deep-sleep current traces](results/deep_sleep_5s_flash_all_20261117_190910_277967/comparison_eng.svg)](results/deep_sleep_5s_flash_all_20261117_190910_277967/comparison_eng.svg)
+
+## Desktop GUI
+
+Configure boards, USB hubs and relays on a wiring diagram. Run measurements, watch current live and browse saved plots in **StandAlone**, **One hub**, **One relay** or **HIL** mode.
+
+In an activated virtual environment:
+
+```powershell
+python -m pip install -e ".[gui]"
+stlink-gui
+stlink-gui --demo  # Try the interface without hardware.
+```
+
+[![GUI demo: wiring, live current and generated reports](docs/images/gui-demo.gif)](docs/images/gui-demo.gif)
+
+Recorded in demo mode with synthetic data. See the [GUI documentation](automation/frontend/README.md).
 
 ## Quick Start
 
@@ -66,10 +82,6 @@ Firmware and results: [idle scenarios](firmware/nodemcu_nocode_cycles/README.md)
 Automation: [upload and measurement sequence](automation/README.md) · [scripts running during acquisition](automation/controllers/README.md).
 
 ## FAQ
-
-**How can I open the HIL desktop interface?**
-
-Install the optional GUI with `python -m pip install -e ".[gui]"`, then run `stlink-gui`. The [frontend](automation/frontend/README.md) supports StandAlone captures and native file selection. Use `stlink-gui --demo` for simulated operation.
 
 **How can I run custom actions during a STLINK measurement?**
 
