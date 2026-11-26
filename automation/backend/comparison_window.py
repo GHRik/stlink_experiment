@@ -80,8 +80,7 @@ class ComparisonFigure:
         else:
             self.fit_trace_y()
         from matplotlib.lines import Line2D
-        handles = [Line2D([], [], color=row['color'], label=f"{row['id']} · {textwrap.fill(row.get('display_name', row['name']), 40)}\n"
-                   + textwrap.fill('Repeats: ' + ', '.join(name.removeprefix('repeat_') for name in row['repeat_names']), 50))
+        handles = [Line2D([], [], color=row['color'], label=f"{row['id']} · {textwrap.fill(row.get('display_name', row['name']), 40)}")
                    for row in self.result['rows'] if row['id'] not in self.hidden and row['repeats']]
         if handles:
             for ax in self.axes:
@@ -148,6 +147,7 @@ class ComparisonWindow:
         self.hidden, self.busy, self.closing = set(), False, False
         self.excluded_repeats = set()
         self.selection_vars = {}
+        self.repeat_buttons = {}
         self.display_names, self.name_vars = {}, {}
         self.cursor = None
         self.queue = Queue()
@@ -205,31 +205,38 @@ class ComparisonWindow:
         self.toolbar.update()
         self.cursor = self.plot.attach_cursor()
         self.canvas.draw_idle()
-        for child in self.sessions.winfo_children(): child.destroy()
-        self.selection_vars.clear()
-        self.name_vars.clear()
-        for index, row in enumerate(self.result['rows']):
+        # Keep native menus alive while Windows finishes their selection callbacks.
+        if not self.selection_vars:
+            for index, row in enumerate(self.result['rows']):
+                sid = row['id']
+                variable = self.selection_vars[(sid, None)] = tk.BooleanVar(value=sid not in self.hidden)
+                color = '#%02x%02x%02x' % tuple(round(c*255) for c in row['color'][:3])
+                button = tk.Checkbutton(self.sessions, text=f"{row['id']} · {row['name']}", variable=variable,
+                    foreground=color, anchor='w', command=lambda sid=row['id']: self.toggle(sid))
+                button.grid(row=index, column=0, sticky='w', padx=5)
+                count = sum((sid, name) not in self.excluded_repeats for name in row['repeat_names'])
+                repeats = self.repeat_buttons[sid] = ttk.Menubutton(self.sessions, text=f'Repeats ({count}/{row["repeats"]})')
+                menu = tk.Menu(repeats, tearoff=False)
+                repeats.configure(menu=menu)
+                repeats.grid(row=index, column=1, sticky='w')
+                for name in row['repeat_names']:
+                    variable = self.selection_vars[(sid, name)] = tk.BooleanVar(value=(sid, name) not in self.excluded_repeats)
+                    menu.add_checkbutton(label=name, variable=variable,
+                        command=lambda sid=sid, name=name: self.root.after_idle(self.toggle_repeat, sid, name))
+                ttk.Label(self.sessions, text='Legend name:').grid(row=index, column=2, padx=(12, 4))
+                name_var = self.name_vars[sid] = tk.StringVar(value=self.display_names.get(sid, row['name']))
+                entry = ttk.Entry(self.sessions, textvariable=name_var, width=32)
+                entry.grid(row=index, column=3, sticky='ew')
+                entry.bind('<Return>', lambda event, sid=sid: self.rename(sid))
+                ttk.Button(self.sessions, text='Rename', command=lambda sid=sid: self.rename(sid)).grid(row=index, column=4, padx=4)
+        for row in self.result['rows']:
             sid = row['id']
-            variable = self.selection_vars[(sid, None)] = tk.BooleanVar(value=sid not in self.hidden)
-            color = '#%02x%02x%02x' % tuple(round(c*255) for c in row['color'][:3])
-            button = tk.Checkbutton(self.sessions, text=f"{row['id']} · {row['name']}", variable=variable,
-                foreground=color, anchor='w', command=lambda sid=row['id']: self.toggle(sid))
-            button.grid(row=index, column=0, sticky='w', padx=5)
-            count = sum((sid, name) not in self.excluded_repeats for name in row['repeat_names'])
-            repeats = ttk.Menubutton(self.sessions, text=f'Repeats ({count}/{row["repeats"]})')
-            menu = tk.Menu(repeats, tearoff=False)
-            repeats.configure(menu=menu)
-            repeats.grid(row=index, column=1, sticky='w')
+            self.selection_vars[(sid, None)].set(sid not in self.hidden)
             for name in row['repeat_names']:
-                variable = self.selection_vars[(sid, name)] = tk.BooleanVar(value=(sid, name) not in self.excluded_repeats)
-                menu.add_checkbutton(label=name, variable=variable,
-                    command=lambda sid=sid, name=name: self.toggle_repeat(sid, name))
-            ttk.Label(self.sessions, text='Legend name:').grid(row=index, column=2, padx=(12, 4))
-            name_var = self.name_vars[sid] = tk.StringVar(value=self.display_names.get(sid, row['name']))
-            entry = ttk.Entry(self.sessions, textvariable=name_var, width=32)
-            entry.grid(row=index, column=3, sticky='ew')
-            entry.bind('<Return>', lambda event, sid=sid: self.rename(sid))
-            ttk.Button(self.sessions, text='Rename', command=lambda sid=sid: self.rename(sid)).grid(row=index, column=4, padx=4)
+                self.selection_vars[(sid, name)].set((sid, name) not in self.excluded_repeats)
+            count = sum((sid, name) not in self.excluded_repeats for name in row['repeat_names'])
+            self.repeat_buttons[sid].configure(text=f'Repeats ({count}/{row["repeats"]})')
+            self.name_vars[sid].set(self.display_names.get(sid, row['name']))
         self.table.delete(*self.table.get_children())
         for row in self.selected_result['rows']:
             self.table.insert('', 'end', values=(row['display_name'], row['repeats'], row['seconds'], row['voltage'],

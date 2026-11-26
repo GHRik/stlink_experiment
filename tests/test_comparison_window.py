@@ -78,12 +78,24 @@ class NativeComparisonTests(unittest.TestCase):
                 menu_button = window.sessions.grid_slaves(row=0, column=1)[0]
                 menu = menu_button.nametowidget(menu_button.cget('menu'))
                 menu.invoke(0)
+                native.update_idletasks()
+                self.assertTrue(menu.winfo_exists())
+                self.assertIs(window.repeat_buttons['S1'], menu_button)
                 self.assertFalse(window.selection_vars[('S1', 'repeat_001')].get())
                 self.assertEqual(window.selected_result['rows'][0]['mean_mA'], 14)
                 self.assertIsNone(window.selected_result['rows'][0]['sd_mA'])
                 self.assertEqual(window.selected_result['rows'][0]['repeats'], 1)
                 self.assertTrue(all('repeat_001' not in label for _, label, _ in window.plot.targets))
-                self.assertIn('Repeats: 002', window.plot.axes[0].get_legend().get_texts()[0].get_text())
+                self.assertEqual('S1 · DUT1', window.plot.axes[0].get_legend().get_texts()[0].get_text())
+                # Reuse the same menu repeatedly, including the zero-repeat case.
+                for index in (1, 0):
+                    menu.invoke(index)
+                    native.update_idletasks()
+                    self.assertTrue(menu.winfo_exists())
+                self.assertEqual(window.selected_result['rows'][0]['values'], [10])
+                menu.invoke(0); native.update_idletasks()
+                menu.invoke(1); native.update_idletasks()
+                self.assertEqual(window.selected_result['rows'][0]['values'], [14])
                 # Apply range must update raw statistics asynchronously, retaining hidden sessions.
                 window.begin.set('.5'); window.end.set('1.5'); window.apply()
                 self.assertTrue(window.busy)
