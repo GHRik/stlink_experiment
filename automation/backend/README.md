@@ -15,10 +15,13 @@
 | [capture_worker.py](capture_worker.py) | Existing capture CLI with a cooperative STOP watcher; measurement cleanup remains in the capture script |
 | [hil.py](hil.py) / [hil_worker.py](hil_worker.py) | GUI configuration mapping and execution through the existing HIL runner |
 | [results_gallery.py](results_gallery.py) | English summary-plot discovery, lazy previews and opening full-size plots |
-| [comparison.py](comparison.py) | Isolated comparison plotting process, separate result window and native PNG/SVG export |
+| [comparison.py](comparison.py) | Raw-sample range analysis, CSV export and comparison process lifecycle |
+| [comparison_window.py](comparison_window.py) | Native Matplotlib Figure with zoom/pan, repeat selection, editable labels, mplcursors point selection and PNG/SVG export |
 | [meter_power.py](meter_power.py) | Manual OUT commands through the existing Device protocol; keeps the connection while powered and releases it before capture |
 
 HTML, styles and JavaScript stay in [frontend](../frontend/README.md). StandAlone Run invokes the existing measurement CLI; HIL Run generates a configuration for the existing [HIL runner](../HIL/README.md).
+
+Comparison workers return JSON summaries and binned traces. The native Figure renders previews in memory and creates PNG/SVG files only on Save. Its temporary working directory is removed after the window closes.
 
 `capture.py` creates a temporary JSONL telemetry file and passes its path as `STLINK_GUI_EVENT_FILE`. The runner and its child processes append confirmed hardware changes and measurement progress through [events.py](../../src/events.py). Status polling returns new events with the same cursor as log lines, even when a child writes its stdout to a separate log. Final events are collected before temporary-file cleanup. Outside the GUI, telemetry is disabled unless the environment variable is set.
 
