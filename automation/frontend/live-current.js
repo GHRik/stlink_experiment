@@ -2,6 +2,7 @@
 const liveCurrent = {points: [], name: '', repeat: 0, demo: null, hover: null};
 
 function resetLiveCurrent(name = '', repeat = 0) {
+  document.querySelector('.live-current').hidden = true;
   liveCurrent.points = [];
   liveCurrent.hover = null;
   liveCurrent.name = name;
@@ -21,6 +22,7 @@ function updateLiveCurrent(event) {
   const end = liveCurrent.points.at(-1)?.[0] || 0;
   liveCurrent.points = liveCurrent.points.filter(point => point[0] >= end - 30).slice(-1000);
   const latest = liveCurrent.points.at(-1);
+  if (latest) document.querySelector('.live-current').hidden = false;
   if (latest) document.querySelector('#live-current-label').textContent =
     `${event.name} · Repeat ${event.repeat} · ${latest[0].toFixed(1)} s · ${latest[1].toFixed(3)} mA (bin mean)`;
   drawLiveCurrent();
@@ -111,6 +113,7 @@ function toggleLiveDemo() {
     return;
   }
   resetLiveCurrent('DEMO — simulated current', 1);
+  document.querySelector('.live-current').hidden = false;
   button.textContent = 'Stop demo preview';
   let time = 0;
   liveCurrent.demo = setInterval(() => {

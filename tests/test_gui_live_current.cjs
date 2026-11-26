@@ -11,7 +11,7 @@ function setup() {
   const fields = {'#live-current-canvas': {clientWidth: 800, getContext: () => drawing,
     addEventListener(event, handler) {handlers[event] = handler;},
     getBoundingClientRect() {return {left: 0, top: 0, width: 800, height: 280};}},
-    '#live-current-label': {}, '#live-current-demo': {addEventListener() {}}};
+    '#live-current-label': {}, '#live-current-demo': {addEventListener() {}}, '.live-current': {hidden: true}};
   const context = vm.createContext({
     document: {querySelector: selector => fields[selector], documentElement: {dataset: {}}},
     window: {devicePixelRatio: 1},
