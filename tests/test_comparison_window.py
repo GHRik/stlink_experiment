@@ -77,7 +77,7 @@ class NativeComparisonTests(unittest.TestCase):
                 # Use the actual repeat-menu command, not just the Python toggle method.
                 menu_button = window.sessions.grid_slaves(row=0, column=1)[0]
                 menu = menu_button.nametowidget(menu_button.cget('menu'))
-                menu.invoke(0)
+                menu.invoke(3)
                 native.update_idletasks()
                 self.assertTrue(menu.winfo_exists())
                 self.assertIs(window.repeat_buttons['S1'], menu_button)
@@ -88,14 +88,27 @@ class NativeComparisonTests(unittest.TestCase):
                 self.assertTrue(all('repeat_001' not in label for _, label, _ in window.plot.targets))
                 self.assertEqual('S1 · DUT1', window.plot.axes[0].get_legend().get_texts()[0].get_text())
                 # Reuse the same menu repeatedly, including the zero-repeat case.
-                for index in (1, 0):
+                for index in (4, 3):
                     menu.invoke(index)
                     native.update_idletasks()
                     self.assertTrue(menu.winfo_exists())
                 self.assertEqual(window.selected_result['rows'][0]['values'], [10])
-                menu.invoke(0); native.update_idletasks()
-                menu.invoke(1); native.update_idletasks()
+                menu.invoke(3); native.update_idletasks()
+                menu.invoke(4); native.update_idletasks()
                 self.assertEqual(window.selected_result['rows'][0]['values'], [14])
+                self.assertEqual(menu.entrycget(0, 'label'), 'Uncheck all')
+                self.assertEqual(menu.entrycget(1, 'label'), 'Check all')
+                menu.invoke(0); native.update_idletasks()
+                self.assertEqual(window.selected_result['rows'][0]['repeats'], 0)
+                self.assertFalse(any(window.selection_vars[('S1', name)].get() for name in ('repeat_001','repeat_002')))
+                self.assertEqual(window.result['rows'][0]['repeats'], 2)
+                menu.invoke(1); native.update_idletasks()
+                self.assertEqual(window.selected_result['rows'][0]['values'], [10,14])
+                self.assertAlmostEqual(window.selected_result['rows'][0]['sd_mA'], 8**.5)
+                self.assertTrue(all(window.selection_vars[('S1', name)].get() for name in ('repeat_001','repeat_002')))
+                self.assertIn('S2', window.hidden)
+                self.assertTrue(menu.winfo_exists())
+                menu.invoke(3); native.update_idletasks()
                 # Apply range must update raw statistics asynchronously, retaining hidden sessions.
                 window.begin.set('.5'); window.end.set('1.5'); window.apply()
                 self.assertTrue(window.busy)

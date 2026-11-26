@@ -217,6 +217,11 @@ class ComparisonWindow:
                 count = sum((sid, name) not in self.excluded_repeats for name in row['repeat_names'])
                 repeats = self.repeat_buttons[sid] = ttk.Menubutton(self.sessions, text=f'Repeats ({count}/{row["repeats"]})')
                 menu = tk.Menu(repeats, tearoff=False)
+                menu.add_command(label='Uncheck all',
+                    command=lambda sid=sid: self.root.after_idle(self.set_all_repeats, sid, False))
+                menu.add_command(label='Check all',
+                    command=lambda sid=sid: self.root.after_idle(self.set_all_repeats, sid, True))
+                menu.add_separator()
                 repeats.configure(menu=menu)
                 repeats.grid(row=index, column=1, sticky='w')
                 for name in row['repeat_names']:
@@ -267,6 +272,14 @@ class ComparisonWindow:
         key = (session, repeat)
         if key in self.excluded_repeats: self.excluded_repeats.remove(key)
         else: self.excluded_repeats.add(key)
+        self.render(keep_time=True)
+
+    def set_all_repeats(self, session, checked):
+        if self.busy: return
+        row = next(row for row in self.result['rows'] if row['id'] == session)
+        keys = {(session, repeat) for repeat in row['repeat_names']}
+        if checked: self.excluded_repeats.difference_update(keys)
+        else: self.excluded_repeats.update(keys)
         self.render(keep_time=True)
 
     def scroll(self, event):
