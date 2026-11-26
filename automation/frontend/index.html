@@ -1634,8 +1634,9 @@
     });
     document.querySelector('#upload-label').textContent = `USB upload · ${count === 1 ? 'port' : 'ports'} ${Array.from({length: count}, (_, index) => index + 1).join(' / ')}`;
     validatePorts();
-    updateConnectionFlows();
     updateExclusiveChoices();
+    // Mapping wrappers must be visible before measuring their switch anchors.
+    updateConnectionFlows();
   }
 
   function validatePorts() {
@@ -1812,7 +1813,8 @@
   window.addEventListener('resize', alignSwitchConnections);
   document.fonts.ready.then(alignSwitchConnections);
   initializeModes();
-  new ResizeObserver(alignSwitchConnections).observe(document.querySelector('.pc'));
+  const connectionResizeObserver = new ResizeObserver(alignSwitchConnections);
+  document.querySelectorAll('.device-card, .connection-row').forEach(element => connectionResizeObserver.observe(element));
 </script>
 </body>
 </html>
