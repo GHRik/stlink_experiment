@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Measurement comparison</title>
+  <style>
+    :root {color-scheme:dark; font:14px Consolas,monospace; color:#e4eaf2; background:#101722;}
+    :root[data-theme="light"] {color-scheme:light; color:#172538; background:#eef2f6;}
+    body {margin:24px;} header {display:flex; align-items:center; justify-content:space-between; gap:16px;}
+    h1 {font-size:22px;} button {font:inherit; padding:10px 18px; border:1px solid #648fc2; border-radius:3px; cursor:pointer;}
+    .plots {display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px;}
+    figure {margin:0;} figcaption {margin:12px 0; font-weight:bold;}
+    img {display:block; width:100%; background:white; border:1px solid #52647d;}
+    .table-scroll {overflow:auto;} table {border-collapse:collapse; width:100%; margin:24px 0;}
+    th,td {padding:10px; border-bottom:1px solid #52647d; text-align:right;}
+    th:first-child,td:first-child {text-align:left; max-width:430px; overflow-wrap:anywhere;}
+    .color {display:inline-block; width:12px; height:12px; margin-right:8px;}
+    #message {white-space:pre-wrap; overflow-wrap:anywhere;} .note {line-height:1.6;}
+    @media(max-width:950px) {.plots {grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <header><h1>Measurement comparison</h1><button id="save" type="button" disabled>Save figures…</button></header>
+  <p id="message" role="status">Loading comparison…</p>
+  <div class="plots">
+    <figure><figcaption>Current traces</figcaption><img id="traces" alt="Overlaid current traces, colored by session"></figure>
+    <figure><figcaption>Mean current ± SD</figcaption><img id="statistics" alt="Individual repeat means and session means with standard deviation"></figure>
+  </div>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Session</th><th>Repeats</th><th>Duration [s]</th><th>Voltage [V]</th><th>Mean [mA]</th><th>SD [mA]</th><th>Mean energy [J]</th></tr></thead>
+    <tbody id="summary"></tbody>
+  </table></div>
+  <p class="note">Each session has one color in both figures. Small dots are individual repeat means; large dots and bars show the session mean ± sample SD between repeats.</p>
+  <p class="note" id="sd-note" hidden>SD requires at least two valid repeats. Sessions with one repeat show their mean without an SD bar.</p>
+  <p class="note">Time is measured from acquisition start. Each repeat uses its full duration, including startup. Energy is per repeat and depends on its duration and voltage. Only valid repeats are included; source files are unchanged.</p>
+  <script src="comparison-window.js"></script>
+</body>
+</html>

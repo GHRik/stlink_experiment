@@ -15,6 +15,7 @@
 | [capture_worker.py](capture_worker.py) | Existing capture CLI with a cooperative STOP watcher; measurement cleanup remains in the capture script |
 | [hil.py](hil.py) / [hil_worker.py](hil_worker.py) | GUI configuration mapping and execution through the existing HIL runner |
 | [results_gallery.py](results_gallery.py) | English summary-plot discovery, lazy previews and opening full-size plots |
+| [comparison.py](comparison.py) | Isolated comparison plotting process, separate result window and native PNG/SVG export |
 | [meter_power.py](meter_power.py) | Manual OUT commands through the existing Device protocol; keeps the connection while powered and releases it before capture |
 
 HTML, styles and JavaScript stay in [frontend](../frontend/README.md). StandAlone Run invokes the existing measurement CLI; HIL Run generates a configuration for the existing [HIL runner](../HIL/README.md).

@@ -11,6 +11,7 @@ import sys
 import json
 from .hil import hil_configuration
 from .results_gallery import ResultsGallery
+from .comparison import ComparisonService
 
 
 class DesktopApi:
@@ -22,6 +23,7 @@ class DesktopApi:
         self._meter_power = MeterPower()
         self._meter_lock = Lock()
         self._results_gallery = ResultsGallery()
+        self._comparisons = ComparisonService(webview, self._capture._directory / 'results')
         self._hub_command = (settings or {}).get("hub", {}).get("cmd", "ykushcmd")
 
     def _bind_window(self, window):
@@ -41,6 +43,9 @@ class DesktopApi:
 
     def result_preview(self, relative_path):
         return self._results_gallery.result_preview(relative_path)
+
+    def compare_results(self, sessions):
+        return self._comparisons.open(sessions)
 
     def list_hubs(self, driver):
         return available_hubs(driver, self._hub_command)

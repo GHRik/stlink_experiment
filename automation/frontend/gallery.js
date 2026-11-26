@@ -36,6 +36,8 @@ async function refreshResults() {
     const sessions = await window.pywebview.api.list_results();
     // Keep the current set of locked controls intact until this Run finishes.
     if (isRunning) return;
+    const available = new Set(sessions.map(session => session.name));
+    for (const name of comparisonSelection) if (!available.has(name)) comparisonSelection.delete(name);
     resultsPreviewObserver.disconnect();
     const groups = new Map();
     sessions.forEach(session => {
@@ -51,7 +53,7 @@ async function refreshResults() {
       card.className = 'result-session';
       card.dataset.name = `${session.name} ${session.date}`.toLowerCase();
       const title = document.createElement('summary');
-      title.textContent = session.name === '.' ? 'results' : session.name;
+      title.append(comparisonCheckbox(session.name), document.createTextNode(session.name === '.' ? 'results' : session.name));
       const plots = document.createElement('div');
       plots.className = 'result-plots';
       for (const plot of session.plots) {
@@ -78,6 +80,7 @@ async function refreshResults() {
     });
     document.querySelector('#results-gallery').replaceChildren(...groups.values());
     filterResults();
+    updateComparisonSelection();
     note.textContent = sessions.length
       ? `${sessions.length} result sets · newest first. Click a preview to open the full plot (SVG when available).`
       : 'No English summary plots in results yet.';

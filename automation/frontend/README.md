@@ -71,6 +71,10 @@ The local canvas shows the last 30 seconds of the active acquisition, resetting 
 
 The **Results** gallery at the bottom loads all English comparison/statistics plots under `results/`, including nested HIL sessions, sorted by session date descending (file modification time is used only for undated sessions). Each result set is collapsed by default; click its name to show the previews. **Search results** filters session names and dates as you type. The gallery refreshes after a Run finishes. Click either preview to open its full SVG in the system browser (PNG when SVG is unavailable). Existing measurements are included without regeneration.
 
+Select at least two saved sessions with their checkboxes, then **Compare selected**. A separate window shows overlaid repeat traces and mean current ± sample SD between repeats, using the same session colors. A table lists valid repeat counts, duration, voltage, mean current, SD and mean energy. Each repeat uses its full measurement window; sessions may have different durations. Mixed measurement conditions within a session are rejected rather than pooled.
+
+**Save figures…** selects a destination and creates a timestamped subdirectory with both figures in PNG/SVG and `summary.json`. Closing the comparison window removes its temporary previews. Source measurements and existing reports are never modified. Comparison requires saved data in desktop mode; synthetic frontend demo previews are not selectable.
+
 ## Browser preview
 
 Open [index.html](index.html) in a browser by double-clicking the local file. No installation or server is required. Browser file pickers expose filenames only; native full-path selection requires the desktop launcher.

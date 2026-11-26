@@ -8,6 +8,9 @@
 [data-theme="dark"] #results-search { background: #162131; }
 .result-session { margin: 18px 0; padding: 16px; border: 1px solid var(--panel-border); border-radius: 3px; background: #fff; }
 .result-session > summary { font-size: 14px; font-weight: 700; overflow-wrap: anywhere; cursor: pointer; }
+.compare-select { margin: 0 10px 0 6px; vertical-align: middle; accent-color: #3479c3; }
+#compare-results { display: block; margin: 8px 0 12px; padding: 10px 16px; font: inherit; color: inherit; background: transparent; border: 1px solid var(--panel-border); border-radius: 3px; cursor: pointer; }
+#compare-results:disabled { opacity: .5; cursor: default; }
 .result-session[open] > summary { margin-bottom: 14px; }
 .result-plots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .result-preview { display: flex; flex-direction: column; gap: 10px; padding: 10px; border: 1px solid var(--panel-border); border-radius: 3px; background: #eef2f6; color: inherit; cursor: pointer; font: inherit; }
