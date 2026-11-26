@@ -100,18 +100,18 @@ class Tests(unittest.TestCase):
             self.assertNotIn("start", [event["tx"] for event in device.events])
             self.assertEqual(json.loads((path / "metadata.json").read_text())["status"], "invalid")
 
-    def test_bilingual_reports(self):
+    def test_reports_generate_only_english_by_default(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             self.capture(root / "repeat_001", [b"ack start\r\n"] +
                          [b"1000-05\r\n"] * 10 + [b"end\r\n"])
             results.report(root, 0, None)
-            for language, phrase in (("pl", "Powtórzenie 1"),
-                                     ("eng", "Repeat 1")):
+            for language, phrase in (("eng", "Repeat 1"),):
                 for base in ("comparison", "statistics"):
                     for extension in ("png", "svg"):
                         self.assertTrue((root / f"{base}_{language}.{extension}").exists())
                 self.assertIn(phrase, (root / f"statistics_{language}.svg").read_text(encoding="utf-8"))
+            self.assertFalse(list(root.glob('*_pl.*')))
 
     def test_report_layout_for_long_captures(self):
         with tempfile.TemporaryDirectory() as temporary:

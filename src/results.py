@@ -17,6 +17,8 @@ from .plot_annotations import (extrema, mark_extrema, trace_captions, statistics
 
 # Display split chosen to include the measured NodeMCU power-on transient and a short margin.
 STARTUP_END_S = 0.2
+# Add "pl" here to re-enable Polish reports; translation and plotting code is retained.
+REPORT_LANGUAGES = ("eng",)
 
 def envelope(ax, x, y, label=None, color=None):
     # Only plots are reduced: keep per-bin MIN/MAX, so narrow peaks remain visible.
@@ -247,7 +249,7 @@ def report(root, begin, end):
         print("CSV reports saved. Combined plots skipped: different voltages, sampling rates, or time windows. "
               "Analyze a separate directory or select a common window with --from-s/--to-s.")
         return
-    for language in ("pl", "eng"):
+    for language in REPORT_LANGUAGES:
         plot_report(root, rows, traces, stats, language)
     # Remove obsolete plots so they cannot be confused with the current reports.
     for base in ("comparison", "statistics"):

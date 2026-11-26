@@ -7,8 +7,8 @@
 | Location / file | Contents |
 | --- | --- |
 | `repeat_001/` … `repeat_010/` | Raw `samples.csv`, received `stream.bin`, metadata, command log, analysis, and individual current plot |
-| `comparison_pl.*`, `comparison_eng.*` | All repeat traces, with matching repeat colors |
-| `statistics_pl.*`, `statistics_eng.*` | Individual repeat results, mean ± SD, and numerical summaries |
+| `comparison_eng.*` | All repeat traces, with matching repeat colors |
+| `statistics_eng.*` | Individual repeat results, mean ± SD, and numerical summaries |
 | `runs_summary.csv`, `statistics.csv` | Per-repeat and aggregate results |
 | `session_config.json`, `warmup.json` | Setup and warm-up temperatures |
 | `excluded_runs.json` | Excluded measurements and reasons |
