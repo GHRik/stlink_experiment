@@ -24,7 +24,7 @@ python -m pip install -e ".[gui]"
 stlink-gui
 ```
 
-For the frontend alone, use `stlink-gui --demo`. It opens sample COM ports and simulated switches without exposing the Python hardware API. **Demo mode** is shown in the header.
+For the frontend alone, use `stlink-gui --demo`. It opens sample COM ports and simulated switches without exposing the Python hardware API. **Demo mode** is shown in the header. Run performs an accelerated synthetic acquisition and generates comparison/statistics previews in Results; clicking either opens an enlarged plot. These demo results stay in memory and are explicitly labelled as synthetic data.
 
 Both Hub 1 and Hub 2 have model and serial selectors. Demo mode provides `YK17125`, `YK21493` and `YK30001`. A serial selected for one hub is hidden from the other hub's choices. Assigned COM ports are likewise hidden from other active devices and become available again when released. Both hubs share the same switching handler, using the model and serial selected in the clicked card.
 
@@ -65,7 +65,7 @@ The remaining-time counter is displayed prominently. CLI output stays collapsed 
 
 The local canvas shows the last 30 seconds of the active acquisition, resetting for each repeat and DUT. The mean line and minimum–maximum envelope use approximately 50 ms bins (one sample per bin at low rates), delivered about every 0.5 seconds. Full-resolution samples and report statistics are unaffected. The final trace stays visible after completion or STOP.
 
-**Demo preview** generates explicitly labelled simulated data without hardware or internet access. Starting a real Run stops the demo automatically. During warm-up and calibration the plot waits for acquisition; those stages do not collect current samples.
+**Demo preview** is available only with `--demo` and generates explicitly labelled simulated data without hardware or internet access. Normal desktop runs hide that control and display only acquired samples. During warm-up and calibration the plot waits for acquisition; those stages do not collect current samples.
 
 ## Results gallery
 

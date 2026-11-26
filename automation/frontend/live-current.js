@@ -107,6 +107,7 @@ function stopLiveDemo() {
 }
 
 function toggleLiveDemo() {
+  if (typeof demoMode !== 'undefined' && (!demoMode || desktopReady)) return;
   const button = document.querySelector('#live-current-demo');
   if (liveCurrent.demo) {
     stopLiveDemo();

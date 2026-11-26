@@ -1147,7 +1147,7 @@
     </footer>
     <p id="status" role="status"> </p>
     <section class="live-current" aria-label="Live current preview" hidden>
-      <header><h2>Live current · last 30 seconds</h2><button id="live-current-demo" type="button">Demo preview</button></header>
+      <header><h2>Live current · last 30 seconds</h2><button id="live-current-demo" type="button" hidden>Demo preview</button></header>
       <p id="live-current-label">Waiting for acquisition</p>
       <canvas id="live-current-canvas" role="img" aria-label="Live current in milliamps over the last 30 seconds"></canvas>
       <p class="live-current-legend"><span>Bin mean</span><span class="range">Bin minimum–maximum</span></p>
@@ -1175,10 +1175,15 @@
       <p id="results-note">Saved plots are available in the desktop launcher.</p>
       <div id="results-gallery"></div>
     </section>
+    <dialog id="demo-report-dialog" aria-label="Demo plot">
+      <form method="dialog"><button type="submit">Close</button></form>
+      <img id="demo-report-image" alt="Synthetic demo report">
+    </dialog>
   </main>
 <script src="modes.js"></script>
 <script src="gallery.js"></script>
 <script src="live-current.js"></script>
+<script src="demo.js"></script>
 <script src="progress.js"></script>
 <script src="capture.js"></script>
 <script src="one-hub.js"></script>
@@ -1191,10 +1196,15 @@
   // Desktop mode replaces browser uploads with native dialogs returning full paths.
   window.addEventListener('pywebviewready', () => {
     if (typeof window.pywebview?.api?.list_ports !== 'function') {
+      demoMode = true;
+      document.querySelector('#live-current-demo').hidden = false;
       document.querySelector('#demo-mode').hidden = false;
       return;
     }
     desktopReady = true;
+    demoMode = false;
+    document.querySelector('#live-current-demo').hidden = true;
+    stopLiveDemo();
     refreshResults();
     resetRelayStates();
     updateRelayControls();
@@ -1669,6 +1679,7 @@
 
   function handleRun() {
     if (isRunning || refreshingPorts || switchingHub || meterBusy || relayBusy) return;
+    if (demoMode && !desktopReady) { startDemoRun(); return; }
     validatePorts();
     if (status.classList.contains('error')) return;
     if (activePorts().some(select => !select.value)) {
@@ -1776,6 +1787,7 @@
 
   runButton.addEventListener('click', handleRun);
   stopButton.addEventListener('click', () => {
+    if (demoRunActive) { demoRunCancelled = true; stopButton.disabled = true; return; }
     if (relaySequenceRunning) {
       stopOneRelayCapture();
       return;
