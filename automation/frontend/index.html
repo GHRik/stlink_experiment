@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HIL testbench</title>
+  <link rel="icon" type="image/png" href="assets/stlink.png">
   <link rel="stylesheet" href="modes.css">
   <link rel="stylesheet" href="gallery.css">
   <link rel="stylesheet" href="sketch-queue.css">
@@ -1212,6 +1213,7 @@
   window.addEventListener('pywebviewready', () => {
     if (typeof window.pywebview?.api?.list_ports !== 'function') {
       demoMode = true;
+      document.querySelector('link[rel="icon"]').href = 'assets/stlink-demo.png';
       document.querySelector('#live-current-demo').hidden = false;
       document.querySelector('#demo-mode').hidden = false;
       return;

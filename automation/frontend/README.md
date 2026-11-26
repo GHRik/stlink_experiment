@@ -24,7 +24,7 @@ python -m pip install -e ".[gui]"
 stlink-gui
 ```
 
-For the frontend alone, use `stlink-gui --demo`. It opens sample COM ports and simulated switches without exposing the Python hardware API. **Demo mode** is shown in the header. Run performs an accelerated synthetic acquisition and generates comparison/statistics previews in Results; clicking either opens an enlarged plot. Demo Run and Run queue animate the selected DUT USB branch during upload, then STLINK OUT and the matching relay branch during measurement. Skipped DUTs stay inactive; STOP clears simulated outputs. These demo results stay in memory and are explicitly labelled as synthetic data.
+For the frontend alone, use `stlink-gui --demo`. It opens sample COM ports and simulated switches without exposing the Python hardware API. **Demo mode** is shown in the header. Normal and demo windows use separate Windows taskbar icons; the demo icon has a yellow **DEMO** badge. Run performs an accelerated synthetic acquisition and generates comparison/statistics previews in Results; clicking either opens an enlarged plot. Demo Run and Run queue animate the selected DUT USB branch during upload, then STLINK OUT and the matching relay branch during measurement. Skipped DUTs stay inactive; STOP clears simulated outputs. These demo results stay in memory and are explicitly labelled as synthetic data.
 
 Both Hub 1 and Hub 2 have model and serial selectors. Demo mode provides `YK17125`, `YK21493` and `YK30001`. A serial selected for one hub is hidden from the other hub's choices. Assigned COM ports are likewise hidden from other active devices and become available again when released. Both hubs share the same switching handler, using the model and serial selected in the clicked card.
 

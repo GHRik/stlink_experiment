@@ -37,6 +37,15 @@ class FilePickerTests(unittest.TestCase):
 
 
 class DesktopAppTests(unittest.TestCase):
+    @patch('automation.backend.app.ctypes')
+    @patch('automation.backend.api.DesktopApi')
+    def test_windows_taskbar_groups_real_and_demo_separately(self, api, native):
+        with patch('automation.backend.app.sys.platform', 'win32'):
+            run_desktop(Mock(), demo=False)
+            run_desktop(Mock(), demo=True)
+        self.assertEqual([call.args[0] for call in native.windll.shell32.SetCurrentProcessExplicitAppUserModelID.call_args_list],
+                         ['GHRik.STLINK.PowerMeasurements', 'GHRik.STLINK.PowerMeasurements.Demo'])
+
     @patch("automation.backend.api.DesktopApi")
     def test_demo_does_not_create_or_expose_backend(self, api):
         webview = Mock()
@@ -44,7 +53,8 @@ class DesktopAppTests(unittest.TestCase):
         api.assert_not_called()
         self.assertIsNone(webview.create_window.call_args.kwargs["js_api"])
         self.assertIn("Demo", webview.create_window.call_args.args[0])
-        webview.start.assert_called_once_with()
+        self.assertEqual(Path(webview.start.call_args.kwargs['icon']).name, 'stlink-demo.ico')
+        self.assertTrue(Path(webview.start.call_args.kwargs['icon']).is_file())
 
     @patch("automation.backend.launcher.run_desktop")
     def test_demo_option_reaches_window_launcher(self, run):
@@ -62,4 +72,5 @@ class DesktopAppTests(unittest.TestCase):
         self.assertTrue(Path(options["url"]).is_file())
         self.assertTrue(options["maximized"])
         self.assertIs(options["js_api"]._picker._window, webview.create_window.return_value)
-        webview.start.assert_called_once_with()
+        self.assertEqual(Path(webview.start.call_args.kwargs['icon']).name, 'stlink.ico')
+        self.assertTrue(Path(webview.start.call_args.kwargs['icon']).is_file())
