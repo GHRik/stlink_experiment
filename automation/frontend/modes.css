@@ -7,6 +7,7 @@
 .hil-usb-option { margin: 12px 0; }
 .pc .hil-usb-option label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; }
 .hil-usb-option input { accent-color: #3479c3; }
+.dut.demo-dut-active { box-shadow: 0 0 18px #4fc99c88; }
 .wiring-diagram[data-layout="standalone"] { height: 950px; }
 .wiring-diagram[data-layout="hil"] { height: 1420px; }
 .wiring-diagram[data-layout="standalone"] .pc { top: 500px; left: 24px; }

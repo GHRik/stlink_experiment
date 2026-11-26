@@ -2,6 +2,34 @@
 let demoMode = false;
 let demoRunActive = false;
 let demoRunCancelled = false;
+let demoWiringPhase = null;
+
+function showDemoHardware(board, phase) {
+  if (desktopReady) return;
+  demoWiringPhase=phase==='idle'?null:{board,phase};
+  const active=phase!=='idle', uploading=phase==='upload';
+  const hasHub=['hil','one-hub'].includes(currentLayout), hasRelay=['hil','one-relay'].includes(currentLayout);
+  const measuring=['warmup','measure'].includes(phase);
+  const set=(button,on)=>{
+    button.setAttribute('aria-pressed',String(on));
+    button.querySelector('.port-state').textContent=on?'ON':'OFF';
+  };
+  hub1Switches.forEach((button,index)=>set(button,active && (index===0 || index===1&&hasRelay || index===2&&hasHub)));
+  hub2Switches.forEach((button,index)=>set(button,active && hasHub && uploading && index===board));
+  relaySwitches.forEach((button,index)=>set(button,active && hasRelay && !uploading && phase!=='prepare' && index===board));
+  document.querySelectorAll('.dut').forEach((card,index)=>card.classList.toggle('demo-dut-active',active&&index===board));
+  displayMeterPower(active&&measuring);
+  updateConnectionFlows();
+}
+
+function showQueueDemoHardware(step, elapsed) {
+  const index=Math.min(step.active.length-1,Math.floor(elapsed/(step.seconds/step.active.length)));
+  const part=step.seconds/step.active.length, uploading=(elapsed-index*part)/part<.15;
+  const cards=[...document.querySelectorAll('.dut')], board=cards.indexOf(step.active[index].card);
+  const phase=uploading?'upload':'measure';
+  if(demoWiringPhase?.board!==board || demoWiringPhase?.phase!==phase) showDemoHardware(board,phase);
+  return `DUT ${board+1} · ${uploading?'Uploading':'Measuring'}`;
+}
 
 function demoTrace(seconds, repeat, board) {
   return Array.from({length: 601}, (_, index) => {
@@ -96,22 +124,34 @@ async function startDemoRun() {
   config.name=config.name.trim() || 'demo_test';
   const count=['hil','one-relay'].includes(currentLayout) ? modeDutCount() : 1;
   const names=Array.from({length:count},(_,index)=>`${config.name}${count>1 ? `_DUT${index+1}` : ''}`);
-  beginRunProgress(config,names);
+  const uploads=['hil','one-hub'].includes(currentLayout);
+  beginRunProgress(config,names,uploads);
   demoRunActive=true; demoRunCancelled=false; setRunning(true);
+  stopButton.disabled=false;
   status.classList.remove('error');
   const output=document.querySelector('#capture-log-output'); output.textContent='DEMO — accelerated frontend simulation. No hardware commands.\n';
   document.querySelector('#capture-log').hidden=false;
   const pause=async ms=>{await new Promise(resolve=>setTimeout(resolve,ms)); if(demoRunCancelled) throw new Error('Stopped');};
   const event=data=>applyRunEvents({events:[data]});
   try {
+    showDemoHardware(-1,'prepare');
+    if(uploads) for(let board=0;board<count;board++) {
+      showDemoHardware(board,'upload');
+      event({type:'upload',name:names[board],state:'started'});await pause(900);
+      event({type:'upload',name:names[board],state:'completed'});
+      showDemoHardware(-1,'prepare');
+    }
     for(let board=0;board<count;board++) {
       const name=names[board], traces=[];
       event({type:'capture_plan',name});
-      event({type:'warmup',state:'started',elapsed:0}); await pause(150);
+      showDemoHardware(board,'warmup');
+      event({type:'warmup',state:'started',elapsed:0}); await pause(400);
       event({type:'warmup',state:'completed',elapsed:Number(config.warmup_seconds)});
       for(let repeat=1;repeat<=Number(config.repeats);repeat++) {
+        showDemoHardware(board,'calibration');
         event({type:'calibration',state:'started',repeat}); await pause(100);
         event({type:'calibration',state:'completed',repeat});
+        showDemoHardware(board,'measure');
         event({type:'repeat',state:'started',repeat,elapsed:0}); event({type:'meter_power',enabled:true});
         const points=demoTrace(Number(config.seconds),repeat,board); traces.push(points);
         for(let start=0;start<points.length;start+=100) {
@@ -121,6 +161,7 @@ async function startDemoRun() {
         }
         event({type:'meter_power',enabled:false}); event({type:'repeat',state:'completed',repeat,elapsed:Number(config.seconds)});
       }
+      showDemoHardware(board,'report');
       event({type:'report',state:'started'}); await pause(100);
       showDemoReports(name,traces,config); event({type:'report',state:'completed'});
     }
@@ -130,7 +171,7 @@ async function startDemoRun() {
     status.textContent=demoRunCancelled ? 'Demo stopped.' : `Demo failed: ${error.message}`;
     finishRunProgress(demoRunCancelled ? 'Stopped' : 'Failed');
   } finally {
-    displayMeterPower(false); demoRunActive=false; setRunning(false);
+    showDemoHardware(-1,'idle'); demoRunActive=false; setRunning(false);stopButton.disabled=false;
     document.querySelectorAll('#results-gallery .result-preview').forEach(button=>{button.disabled=false;});
   }
 }

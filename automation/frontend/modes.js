@@ -60,6 +60,7 @@ function initializeModes() {
 }
 
 function modeConnectionActive(index, hilActive) {
+  if (typeof demoWiringPhase!=='undefined' && !desktopReady && demoWiringPhase?.phase==='upload' && currentLayout==='one-hub' && index===1) return false;
   if (hilUsesHubOne()) return hilActive();
   if (index === 1 || index === 2 || index === 3 || index === 4) return true;
   if (index === 5) return isOn(meterOutput);
