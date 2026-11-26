@@ -5,7 +5,6 @@ RATES = (1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000)
 
 REQUIRED_REASONS = {
     "--name": "Required to identify the tested configuration and name its results directory; date and time are appended automatically.",
-    "--notes": "Required to document the board, firmware, and measurement conditions so results can be interpreted and reproduced. These details cannot be inferred from the meter.",
 }
 
 
@@ -38,8 +37,8 @@ def read_options():
                          help="Warm up with OUT enabled before the series (default: 180 s; 0 skips). The target runs during warm-up.")
     capture.add_argument("--out", default="results")
     capture.add_argument("--controller", help="Python script to run during each acquisition; stopped automatically when capture ends.")
-    capture.add_argument("--notes", required=True, type=nonempty_text,
-                         help=REQUIRED_REASONS["--notes"])
+    capture.add_argument("--notes", default="", type=str.strip,
+                         help="Optional board, firmware and measurement notes saved with the results.")
     analysis = sub.add_parser("analyze", help="Reanalyze saved CSV data without connecting to the device.")
     analysis.add_argument("--root", default="results")
     analysis.add_argument("--from-s", type=float, default=0)

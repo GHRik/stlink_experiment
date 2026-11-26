@@ -79,8 +79,9 @@ def load_config(path):
         raise ValueError("STLINK, relay controller and board COM ports must be distinct and nonempty")
     for board in boards:
         board["sketch"] = str((path.parent / board["sketch"]).resolve())
-        if not re.fullmatch(r"[A-Za-z0-9_-]+", board["name"]) or not board["notes"].strip():
-            raise ValueError("Each board needs an ASCII name and nonempty measurement notes")
+        board.setdefault("notes", "")
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", board["name"]):
+            raise ValueError("Each board needs an ASCII name")
         if type(board["ykush_usb_port"]) is not int or board["ykush_usb_port"] not in ports:
             raise ValueError("Board ykush_usb_port is not in hub.ports")
         if type(board["relay"]) is not int or not 0 <= board["relay"] < count:

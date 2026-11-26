@@ -61,6 +61,16 @@ class FakeHardware:
 
 
 class AutomationTests(unittest.TestCase):
+    def test_board_notes_are_optional(self):
+        config = run.read_config(run.ROOT / 'automation/HIL/config.example.jsonc')
+        for board in config['connected_boards']:
+            board.pop('notes')
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'config.json'
+            path.write_text(json.dumps(config))
+            loaded = run.load_config(path)
+        self.assertTrue(all(board['notes'] == '' for board in loaded['connected_boards']))
+
     def test_config_comments_do_not_change_string_values(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "config.jsonc"

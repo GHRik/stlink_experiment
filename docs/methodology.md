@@ -16,7 +16,7 @@
 | Option | Why / default |
 | --- | --- |
 | `--name` | **Required.** Identifies the configuration and names its results directory; date/time are appended. |
-| `--notes` | **Required.** Records board, firmware, and conditions needed to interpret and reproduce the measurement. |
+| `--notes` | Optional. Records board, firmware and measurement conditions; defaults to an empty description. |
 | `--repeats` | 10 independent captures |
 | `--seconds` | 100 seconds per capture |
 | `--hz` | 1000 samples/second |
