@@ -10,6 +10,7 @@ from types import SimpleNamespace
 
 import numpy as np
 from matplotlib.figure import Figure
+from matplotlib.colors import to_hex, to_rgba
 
 from .comparison import ComparisonData
 
@@ -155,6 +156,7 @@ class ComparisonWindow:
         self.selection_vars = {}
         self.repeat_buttons = {}
         self.display_names, self.name_vars = {}, {}
+        self.colors, self.swatches, self.session_checks = {}, {}, {}
         self.cursor = None
         self.queue = Queue()
         root.title('Measurement comparison — Matplotlib Figure')
@@ -199,7 +201,8 @@ class ComparisonWindow:
         columns = ('session', 'n', 'duration', 'voltage', 'mean', 'sd', 'energy')
         self.table_sort = (None, False)
         self.table_headings = dict(zip(columns, ('Session', 'Repeats', 'Duration [s]', 'Voltage [V]', 'Mean [mA]', 'SD [mA]', 'Mean energy [J]')))
-        self.table = ttk.Treeview(self.body, columns=columns, show='headings', height=4)
+        self.table = ttk.Treeview(self.body, columns=columns, show='tree headings', height=4)
+        self.table.column('#0', width=40, minwidth=40, stretch=False)
         for key, heading in self.table_headings.items():
             self.table.heading(key, text=heading, command=lambda key=key: self.sort_table(key))
             self.table.column(key, width=110 if key != 'session' else 400)
@@ -233,8 +236,13 @@ class ComparisonWindow:
         self.selected_result = select_repeats(self.result, self.excluded_repeats)
         for row in self.selected_result['rows']:
             row['display_name'] = self.display_names.get(row['id'], row['name'])
+            row['color'] = self.colors.get(row['id'], row['color'])
+            if row['id'] not in self.swatches:
+                self.swatches[row['id']] = tk.PhotoImage(master=self.root, width=14, height=14)
+            self.swatches[row['id']].put(to_hex(row['color']), to=(0, 0, 14, 14))
         self.selected_result['preview']['series'] = [
-            {**series, 'display_name': self.display_names.get(series['id'], series['name'])}
+            {**series, 'display_name': self.display_names.get(series['id'], series['name']),
+             'color': self.colors.get(series['id'], series['color'])}
             for series in self.selected_result['preview']['series']]
         self.plot = ComparisonFigure(self.figure, self.selected_result, self.hidden)
         if limits:
@@ -250,7 +258,7 @@ class ComparisonWindow:
                 sid = row['id']
                 variable = self.selection_vars[(sid, None)] = tk.BooleanVar(value=sid not in self.hidden)
                 color = '#%02x%02x%02x' % tuple(round(c*255) for c in row['color'][:3])
-                button = tk.Checkbutton(self.sessions, text=f"{row['id']} · {row['name']}", variable=variable,
+                button = self.session_checks[sid] = tk.Checkbutton(self.sessions, text=f"{row['id']} · {row['name']}", variable=variable,
                     foreground=color, anchor='w', command=lambda sid=row['id']: self.toggle(sid))
                 button.grid(row=index, column=0, sticky='w', padx=5)
                 count = sum((sid, name) not in self.excluded_repeats for name in row['repeat_names'])
@@ -274,6 +282,8 @@ class ComparisonWindow:
                 entry.bind('<Return>', lambda event, sid=sid: self.rename(sid))
                 ttk.Button(self.sessions, text='Rename', command=lambda sid=sid: self.rename(sid)).grid(row=index, column=4, padx=4)
                 ttk.Button(self.sessions, text='Reset to original', command=lambda sid=sid: self.reset_name(sid)).grid(row=index, column=5, padx=4)
+                ttk.Button(self.sessions, text='Color…', image=self.swatches[sid], compound='left',
+                           command=lambda sid=sid: self.choose_color(sid)).grid(row=index, column=6, padx=4)
         for row in self.result['rows']:
             sid = row['id']
             self.selection_vars[(sid, None)].set(sid not in self.hidden)
@@ -282,9 +292,10 @@ class ComparisonWindow:
             count = sum((sid, name) not in self.excluded_repeats for name in row['repeat_names'])
             self.repeat_buttons[sid].configure(text=f'Repeats ({count}/{row["repeats"]})')
             self.name_vars[sid].set(self.display_names.get(sid, row['name']))
+            self.session_checks[sid].configure(foreground=to_hex(self.colors.get(sid, row['color'])))
         self.table.delete(*self.table.get_children())
         for row in self.selected_result['rows']:
-            self.table.insert('', 'end', iid=row['id'], values=(row['display_name'], row['repeats'], row['seconds'], row['voltage'],
+            self.table.insert('', 'end', iid=row['id'], image=self.swatches[row['id']], values=(row['display_name'], row['repeats'], row['seconds'], row['voltage'],
                 'N/A' if row['mean_mA'] is None else f"{row['mean_mA']:.4f}",
                 'N/A (n<2)' if row['sd_mA'] is None else f"{row['sd_mA']:.4f}",
                 'N/A' if row['energy_J'] is None else f"{row['energy_J']:.6f}"))
@@ -295,6 +306,15 @@ class ComparisonWindow:
             self.end.set(str(preview['analysis_range'][1] or preview['common_end']))
         self.status.set('Statistics: full repeats' if preview['analysis_range'][1] is None
                         else f"Statistics: [{self.begin.get()}, {self.end.get()}) s")
+
+    def choose_color(self, session):
+        if self.busy: return
+        from tkinter.colorchooser import askcolor
+        row = next(row for row in self.selected_result['rows'] if row['id'] == session)
+        _, color = askcolor(color=to_hex(row['color']), parent=self.root, title='Session color')
+        if color:
+            self.colors[session] = list(to_rgba(color))
+            self.render(keep_time=True, keep_limits=True)
 
     def sort_table(self, column):
         previous, descending = self.table_sort

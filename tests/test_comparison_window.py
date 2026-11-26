@@ -7,6 +7,8 @@ from tempfile import TemporaryDirectory
 import time
 import tkinter as tk
 import unittest
+from unittest.mock import patch
+from matplotlib.colors import to_hex
 
 from matplotlib.backend_bases import MouseEvent, KeyEvent
 
@@ -200,6 +202,23 @@ class NativeComparisonTests(unittest.TestCase):
                 self.assertEqual(window.selected_result['rows'][0]['display_name'], 'DUT1')
                 self.assertEqual([(ax.get_xlim(), ax.get_ylim()) for ax in window.plot.axes], limits)
                 self.assertTrue(window.figure.legends[0].get_texts()[0].get_text().startswith('S1 · DUT1 |'))
+                original_color = window.result['rows'][0]['color'][:]
+                with patch('tkinter.colorchooser.askcolor', return_value=((18, 52, 86), '#123456')):
+                    window.sessions.grid_slaves(row=0, column=6)[0].invoke()
+                self.assertEqual(window.swatches['S1'].get(0, 0), (18, 52, 86))
+                self.assertEqual(tuple(window.table.item('S1', 'image')), (str(window.swatches['S1']),))
+                self.assertEqual(window.result['rows'][0]['color'], original_color)
+                self.assertEqual([(ax.get_xlim(), ax.get_ylim()) for ax in window.plot.axes], limits)
+                for line, label, _ in window.plot.targets:
+                    if label.startswith('DUT1\n'): self.assertEqual(to_hex(line.get_color()), '#123456')
+                self.assertEqual(to_hex(window.selected_result['rows'][0]['color']), '#123456')
+                with TemporaryDirectory() as destination:
+                    exported = window.plot.save(destination)
+                    for filename in ('comparison_traces.svg', 'comparison_statistics.svg'):
+                        self.assertIn('#123456', (exported/filename).read_text(encoding='utf-8'))
+                    self.assertEqual(to_hex(json.loads((exported/'summary.json').read_text())[0]['color']), '#123456')
+                window.toggle_repeat('S1', 'repeat_001')
+                self.assertEqual(window.swatches['S1'].get(0, 0), (18, 52, 86))
                 window.close(); window.poll()
                 self.assertTrue(window.data._closed)
             finally:
