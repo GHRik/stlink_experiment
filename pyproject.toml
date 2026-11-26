@@ -11,7 +11,7 @@ requires-python = ">=3.10"
 dynamic = ["dependencies"]
 
 [project.optional-dependencies]
-gui = ["pywebview>=6"]
+gui = ["pywebview>=6", "mplcursors>=0.6,<1"]
 
 [project.scripts]
 stlink-measure = "src.stlink_measure:main"
@@ -24,7 +24,7 @@ include = ["src", "automation", "automation.*"]
 
 [tool.setuptools.package-data]
 "automation.HIL" = ["board_profiles.json", "config.example.jsonc", "config.lcus2.json", "example/*.ino"]
-"automation.frontend" = ["index.html", "modes.js", "modes.css", "capture.js", "meter.js", "relay.js", "mappings.js", "one-hub.js", "one-relay.js", "hil.js", "progress.js", "gallery.js", "gallery.css", "live-current.js", "live-current.css", "demo.js", "compare.js", "comparison.html", "comparison-window.js"]
+"automation.frontend" = ["index.html", "modes.js", "modes.css", "capture.js", "meter.js", "relay.js", "mappings.js", "one-hub.js", "one-relay.js", "hil.js", "progress.js", "gallery.js", "gallery.css", "live-current.js", "live-current.css", "demo.js", "compare.js", "busy.css"]
 "automation.backend" = ["config.json"]
 
 [tool.setuptools.dynamic]

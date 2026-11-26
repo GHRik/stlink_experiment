@@ -97,6 +97,8 @@ class DesktopApi:
 
     def _on_closing(self):
         stopped = self._capture.close()
+        if stopped:
+            self._comparisons.close()
         with self._meter_lock:
             self._meter_power.close()
         return stopped
