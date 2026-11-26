@@ -24,7 +24,7 @@ python -m pip install -e ".[gui]"
 stlink-gui
 ```
 
-For the frontend alone, use `stlink-gui --demo`. It opens sample COM ports and simulated switches without exposing the Python hardware API. **Demo mode** is shown in the header. Run performs an accelerated synthetic acquisition and generates comparison/statistics previews in Results; clicking either opens an enlarged plot. These demo results stay in memory and are explicitly labelled as synthetic data.
+For the frontend alone, use `stlink-gui --demo`. It opens sample COM ports and simulated switches without exposing the Python hardware API. **Demo mode** is shown in the header. Run performs an accelerated synthetic acquisition and generates comparison/statistics previews in Results; clicking either opens an enlarged plot. Demo Run and Run queue animate the selected DUT USB branch during upload, then STLINK OUT and the matching relay branch during measurement. Skipped DUTs stay inactive; STOP clears simulated outputs. These demo results stay in memory and are explicitly labelled as synthetic data.
 
 Both Hub 1 and Hub 2 have model and serial selectors. Demo mode provides `YK17125`, `YK21493` and `YK30001`. A serial selected for one hub is hidden from the other hub's choices. Assigned COM ports are likewise hidden from other active devices and become available again when released. Both hubs share the same switching handler, using the model and serial selected in the clicked card.
 
@@ -91,7 +91,9 @@ Duplicate assignments are flagged. In StandAlone, Run passes the SMU port, test 
 
 The STLINK **OUT ON/OFF** button uses the selected SMU port. ON applies **OUT voltage [V]** and enables VOUT; OFF disables power and releases the connection. Acknowledgement updates the displayed state. Capture takes over the meter connection and retains its normal warm-up, calibration and power-cycle sequence. Manual OUT commands are blocked during capture. Window close also disables manually enabled OUT.
 
-Each DUT has a local `.ino` file picker showing the selected filename. Files stay in the browser; they are not uploaded or flashed.
+In **One hub** and **HIL**, a **Sketch queue** sits beside each DUT. **Add sketches…** opens the native multi-file picker in desktop mode. Arrows reorder files, × removes one, and **Clear** empties the queue. **Run queue** snapshots the shared configuration and paths, then loops over the existing HIL or One hub Run flow, waiting for each upload/measurement sequence to finish. There is no separate queue worker or hardware-control implementation. Queues may have different lengths: DUTs with no sketch at a step are skipped without renumbering their USB ports or relay channels. An empty queue uses the DUT's single Arduino sketch for step one; no sketches on any active DUT produces an error before starting.
+
+Current entries glow and completed entries dim. The large timer shows programmed time remaining in the current step; the smaller line shows current/total steps and total remaining programmed time. Estimates cover warm-up and acquisition. **STOP** stops the queue and waits for the existing runner cleanup; errors abort subsequent steps. HIL runs unattended. One hub retains the STLINK disconnect/reconnect confirmation dialogs for each upload. Results and configuration snapshots are grouped under `results/queue_<timestamp>/step_XXX/`. Browser/demo mode uses an accelerated 60× simulation and never controls hardware. Ordinary **Run** still uses the single Arduino sketch.
 
 Each DUT also has a board profile selector. The prototype lists the currently configured profile, `nodemcu`. **Add profile** opens [board_profiles.json](../HIL/board_profiles.json) in a new browser tab; edit the file in your editor. The static selector does not automatically reload profiles from JSON.
 
