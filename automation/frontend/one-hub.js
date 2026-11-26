@@ -2,20 +2,21 @@
 let oneHubPreparing = false;
 let oneHubCancelled = false;
 
-async function startOneHubCapture() {
+async function startOneHubCapture(options = {}) {
   const api = window.pywebview.api;
-  const config = standaloneConfiguration();
+  const config = options.config || standaloneConfiguration();
   const value = id => document.querySelector(`#${id}`).value;
-  const hub = {driver: value('hub-model'), serial: value('hub-serial'),
+  const hub = options.hub || {driver: value('hub-model'), serial: value('hub-serial'),
     port: Number(hub2Switches[0].dataset.port)};
-  const sketch = document.querySelector('#dut1-sketch').dataset.path;
+  const sketch = options.sketch || document.querySelector('#dut1-sketch').dataset.path;
   if (!hubConfigured(document.querySelector('.upload-hub')) || !sketch) {
     status.classList.add('error');
     status.textContent = 'Select the hub model, serial number and a DUT sketch before running.';
+    options.onComplete?.({code:1,stopped:false,error:new Error(status.textContent)});
     return;
   }
-  const board = value('dut1-profile');
-  const uploadPort = value('dut1-port');
+  const board = options.board || value('dut1-profile');
+  const uploadPort = options.uploadPort || value('dut1-port');
   oneHubPreparing = true;
   beginRunProgress(config, [config.name], true);
   oneHubCancelled = false;
@@ -104,16 +105,17 @@ async function startOneHubCapture() {
     }
     checkStop();
     oneHubPreparing = false;
-    await startStandaloneCapture(true, config);
+    await startStandaloneCapture(true, config, 'start_capture', options.onComplete);
   } catch (error) {
     // Do not enable measurement power after an incomplete preparation.
     try { await switchHub(false); } catch (cleanupError) { log(`USB cleanup failed: ${cleanupError.message || cleanupError}`); }
     oneHubPreparing = false;
-    setRunning(false);
+    if (!options.onComplete) setRunning(false);
     updateMeterControls();
     status.classList.toggle('error', !oneHubCancelled);
     log(oneHubCancelled ? 'Setup stopped. Measurement was not started.' : `One hub setup failed: ${error.message || error}`);
     finishRunProgress(oneHubCancelled ? 'Stopped' : 'Failed');
+    options.onComplete?.({code:oneHubCancelled?130:1,stopped:oneHubCancelled,error});
   }
 }
 

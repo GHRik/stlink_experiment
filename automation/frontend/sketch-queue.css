@@ -1,0 +1,29 @@
+.wiring-diagram[data-layout="hil"], .wiring-diagram[data-layout="one-hub"] { width: 1730px; }
+.sketch-queue { position: absolute; top: -3px; left: calc(100% + 18px); box-sizing: border-box; width: 310px; padding: 16px; border: 1px solid var(--panel-border); border-left: 3px solid; border-radius: 3px; background: #eef2f6; color: #172538; box-shadow: 3px 3px 0 #1725380d; }
+.dut-position-1 .sketch-queue { border-left-color: #7340bb; }
+.dut-position-2 .sketch-queue { border-left-color: #087f96; }
+.dut-position-3 .sketch-queue { border-left-color: #ae386f; }
+.wiring-diagram[data-layout="standalone"] .sketch-queue, .wiring-diagram[data-layout="one-relay"] .sketch-queue { display: none; }
+[data-theme="dark"] .sketch-queue { background: #162131; color: #e4edf9; }
+.sketch-queue-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sketch-queue-header span { font-size: 10px; text-transform: uppercase; border: 1px solid #648fc2; padding: 3px 6px; }
+.sketch-queue-list { display: grid; gap: 6px; max-height: 224px; overflow-y: auto; padding: 0; margin: 14px 0; list-style: none; }
+.sketch-queue-row { display: flex; align-items: center; gap: 6px; padding: 7px; border: 1px solid var(--panel-border); border-radius: 3px; }
+.sketch-queue-order { font-size: 11px; opacity: .65; }
+.sketch-queue-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.sketch-queue button { border: 1px solid #648fc2; border-radius: 3px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.sketch-queue-row button { padding: 4px 6px; min-width: 27px; }
+.sketch-queue-actions { display: flex; gap: 8px; }
+.sketch-queue-actions button { padding: 8px 10px; font-size: 12px; }
+.sketch-queue button:focus-visible { outline: 2px solid #648fc2; outline-offset: 2px; }
+.sketch-queue-empty, .sketch-queue-note { font-size: 11px; line-height: 1.5; opacity: .75; }
+.sketch-queue-note { margin: 12px 0 0; }
+.queue-run { margin-top: 10px; }
+.sketch-queue-row.is-done { opacity: .35; }
+.sketch-queue-row.is-current { border-color: #4fc99c; background: #4fc99c22; box-shadow: 0 0 12px #4fc99c66; }
+.dut.queue-dut-skipped { opacity: .4; }
+.dut.queue-preview-active .device-field:has(> input.sketch) { display: none; }
+.queue-current-sketch { font-size: 12px; overflow-wrap: anywhere; }
+#queue-actual-time { font-size: clamp(28px, 3vw, 42px); font-weight: 700; margin: 14px 0 8px; }
+#queue-total-time { font-size: 14px; }
+.wiring-diagram[data-layout="standalone"] .queue-run, .wiring-diagram[data-layout="one-relay"] .queue-run { display: none; }

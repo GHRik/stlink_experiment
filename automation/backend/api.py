@@ -32,6 +32,12 @@ class DesktopApi:
     def pick_file(self, kind):
         return self._picker.pick_file(kind)
 
+    def pick_sketches(self):
+        return self._picker.pick_sketches()
+
+    def validate_sketches(self, paths):
+        return self._picker.validate_sketches(paths)
+
     def list_ports(self):
         return available_ports()
 
@@ -84,7 +90,8 @@ class DesktopApi:
             configuration = hil_configuration(config, self._hub_command)
             self._meter_power.close()
             return self._capture.start({}, command=[sys.executable, "-u", "-m",
-                "automation.backend.hil_worker", json.dumps(configuration)])
+                "automation.backend.hil_worker", json.dumps(configuration),
+                *(['--out', config['out']] if config.get('out') else [])])
 
     def confirm_connection(self, message):
         return self._picker._window.create_confirmation_dialog("One hub setup", message)

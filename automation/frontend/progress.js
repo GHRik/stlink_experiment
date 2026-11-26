@@ -2,6 +2,7 @@
 let runProgress = null;
 
 function beginRunProgress(config, names = [config.name], uploads = false) {
+  document.querySelector('#queue-progress').hidden = true;
   if (typeof stopLiveDemo === 'function') stopLiveDemo();
   if (typeof resetLiveCurrent === 'function') resetLiveCurrent();
   runProgress = {finished: false, current: '', phase: 'Preparing', clock: null,
@@ -84,6 +85,7 @@ function renderRunProgress() {
     remaining -= Math.min(Math.max(0, available), (Date.now() - clock.since) / 1000);
   }
   const seconds = Math.max(0, Math.ceil(remaining));
+  if (typeof updateSketchQueueRemaining === 'function') updateSketchQueueRemaining(remaining);
   const current = boards.find(board => board.name === runProgress.current);
   document.querySelector('#run-stage').textContent = `${runProgress.current || 'Setup'} · ${runProgress.phase}${current?.repeat ? ` · Repeat ${current.repeat}/${current.repeats}` : ''}`;
   document.querySelector('#run-count').textContent = `${done}/${total} stages done · ${total - done} remaining`;

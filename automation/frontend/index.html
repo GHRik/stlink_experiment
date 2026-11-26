@@ -6,6 +6,7 @@
   <title>HIL testbench</title>
   <link rel="stylesheet" href="modes.css">
   <link rel="stylesheet" href="gallery.css">
+  <link rel="stylesheet" href="sketch-queue.css">
   <link rel="stylesheet" href="busy.css">
   <link rel="stylesheet" href="live-current.css">
   <style>
@@ -881,6 +882,7 @@
             </div>
           </div>
           <button class="run" id="run" type="button">Run</button>
+          <button class="run queue-run" id="run-queue" type="button">Run queue</button>
           <button class="run stop" id="stop" type="button" hidden>STOP</button>
         </div>
         <div class="device-card primary-hub">
@@ -1147,6 +1149,12 @@
       <span class="key orange">Switched OUT + GND · two contacts per DUT</span>
     </footer>
     <p id="status" role="status"> </p>
+    <section id="queue-progress" class="capture-log" aria-label="Sketch queue preview progress" hidden>
+      <h2>Sketch queue</h2>
+      <p id="queue-preview-phase" role="status"></p>
+      <p id="queue-actual-time"></p>
+      <p id="queue-total-time"></p>
+    </section>
     <section class="live-current" aria-label="Live current preview" hidden>
       <header><h2>Live current · last 30 seconds</h2><button id="live-current-demo" type="button" hidden>Demo preview</button></header>
       <p id="live-current-label">Waiting for acquisition</p>
@@ -1184,6 +1192,9 @@
     </dialog>
   </main>
 <script src="modes.js"></script>
+<script src="sketch-queue.js"></script>
+<script src="queue-preview.js"></script>
+<script src="queue-capture.js"></script>
 <script src="gallery.js"></script>
 <script src="compare.js"></script>
 <script src="live-current.js"></script>
@@ -1223,7 +1234,7 @@
     initializeLiveChoice(document.querySelector('#hub-serial'), () => refreshHubs());
     initializeLiveChoice(document.querySelector('#hub1-serial'), () => refreshHubs(document.querySelector('#hub1-serial'), document.querySelector('#hub1-model')));
     refreshSerialPorts().catch(() => {});
-    document.querySelectorAll('input[type="file"]').forEach(input => {
+    document.querySelectorAll('input[type="file"]:not([data-queue-picker])').forEach(input => {
       const picker = document.createElement('div');
       picker.className = 'native-file-picker';
       const button = document.createElement('button');

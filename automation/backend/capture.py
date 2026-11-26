@@ -14,7 +14,7 @@ def capture_command(config):
     command = [sys.executable, "-u", "-m", "automation.backend.capture_worker", "capture",
                "--port", config["port"], "--name", config["name"].strip(), "--notes", notes]
     flags = {"repeats": "--repeats", "seconds": "--seconds", "hz": "--hz",
-             "voltage": "--voltage", "warmup_seconds": "--warmup-seconds", "off_seconds": "--off-seconds"}
+             "voltage": "--voltage", "warmup_seconds": "--warmup-seconds", "off_seconds": "--off-seconds", "out": "--out"}
     for key, flag in flags.items():
         if key in config:
             command.extend([flag, str(config[key])])

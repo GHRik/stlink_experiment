@@ -1,6 +1,7 @@
 // StandAlone delegates measurement, validation and cleanup to the existing CLI.
 let captureInProgress = false;
 let captureCursor = 0;
+let captureCompletion = null;
 
 function standaloneConfiguration() {
   const value = id => document.querySelector(`#${id}`).value;
@@ -12,7 +13,8 @@ function standaloneConfiguration() {
   };
 }
 
-async function startStandaloneCapture(preserveLog = false, config = standaloneConfiguration(), startMethod = 'start_capture') {
+async function startStandaloneCapture(preserveLog = false, config = standaloneConfiguration(), startMethod = 'start_capture', onComplete = null) {
+  captureCompletion = onComplete;
   if (!preserveLog) beginRunProgress(config, startMethod === 'start_hil'
     ? config.boards.map(board => `${config.name.trim()}_${board.upload_profile}-relay${board.relay + 1}`) : [config.name], startMethod === 'start_hil');
   if (!isRunning) setRunning(true);
@@ -32,12 +34,14 @@ async function startStandaloneCapture(preserveLog = false, config = standaloneCo
     pollCapture();
   } catch (error) {
     stopButton.disabled = false;
-    setRunning(false);
+    if (!onComplete) setRunning(false);
     displayMeterPower(null);
     updateMeterControls();
     status.classList.add('error');
     status.textContent = `Could not start capture: ${error.message || error}`;
     finishRunProgress('Failed to start');
+    captureCompletion = null;
+    onComplete?.({code:1,stopped:false,error});
   }
 }
 
@@ -53,16 +57,19 @@ async function pollCapture() {
       output.scrollTop = output.scrollHeight;
     }
     if (!result.running) {
+      const stopped=result.stopping || result.returncode===130;
+      const complete=captureCompletion;captureCompletion=null;
       captureInProgress = false;
       stopButton.disabled = false;
-      setRunning(false);
+      if (!complete) setRunning(false);
       displayMeterPower(result.returncode === 0 ? false : null);
       updateMeterControls();
-      status.classList.toggle('error', result.returncode !== 0 && !result.stopping);
-      status.textContent = result.stopping ? 'Measurement stopped.'
+      status.classList.toggle('error', result.returncode !== 0 && !stopped);
+      status.textContent = stopped ? 'Measurement stopped.'
         : result.returncode === 0 ? 'Measurement completed. Results location is in the log.'
         : `Capture exited with code ${result.returncode}. See the log below.`;
-      finishRunProgress(result.stopping ? 'Stopped' : result.returncode === 0 ? 'Completed' : 'Failed');
+      finishRunProgress(stopped ? 'Stopped' : result.returncode === 0 ? 'Completed' : 'Failed');
+      complete?.({code:result.returncode,stopped});
       return;
     }
   } catch (error) {
