@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -1251,7 +1251,7 @@
     try { localStorage.setItem('hil-theme', theme); } catch (_) { /* Keep session-only selection. */ }
   }
   function initializeTheme() {
-    let theme = 'light';
+    let theme = 'dark';
     try { theme = localStorage.getItem('hil-theme') || theme; } catch (_) { /* Use the default theme. */ }
     setTheme(theme === 'dark' ? 'dark' : 'light');
     document.querySelectorAll('[data-theme-choice]').forEach(button => {
