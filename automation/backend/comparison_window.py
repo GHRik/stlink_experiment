@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 from queue import Queue, Empty
 import sys
-import textwrap
 from threading import Thread
 from types import SimpleNamespace
 
@@ -33,6 +32,14 @@ def select_repeats(result, excluded):
                 if (series['id'], series['repeat']) not in excluded]})
 
 
+def legend_label(row):
+    name = ' '.join(row.get('display_name', row['name']).split())
+    sd = 'N/A (n<2)' if row['sd_mA'] is None else f"{row['sd_mA']:.4f} mA"
+    return (f"{row['id']} · {name} | Repeats: {row['repeats']} | Duration: {row['seconds']:g} s"
+            f" | Voltage: {row['voltage']:g} V | Mean: {row['mean_mA']:.4f} mA"
+            f" | SD: {sd} | Mean energy: {row['energy_J']:.6f} J")
+
+
 class ComparisonFigure:
     """Matplotlib artists shared by the desktop view and explicit exports."""
 
@@ -43,6 +50,7 @@ class ComparisonFigure:
         self.draw()
 
     def draw(self, limits=None):
+        for legend in list(self.figure.legends): legend.remove()
         self.targets.clear()
         left, right = self.axes
         for ax in self.axes:
@@ -80,11 +88,10 @@ class ComparisonFigure:
         else:
             self.fit_trace_y()
         from matplotlib.lines import Line2D
-        handles = [Line2D([], [], color=row['color'], label=f"{row['id']} · {textwrap.fill(row.get('display_name', row['name']), 40)}")
+        handles = [Line2D([], [], color=row['color'], label=legend_label(row))
                    for row in self.result['rows'] if row['id'] not in self.hidden and row['repeats']]
         if handles:
-            for ax in self.axes:
-                ax.legend(handles=handles, loc='upper center', bbox_to_anchor=(.5, -.18), fontsize=7)
+            self.figure.legend(handles=handles, loc='outside lower center', fontsize=8, frameon=False)
 
     def fit_trace_y(self):
         low, high = self.axes[0].get_xlim()
@@ -120,15 +127,14 @@ class ComparisonFigure:
         folder.mkdir()
         limits = [(ax.get_xlim(), ax.get_ylim()) for ax in self.axes]
         # Reuse the same artists and exact view limits without hover decorations.
-        export = Figure(figsize=(14, 6), layout='constrained')
-        plots = ComparisonFigure(export, self.result, self.hidden)
-        plots.draw(limits)
-        from matplotlib.backends.backend_agg import FigureCanvasAgg
-        FigureCanvasAgg(export).draw()
-        for ax, base in zip(plots.axes, ('comparison_traces', 'comparison_statistics')):
-            bbox = ax.get_tightbbox(export.canvas.get_renderer()).transformed(export.dpi_scale_trans.inverted()).expanded(1.03, 1.08)
+        for index, base in enumerate(('comparison_traces', 'comparison_statistics')):
+            export = Figure(figsize=(14, 6), layout='constrained')
+            plots = ComparisonFigure(export, self.result, self.hidden)
+            plots.draw(limits)
+            export.delaxes(plots.axes[1-index])
+            plots.axes[index].set_subplotspec(export.add_gridspec(1, 1)[0])
             for extension in ('png', 'svg'):
-                export.savefig(folder / f'{base}.{extension}', bbox_inches=bbox, dpi=180)
+                export.savefig(folder / f'{base}.{extension}', bbox_inches='tight', dpi=180)
         rows = [{**row, 'visible': row['id'] not in self.hidden and bool(row['repeats'])} for row in self.result['rows']]
         (folder / 'summary.json').write_text(json.dumps(rows, indent=2), encoding='utf-8')
         (folder / 'view.json').write_text(json.dumps(dict(limits=limits, analysis_range=self.result['preview']['analysis_range'])), encoding='utf-8')
@@ -153,7 +159,26 @@ class ComparisonWindow:
         self.queue = Queue()
         root.title('Measurement comparison — Matplotlib Figure')
         root.geometry('1400x900'); root.minsize(900, 650)
-        controls = ttk.Frame(root, padding=8); controls.pack(fill='x')
+        status_header = ttk.Frame(root)
+        status_header.pack(fill='x')
+        self.status = tk.StringVar(value='')
+        ttk.Label(status_header, textvariable=self.status, font=('Segoe UI', 12)).pack(fill='x', padx=12)
+        self.progress = ttk.Progressbar(status_header, mode='indeterminate')
+        container = ttk.Frame(root); container.pack(fill='both', expand=True)
+        container.rowconfigure(0, weight=1); container.columnconfigure(0, weight=1)
+        self.viewport = tk.Canvas(container, highlightthickness=0)
+        self.viewport.grid(row=0, column=0, sticky='nsew')
+        vertical = ttk.Scrollbar(container, orient='vertical', command=self.viewport.yview)
+        horizontal = ttk.Scrollbar(container, orient='horizontal', command=self.viewport.xview)
+        vertical.grid(row=0, column=1, sticky='ns')
+        horizontal.grid(row=1, column=0, sticky='ew')
+        self.viewport.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
+        self.body = ttk.Frame(self.viewport)
+        self.body_item = self.viewport.create_window(0, 0, window=self.body, anchor='nw')
+        self.body.bind('<Configure>', self.layout_scroll_area)
+        self.viewport.bind('<Configure>', self.layout_scroll_area)
+        root.bind('<MouseWheel>', self.scroll_window)
+        controls = ttk.Frame(self.body, padding=8); controls.pack(fill='x')
         self.begin, self.end = tk.StringVar(), tk.StringVar()
         self.buttons, self.entries = [], []
         for label, variable in [('From [s]', self.begin), ('To [s]', self.end)]:
@@ -165,24 +190,35 @@ class ComparisonWindow:
                              ('Export samples…', self.export)]:
             button = ttk.Button(controls, text=text, command=action); button.pack(side='left', padx=4)
             self.buttons.append(button)
-        self.status = tk.StringVar(value='')
-        ttk.Label(root, textvariable=self.status, font=('Segoe UI', 12)).pack(fill='x', padx=12)
-        self.progress = ttk.Progressbar(root, mode='indeterminate')
-        self.sessions = ttk.Frame(root, padding=8); self.sessions.pack(fill='x')
+        self.sessions = ttk.Frame(self.body, padding=8); self.sessions.pack(fill='x')
         self.figure = Figure(figsize=(14, 5), layout='constrained')
-        self.canvas = FigureCanvasTkAgg(self.figure, master=root)
-        self.toolbar = NavigationToolbar2Tk(self.canvas, root, pack_toolbar=False)
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self.body)
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self.body, pack_toolbar=False)
         self.toolbar.pack(fill='x')
         self.canvas.get_tk_widget().pack(fill='both', expand=True)
         columns = ('session', 'n', 'duration', 'voltage', 'mean', 'sd', 'energy')
-        self.table = ttk.Treeview(root, columns=columns, show='headings', height=4)
-        for key, heading in zip(columns, ('Session', 'Repeats', 'Duration [s]', 'Voltage [V]', 'Mean [mA]', 'SD [mA]', 'Energy [J]')):
+        self.table = ttk.Treeview(self.body, columns=columns, show='headings', height=4)
+        for key, heading in zip(columns, ('Session', 'Repeats', 'Duration [s]', 'Voltage [V]', 'Mean [mA]', 'SD [mA]', 'Mean energy [J]')):
             self.table.heading(key, text=heading); self.table.column(key, width=110 if key != 'session' else 400)
         self.table.pack(fill='x', padx=8, pady=8)
         self.canvas.mpl_connect('scroll_event', self.scroll)
+        self.canvas.mpl_connect('key_press_event', self.dismiss_point)
+        self.canvas.mpl_connect('button_press_event', self.dismiss_point)
+        root.bind('<Escape>', lambda event: self.dismiss_point())
         root.protocol('WM_DELETE_WINDOW', self.close)
         self.render()
         root.after(100, self.poll)
+
+    def layout_scroll_area(self, event=None):
+        self.viewport.itemconfigure(self.body_item,
+            width=max(self.viewport.winfo_width(), self.body.winfo_reqwidth(), 1100),
+            height=max(self.viewport.winfo_height(), self.body.winfo_reqheight()))
+        self.viewport.configure(scrollregion=self.viewport.bbox('all'))
+
+    def scroll_window(self, event):
+        # Wheel over the Figure keeps its zoom behavior; elsewhere it scrolls the window.
+        if str(event.widget).startswith(str(self.canvas.get_tk_widget())) or not event.delta: return
+        self.viewport.yview_scroll((-1 if event.delta > 0 else 1) * max(1, abs(event.delta)//120), 'units')
 
     def render(self, keep_time=False, keep_limits=False):
         import tkinter as tk
@@ -281,6 +317,19 @@ class ComparisonWindow:
         if checked: self.excluded_repeats.difference_update(keys)
         else: self.excluded_repeats.update(keys)
         self.render(keep_time=True)
+
+    def dismiss_point(self, event=None):
+        if event is not None:
+            if event.name == 'key_press_event' and event.key != 'escape': return
+            if event.name == 'button_press_event':
+                if event.button == 1:
+                    if self.toolbar.mode: return
+                    if self.cursor and any(selection.annotation.contains(event)[0] for selection in self.cursor.selections): return
+                    if any(line.axes is event.inaxes and line.contains(event)[0] for line, _, _ in self.plot.targets): return
+                elif event.button != 3: return
+        if self.cursor:
+            for selection in self.cursor.selections:
+                self.cursor.remove_selection(selection)
 
     def scroll(self, event):
         if self.busy or event.inaxes not in self.plot.axes or event.xdata is None: return

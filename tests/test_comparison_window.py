@@ -8,7 +8,7 @@ import time
 import tkinter as tk
 import unittest
 
-from matplotlib.backend_bases import MouseEvent
+from matplotlib.backend_bases import MouseEvent, KeyEvent
 
 from automation.backend.comparison import generate_comparison
 from automation.backend.comparison_window import ComparisonWindow, create_root
@@ -25,10 +25,24 @@ class NativeComparisonTests(unittest.TestCase):
             native.withdraw()
             window = ComparisonWindow(native, work)
             try:
+                native.geometry('900x650'); native.deiconify(); native.update_idletasks()
+                region = window.viewport.bbox('all')
+                self.assertGreater(region[2], window.viewport.winfo_width())
+                self.assertGreater(region[3], window.viewport.winfo_height())
+                window.viewport.yview_moveto(1)
+                self.assertGreater(window.viewport.yview()[0], 0)
+                window.viewport.xview_moveto(1)
+                self.assertGreater(window.viewport.xview()[0], 0)
+                window.viewport.yview_moveto(0); window.viewport.xview_moveto(0)
+                native.withdraw()
                 window.canvas.draw()
                 left, right = window.plot.axes
                 for ax in (left, right):
-                    self.assertEqual([text.get_text().splitlines()[0] for text in ax.get_legend().get_texts()], ['S1 · DUT1', 'S2 · DUT2'])
+                    self.assertEqual([text.get_text().split(' | ')[0] for text in window.figure.legends[0].get_texts()], ['S1 · DUT1', 'S2 · DUT2'])
+                label = window.figure.legends[0].get_texts()[0].get_text()
+                self.assertNotIn('\n', label)
+                for value in ('Repeats: 2', 'Duration: 2 s', 'Voltage: 3.3 V', 'Mean: 12.0000 mA', 'SD: 2.8284 mA', 'Mean energy: 0.079200 J'):
+                    self.assertIn(value, label)
                 original_xlim = left.get_xlim()
                 window.toolbar.push_current()
                 # Use Matplotlib's actual rectangle-zoom tool, not a custom drag handler.
@@ -59,7 +73,7 @@ class NativeComparisonTests(unittest.TestCase):
                 self.assertLess(right.get_ylim()[1], 20)
                 self.assertTrue(all('DUT2' not in label for _, label, _ in window.plot.targets))
                 for ax in (left, right):
-                    self.assertEqual([text.get_text().splitlines()[0] for text in ax.get_legend().get_texts()], ['S1 · DUT1'])
+                    self.assertEqual([text.get_text().split(' | ')[0] for text in window.figure.legends[0].get_texts()], ['S1 · DUT1'])
                 # The standard Figure save path must include only currently visible session labels.
                 saved = io.StringIO()
                 window.figure.savefig(saved, format='svg')
@@ -74,6 +88,20 @@ class NativeComparisonTests(unittest.TestCase):
                 self.assertIsNotNone(selection)
                 self.assertIn('repeat_001', selection.annotation.get_text())
                 self.assertIn('10.0000 mA', selection.annotation.get_text())
+                window.canvas.callbacks.process('key_press_event', KeyEvent('key_press_event', window.canvas, key='escape'))
+                self.assertFalse(window.cursor.selections)
+                self.assertIsNone(selection.annotation.axes)
+                self.assertIsNotNone(window.cursor.select_at(line, (x, y)))
+                window.canvas.callbacks.process('button_press_event', MouseEvent('button_press_event', window.canvas, 5, 5, button=3))
+                self.assertFalse(window.cursor.selections)
+                # Selecting a point still works after dismissing the previous one.
+                self.assertIsNotNone(window.cursor.select_at(line, (x, y)))
+                blank_x, blank_y = left.transData.transform((1.8, 12))
+                window.canvas.callbacks.process('button_press_event', MouseEvent('button_press_event', window.canvas, blank_x, blank_y, button=1))
+                self.assertFalse(window.cursor.selections)
+                point_x, point_y = left.transData.transform((x, y))
+                window.canvas.callbacks.process('button_press_event', MouseEvent('button_press_event', window.canvas, point_x, point_y, button=1))
+                self.assertTrue(window.cursor.selections)
                 # Use the actual repeat-menu command, not just the Python toggle method.
                 menu_button = window.sessions.grid_slaves(row=0, column=1)[0]
                 menu = menu_button.nametowidget(menu_button.cget('menu'))
@@ -86,7 +114,7 @@ class NativeComparisonTests(unittest.TestCase):
                 self.assertIsNone(window.selected_result['rows'][0]['sd_mA'])
                 self.assertEqual(window.selected_result['rows'][0]['repeats'], 1)
                 self.assertTrue(all('repeat_001' not in label for _, label, _ in window.plot.targets))
-                self.assertEqual('S1 · DUT1', window.plot.axes[0].get_legend().get_texts()[0].get_text())
+                self.assertTrue(window.figure.legends[0].get_texts()[0].get_text().startswith('S1 · DUT1 | Repeats: 1 |'))
                 # Reuse the same menu repeatedly, including the zero-repeat case.
                 for index in (4, 3):
                     menu.invoke(index)
@@ -112,6 +140,9 @@ class NativeComparisonTests(unittest.TestCase):
                 # Apply range must update raw statistics asynchronously, retaining hidden sessions.
                 window.begin.set('.5'); window.end.set('1.5'); window.apply()
                 self.assertTrue(window.busy)
+                self.assertIs(window.progress.master, native.pack_slaves()[0])
+                self.assertIs(window.progress.master.pack_slaves()[-1], window.progress)
+                self.assertEqual(window.table.heading('energy', 'text'), 'Mean energy [J]')
                 deadline = time.monotonic()+30
                 while window.busy and time.monotonic()<deadline:
                     native.update(); time.sleep(.02)
@@ -131,7 +162,7 @@ class NativeComparisonTests(unittest.TestCase):
                 self.assertEqual(window.plot.axes[0].get_xlim(), (.6, 1.1))
                 self.assertEqual(window.plot.axes[1].get_ylim(), (12, 16))
                 for ax in window.plot.axes:
-                    self.assertIn('Deep sleep reference', ax.get_legend().get_texts()[0].get_text())
+                    self.assertIn('Deep sleep reference', window.figure.legends[0].get_texts()[0].get_text())
                 self.assertEqual(window.result['rows'][0]['name'], 'DUT1')
                 self.assertEqual(window.selected_result['rows'][0]['name'], 'DUT1')
                 self.assertTrue(all('Deep sleep reference' in label for _, label, _ in window.plot.targets))
@@ -139,6 +170,8 @@ class NativeComparisonTests(unittest.TestCase):
                     exported = window.plot.save(destination)
                     for filename in ('comparison_traces.svg', 'comparison_statistics.svg'):
                         self.assertIn('Deep sleep reference', (exported/filename).read_text(encoding='utf-8'))
+                        self.assertIn('Repeats: 1 | Duration: 1 s | Voltage: 3.3 V | Mean: 14.0000 mA | SD: N/A (n&lt;2) | Mean energy: 0.046200 J',
+                                      (exported/filename).read_text(encoding='utf-8').replace('n<2', 'n&lt;2'))
                     summary = json.loads((exported/'summary.json').read_text())
                     self.assertEqual(summary[0]['name'], 'DUT1')
                     self.assertEqual(summary[0]['display_name'], 'Deep sleep reference')
