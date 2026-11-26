@@ -197,9 +197,12 @@ class ComparisonWindow:
         self.toolbar.pack(fill='x')
         self.canvas.get_tk_widget().pack(fill='both', expand=True)
         columns = ('session', 'n', 'duration', 'voltage', 'mean', 'sd', 'energy')
+        self.table_sort = (None, False)
+        self.table_headings = dict(zip(columns, ('Session', 'Repeats', 'Duration [s]', 'Voltage [V]', 'Mean [mA]', 'SD [mA]', 'Mean energy [J]')))
         self.table = ttk.Treeview(self.body, columns=columns, show='headings', height=4)
-        for key, heading in zip(columns, ('Session', 'Repeats', 'Duration [s]', 'Voltage [V]', 'Mean [mA]', 'SD [mA]', 'Mean energy [J]')):
-            self.table.heading(key, text=heading); self.table.column(key, width=110 if key != 'session' else 400)
+        for key, heading in self.table_headings.items():
+            self.table.heading(key, text=heading, command=lambda key=key: self.sort_table(key))
+            self.table.column(key, width=110 if key != 'session' else 400)
         self.table.pack(fill='x', padx=8, pady=8)
         self.canvas.mpl_connect('scroll_event', self.scroll)
         self.canvas.mpl_connect('key_press_event', self.dismiss_point)
@@ -270,6 +273,7 @@ class ComparisonWindow:
                 entry.grid(row=index, column=3, sticky='ew')
                 entry.bind('<Return>', lambda event, sid=sid: self.rename(sid))
                 ttk.Button(self.sessions, text='Rename', command=lambda sid=sid: self.rename(sid)).grid(row=index, column=4, padx=4)
+                ttk.Button(self.sessions, text='Reset to original', command=lambda sid=sid: self.reset_name(sid)).grid(row=index, column=5, padx=4)
         for row in self.result['rows']:
             sid = row['id']
             self.selection_vars[(sid, None)].set(sid not in self.hidden)
@@ -280,10 +284,11 @@ class ComparisonWindow:
             self.name_vars[sid].set(self.display_names.get(sid, row['name']))
         self.table.delete(*self.table.get_children())
         for row in self.selected_result['rows']:
-            self.table.insert('', 'end', values=(row['display_name'], row['repeats'], row['seconds'], row['voltage'],
+            self.table.insert('', 'end', iid=row['id'], values=(row['display_name'], row['repeats'], row['seconds'], row['voltage'],
                 'N/A' if row['mean_mA'] is None else f"{row['mean_mA']:.4f}",
                 'N/A (n<2)' if row['sd_mA'] is None else f"{row['sd_mA']:.4f}",
                 'N/A' if row['energy_J'] is None else f"{row['energy_J']:.6f}"))
+        self.order_table()
         preview = self.result['preview']
         if not keep_time:
             self.begin.set(str(preview['analysis_range'][0]))
@@ -291,10 +296,34 @@ class ComparisonWindow:
         self.status.set('Statistics: full repeats' if preview['analysis_range'][1] is None
                         else f"Statistics: [{self.begin.get()}, {self.end.get()}) s")
 
+    def sort_table(self, column):
+        previous, descending = self.table_sort
+        self.table_sort = (column, not descending if previous == column else False)
+        self.order_table()
+
+    def order_table(self):
+        column, descending = self.table_sort
+        if column is None: return
+        field = dict(session='display_name', n='repeats', duration='seconds', voltage='voltage',
+                     mean='mean_mA', sd='sd_mA', energy='energy_J')[column]
+        rows = self.selected_result['rows']
+        available = [row for row in rows if row[field] is not None]
+        available.sort(key=lambda row: row[field].casefold() if column == 'session' else row[field], reverse=descending)
+        # Undefined statistics stay at the bottom in either sort direction.
+        ordered = available + [row for row in rows if row[field] is None]
+        for index, row in enumerate(ordered): self.table.move(row['id'], '', index)
+        for key, heading in self.table_headings.items():
+            self.table.heading(key, text=heading + (' ▼' if descending else ' ▲') if key == column else heading)
+
     def rename(self, session):
         if self.busy: return
         original = next(row['name'] for row in self.result['rows'] if row['id'] == session)
         self.display_names[session] = self.name_vars[session].get().strip() or original
+        self.render(keep_time=True, keep_limits=True)
+
+    def reset_name(self, session):
+        if self.busy: return
+        self.display_names.pop(session, None)
         self.render(keep_time=True, keep_limits=True)
 
     def toggle(self, session):
