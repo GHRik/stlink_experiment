@@ -16,7 +16,7 @@ function comparisonCheckbox(name) {
 function updateComparisonSelection() {
   const button = document.querySelector('#compare-results');
   button.textContent = `Compare selected (${comparisonSelection.size})`;
-  button.disabled = comparisonSelection.size < 2 || isRunning || comparisonGenerating;
+  button.disabled = comparisonSelection.size < 2 || comparisonGenerating;
 }
 
 document.querySelector('#compare-results').addEventListener('click', async event => {

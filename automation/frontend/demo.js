@@ -76,7 +76,7 @@ function showDemoReports(name, traces, config) {
   const plots=document.createElement('div'); plots.className='result-plots';
   for(const [label, statistics] of [['Current traces',false],['Summary statistics',true]]) {
     const source=demoReport(name,traces,Number(config.seconds),Number(config.voltage),statistics);
-    const button=document.createElement('button'); button.type='button'; button.className='result-preview'; button.disabled=isRunning;
+    const button=document.createElement('button'); button.type='button'; button.className='result-preview';
     const image=document.createElement('img'); image.src=source; image.alt=`DEMO ${label}`;
     const caption=document.createElement('span'); caption.textContent=label; button.append(image,caption);
     button.addEventListener('click',()=>{

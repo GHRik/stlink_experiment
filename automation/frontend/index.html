@@ -1170,12 +1170,12 @@
     </details>
     <section class="results-section" aria-label="Saved measurement results">
       <h2>Results</h2>
+      <p id="results-note">Saved plots are available in the desktop launcher.</p>
       <label for="results-search">Search results</label>
       <input id="results-search" type="search" placeholder="Session name or date..." autocomplete="off">
       <p id="results-matches" role="status"></p>
       <button id="compare-results" type="button" disabled>Compare selected (0)</button>
       <p id="comparison-status" class="work-status" role="status"></p>
-      <p id="results-note">Saved plots are available in the desktop launcher.</p>
       <div id="results-gallery"></div>
     </section>
     <dialog id="demo-report-dialog" aria-label="Demo plot">
@@ -1543,7 +1543,7 @@
       document.dispatchEvent(new Event('close-device-menus'));
       document.querySelectorAll('.field-help[open]').forEach(help => { help.open = false; });
       lockedControls = [...document.querySelectorAll('button, input, textarea, select, a, summary')]
-        .filter(control => control !== stopButton && !control.closest('#capture-log'))
+        .filter(control => control !== stopButton && !control.closest('#capture-log, .results-section, #demo-report-dialog'))
         .map(control => {
           const previous = {control, disabled: control.disabled, inert: control.inert,
             ariaDisabled: control.getAttribute('aria-disabled')};

@@ -34,8 +34,6 @@ async function refreshResults() {
   const note = document.querySelector('#results-note');
   try {
     const sessions = await window.pywebview.api.list_results();
-    // Keep the current set of locked controls intact until this Run finishes.
-    if (isRunning) return;
     const available = new Set(sessions.map(session => session.name));
     for (const name of comparisonSelection) if (!available.has(name)) comparisonSelection.delete(name);
     resultsPreviewObserver.disconnect();
@@ -60,7 +58,6 @@ async function refreshResults() {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'result-preview';
-        button.disabled = isRunning;
         button.title = `Open ${plot.path}`;
         const image = document.createElement('img');
         image.dataset.path = plot.preview;

@@ -1,16 +1,16 @@
 .results-section { margin-top: 28px; }
-.results-section h2 { font-size: 18px; }
+.results-section h2 { font-size: 32px; }
 .result-day { margin-top: 28px; }
 .result-day > h3 { padding-bottom: 8px; border-bottom: 2px solid var(--panel-border); font-size: 18px; letter-spacing: 1px; }
-.results-section > label { display: block; margin-bottom: 6px; }
-#results-search { width: min(100%, 480px); padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--panel-border); border-radius: 3px; background: #fff; color: inherit; font: inherit; }
+.results-section > label { display: block; margin-bottom: 12px; font-size: 22px; font-weight: 700; }
+#results-search { box-sizing: border-box; width: min(100%, 720px); min-height: 60px; padding: 16px 18px; margin-bottom: 18px; border: 1px solid var(--panel-border); border-radius: 3px; background: #fff; color: inherit; font: inherit; font-size: 20px; }
 #results-matches:empty { display: none; }
 [data-theme="dark"] #results-search { background: #162131; }
 .result-session { margin: 18px 0; padding: 16px; border: 1px solid var(--panel-border); border-radius: 3px; background: #fff; }
 .result-session > summary { font-size: 14px; font-weight: 700; overflow-wrap: anywhere; cursor: pointer; }
 .compare-select { width: 28px; height: 28px; margin: 4px 16px 4px 22px; padding: 0; vertical-align: middle; accent-color: #3479c3; cursor: pointer; }
 .compare-select:focus-visible { outline: 2px solid #648fc2; outline-offset: 4px; }
-#compare-results { display: block; margin: 8px 0 12px; padding: 10px 16px; font: inherit; color: inherit; background: transparent; border: 1px solid var(--panel-border); border-radius: 3px; cursor: pointer; }
+#compare-results { display: block; min-height: 64px; margin: 8px 0 18px; padding: 16px 24px; font: inherit; font-size: 22px; font-weight: 700; color: inherit; background: transparent; border: 1px solid var(--panel-border); border-radius: 3px; cursor: pointer; }
 #compare-results:disabled { opacity: .5; cursor: default; }
 .result-session[open] > summary { margin-bottom: 14px; }
 .result-plots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
