@@ -1,6 +1,10 @@
 // Layouts reuse the existing cards, form fields, switches and animated SVG paths.
 let currentLayout = 'standalone';
 
+function hilUsesHubOne() {
+  return currentLayout === 'hil' && document.querySelector('#hil-use-hub').checked;
+}
+
 function modeDutCount() {
   if (currentLayout === 'standalone') return 1;
   if (currentLayout === 'one-hub') return 1;
@@ -18,13 +22,14 @@ function initializeModes() {
     document.dispatchEvent(new Event('close-device-menus'));
     currentLayout = layout;
     document.querySelector('.wiring-diagram').dataset.layout = layout;
+    document.querySelector('#hil-usb-option').hidden = layout !== 'hil';
     tabs.forEach(tab => tab.setAttribute('aria-pressed', String(tab.dataset.layout === layout)));
     const visibility = {
-      '.primary-hub': layout === 'hil',
+      '.primary-hub': hilUsesHubOne(),
       '.upload-hub': layout === 'hil' || layout === 'one-hub',
       '.relay': layout === 'hil' || layout === 'one-relay',
       '.relay-contacts': layout === 'hil' || layout === 'one-relay',
-      '.external-power': layout === 'hil',
+      '.external-power': hilUsesHubOne(),
     };
     Object.entries(visibility).forEach(([selector, visible]) => {
       document.querySelector(selector).hidden = !visible;
@@ -33,7 +38,7 @@ function initializeModes() {
     ['#hub1-model', '#hub-model'].forEach(selector => {
       const model = document.querySelector(selector);
       const xs = model.querySelector('option[value="ykushxs"]');
-      const unavailable = layout === 'hil' && selector === '#hub1-model';
+      const unavailable = hilUsesHubOne() && selector === '#hub1-model';
       xs.hidden = unavailable;
       xs.disabled = unavailable;
       if (unavailable && model.value === 'ykushxs') {
@@ -50,11 +55,12 @@ function initializeModes() {
     updateDeviceCount();
   }
   tabs.forEach(tab => tab.addEventListener('click', () => activate(tab.dataset.layout)));
+  document.querySelector('#hil-use-hub').addEventListener('change', () => activate(currentLayout));
   activate('standalone');
 }
 
 function modeConnectionActive(index, hilActive) {
-  if (currentLayout === 'hil') return hilActive();
+  if (hilUsesHubOne()) return hilActive();
   if (index === 1 || index === 2 || index === 3 || index === 4) return true;
   if (index === 5) return isOn(meterOutput);
   const dut = Math.floor((index - 6) / 2);
@@ -76,6 +82,8 @@ function routeModeConnections() {
   const pathVia = (start, end, lane) => `M${start.x} ${start.y} H${lane} V${end.y} H${end.x}`;
   const paths = Array(12).fill(null);
   const hil = currentLayout === 'hil';
+  const upstream = hilUsesHubOne();
+  const directHil = hil && !upstream;
   const single = currentLayout === 'standalone';
   const oneHub = currentLayout === 'one-hub';
   const oneRelay = currentLayout === 'one-relay';
@@ -85,7 +93,7 @@ function routeModeConnections() {
   const meter = anchor('.power-meter', 'left');
   const output = anchor('.power-meter', 'right', meterOutput);
   const count = modeDutCount();
-  if (hil) {
+  if (upstream) {
     const hub = anchor('.primary-hub', 'left');
     const pcTop = document.querySelector('.pc').offsetTop;
     paths[0] = `M${pc.x} ${pc.y} H365 V${pcTop - 30} H120 V${hub.y} H${hub.x}`;
@@ -95,11 +103,11 @@ function routeModeConnections() {
       paths[3] = pathVia(anchor('.primary-hub', 'right', hub1Switches[2]), anchor('.upload-hub', 'left'), 390);
     }
   } else {
-    paths[1] = pathVia({...pc, y: pc.y - (oneHub || oneRelay ? 30 : 0)}, meter, 390);
-    if (hasRelay) paths[2] = pathVia({...pc, y: pc.y + 30}, anchor('.relay', 'left'), 350);
+    paths[1] = pathVia({...pc, y: pc.y - (directHil ? 40 : oneHub || oneRelay ? 30 : 0)}, meter, 390);
+    if (hasRelay) paths[2] = pathVia({...pc, y: pc.y + (directHil ? 0 : 30)}, anchor('.relay', 'left'), 350);
     if (hasHub) {
       const hub = anchor('.upload-hub', 'left');
-      paths[3] = pathVia(pc, {...hub, y: hub.y - 25}, 370);
+      paths[3] = pathVia({...pc, y: pc.y + (directHil ? 40 : 0)}, {...hub, y: hub.y - 25}, 370);
     }
   }
   if (hasRelay) {
@@ -143,9 +151,9 @@ function routeModeConnections() {
     if (y !== undefined) element.setAttribute('y', y);
     if (text !== undefined) element.textContent = text;
   }
-  label('#pc-usb-label', true, oneHub || oneRelay ? pc.x + 10 : pc.x - 100,
-    hil ? document.querySelector('.pc').offsetTop - 45 : pc.y - (oneHub || oneRelay ? 45 : 30),
-    hil ? 'USB - Data line only' : 'USB');
+  label('#pc-usb-label', true, oneHub || oneRelay || directHil ? pc.x + 10 : pc.x - 100,
+    upstream ? document.querySelector('.pc').offsetTop - 45 : pc.y - (directHil ? 60 : oneHub || oneRelay ? 45 : 30),
+    upstream ? 'USB - Data line only' : 'USB');
   label('#relay-control-label', hasRelay, 610, anchor('.relay').y - 12);
   label('#meter-output-label', hasRelay || single || currentLayout === 'one-hub', output.x + 10, output.y - 12);
   const relayStart = anchor('.relay-contacts', 'right', relaySwitches[0]);
@@ -153,8 +161,8 @@ function routeModeConnections() {
   const uploadLabel = anchor('.upload-hub', 'right', hub2Switches[Math.max(0, count - 1)]);
   label('#upload-label', hasHub, uploadLabel.x + 15, uploadLabel.y - 12);
   const external = document.querySelector('.external-power-wire');
-  external.style.display = hil || currentLayout === 'one-hub' ? '' : 'none';
-  if (hil) external.setAttribute('d', 'M179 465 H240 V577');
+  external.style.display = upstream || currentLayout === 'one-hub' ? '' : 'none';
+  if (upstream) external.setAttribute('d', 'M179 465 H240 V577');
   if (currentLayout === 'one-hub') {
     const hub = anchor('.upload-hub', 'left');
     external.setAttribute('d', pathVia({...pc, y: pc.y + 30}, {...hub, y: hub.y + 25}, 350));
