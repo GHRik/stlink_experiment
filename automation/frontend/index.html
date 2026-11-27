@@ -1223,6 +1223,19 @@
 <script src="relay.js"></script>
 <script src="mappings.js"></script>
 <script>
+  async function refreshBoardProfiles() {
+    if (!desktopReady || isRunning) return;
+    const profiles = await window.pywebview.api.list_board_profiles();
+    document.querySelectorAll('.board-profile').forEach(select => {
+      const selected = select.value;
+      select.replaceChildren(new Option('Select a board profile', ''), ...profiles.map(name => new Option(name, name)));
+      select.value = profiles.includes(selected) ? selected : '';
+      select.dispatchEvent(new Event('options-updated'));
+    });
+  }
+  window.addEventListener('focus', () => {
+    refreshBoardProfiles().catch(error => { status.textContent = `Could not refresh board profiles: ${error.message || error}`; });
+  });
   document.querySelectorAll('.add-profile').forEach(button => button.addEventListener('click', async () => {
     if (isRunning) return;
     if (!desktopReady) {
@@ -1245,6 +1258,8 @@
       return;
     }
     desktopReady = true;
+    document.querySelectorAll('.board-profile').forEach(select => initializeLiveChoice(select, refreshBoardProfiles));
+    refreshBoardProfiles().catch(error => { status.textContent = `Could not load board profiles: ${error.message || error}`; });
     demoMode = false;
     document.querySelector('#live-current-demo').hidden = true;
     stopLiveDemo();

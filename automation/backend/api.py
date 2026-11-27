@@ -15,6 +15,7 @@ from pathlib import Path
 from .hil import hil_configuration
 from .results_gallery import ResultsGallery
 from .comparison import ComparisonService
+from .upload import load_profiles
 
 
 class DesktopApi:
@@ -42,6 +43,9 @@ class DesktopApi:
         else:
             subprocess.Popen(['open' if sys.platform == 'darwin' else 'xdg-open', str(path)])
         return str(path)
+
+    def list_board_profiles(self):
+        return list(load_profiles())
 
     def pick_sketches(self):
         return self._picker.pick_sketches()
