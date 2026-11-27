@@ -8,7 +8,7 @@ async function startOneRelayCapture() {
   const driver = document.querySelector('#relay-model').value;
   const port = document.querySelector('#relay-port').value;
   const channels = relaySwitches.filter(button => !button.hidden).map(button => Number(button.dataset.channel));
-  beginRunProgress(config, channels.map(channel => `${config.name.trim()}_relay${channel + 1}`));
+  beginRunProgress(config, channels.map(channel => `${config.name.trim()}_relay${relayChannelNumber(channel,driver)}`));
   const totalChannels = driver === 'lcus2' ? 2 : 4;
   const output = document.querySelector('#capture-log-output');
   output.textContent = '';
@@ -50,10 +50,10 @@ async function startOneRelayCapture() {
       checkStop();
       let cursor = 0;
       try {
-        log(`Relay ${channel + 1} ON. Waiting 2 seconds...`);
+        log(`Relay ${relayChannelNumber(channel,driver)} ON. Waiting 2 seconds...`);
         await switchRelayChannel(channel, true);
         await pause();
-        const measurement = {...config, name: `${config.name.trim()}_relay${channel + 1}`};
+        const measurement = {...config, name: `${config.name.trim()}_relay${relayChannelNumber(channel,driver)}`};
         log(`Measuring ${measurement.name}...`);
         await api.start_capture(measurement);
         captureInProgress = true;
@@ -91,7 +91,7 @@ async function startOneRelayCapture() {
         }
         await switchRelayChannel(channel, false);
       }
-      log(`Relay ${channel + 1} OFF. Waiting 2 seconds...`);
+      log(`Relay ${relayChannelNumber(channel,driver)} OFF. Waiting 2 seconds...`);
       await pause();
     }
     log('Relay sequence completed. Results locations are in the log.');

@@ -101,7 +101,7 @@ Select **Relay channels** (1–3) in **Relay contacts** to show the matching num
 
 **Hub 2** provides a model selector for `ykush` and `ykush3`. Opening **Hub serial number** runs `ykushcmd -l` or `ykushcmd ykush3 -l` and lists attached serial numbers. The executable defaults to `ykushcmd`; override `hub.cmd` in [backend/config.json](../backend/config.json) if needed. Discovery does not switch hub ports.
 
-**Relay controller** selects the existing `numato` or `lcus2` driver and COM port. Each ON/OFF button switches its corresponding physical channel through that driver. No COM selection means the buttons are disabled. Numato confirms state readback; LCUS-2 reports command write/flush completion. Changing COM or model resets the displayed states to unknown (`?`); it does not switch hardware.
+**Relay controller** selects the existing `numato` or `lcus2` driver and COM port. Each ON/OFF button switches its corresponding physical channel through that driver. GUI labels match the device: **Numato 0–3**, **LCUS-2 1–2**. Configuration and driver indices remain zero-based. No COM selection means the buttons are disabled. Numato confirms state readback; LCUS-2 reports command write/flush completion. Changing COM or model resets the displayed states to unknown (`?`); it does not switch hardware.
 
 LCUS-2 supports at most two relay channels. Selecting it limits the channel selector and the HIL / One relay DUT count to two (or fewer if the selected DUT hub has only one port).
 

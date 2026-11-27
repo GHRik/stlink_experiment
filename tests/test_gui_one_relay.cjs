@@ -27,6 +27,7 @@ function setup({driver = 'numato', failedCapture = false, stopDuringCapture = fa
   };
   context = vm.createContext({
     window: {pywebview: {api}}, document: {querySelector: selector => fields[selector.slice(1)]},
+    relayChannelNumber: (channel,driver) => channel + (driver === "lcus2" ? 1 : 0),
     standaloneConfiguration: () => config, relaySwitches: buttons, captureInProgress: false,
     beginRunProgress() {}, applyRunEvents() {}, finishRunProgress() {},
     setRunning(value) {calls.push(['locked', value]);},
@@ -54,7 +55,7 @@ test('Numato disables all four channels, then measures mapped DUTs in row order'
   ]);
   assert.deepEqual(actions.slice(5).map(c => c[0]), ['relay', 'capture', 'relay', 'relay', 'capture', 'relay']);
   const captures = calls.filter(call => call[0] === 'capture').map(call => call[1]);
-  assert.deepEqual(captures.map(c => c.name), ['test_relay4', 'test_relay1']);
+  assert.deepEqual(captures.map(c => c.name), ['test_relay3', 'test_relay0']);
   assert.equal(captures[0].controller, config.controller);
   assert.equal(captures[0].repeats, '10');
   assert.equal(calls.filter(c => c[0] === 'wait').reduce((sum, c) => sum + c[1], 0), 8000);

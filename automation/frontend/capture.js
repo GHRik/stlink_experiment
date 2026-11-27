@@ -16,7 +16,7 @@ function standaloneConfiguration() {
 async function startStandaloneCapture(preserveLog = false, config = standaloneConfiguration(), startMethod = 'start_capture', onComplete = null) {
   captureCompletion = onComplete;
   if (!preserveLog) beginRunProgress(config, startMethod === 'start_hil'
-    ? config.boards.map(board => `${config.name.trim()}_${board.upload_profile}-relay${board.relay + 1}`) : [config.name], startMethod === 'start_hil');
+    ? config.boards.map(board => `${config.name.trim()}_${board.upload_profile}-relay${relayChannelNumber(board.relay,config.relay.driver)}`) : [config.name], startMethod === 'start_hil');
   if (!isRunning) setRunning(true);
   stopButton.disabled = true;
   captureCursor = 0;

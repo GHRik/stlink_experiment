@@ -1,5 +1,9 @@
-// Relay channel labels are one-based; the shared Python drivers use zero-based indices.
+// Numato hardware labels start at 0; LCUS-2 labels start at 1. Driver indices start at 0.
 let relayBusy = false;
+
+function relayChannelNumber(channel, driver = document.querySelector('#relay-model').value) {
+  return Number(channel) + (driver === 'lcus2' ? 1 : 0);
+}
 
 function resetRelayStates() {
   if (!desktopReady) return;
@@ -31,12 +35,12 @@ async function switchRelay(button) {
   controls.forEach(control => { control.disabled = true; });
   button.setAttribute('aria-busy', 'true');
   status.classList.remove('error');
-  status.textContent = `Switching relay ${channel + 1} ${enabled ? 'ON' : 'OFF'}…`;
+  status.textContent = `Switching relay ${relayChannelNumber(channel,driver)} ${enabled ? 'ON' : 'OFF'}…`;
   try {
     const result = await window.pywebview.api.set_relay(driver, port, channel, enabled);
     button.setAttribute('aria-pressed', String(result.enabled));
     button.querySelector('.port-state').textContent = result.enabled ? 'ON' : 'OFF';
-    status.textContent = `Relay ${channel + 1} ${result.enabled ? 'ON' : 'OFF'} · ${result.confirmation === 'readback' ? 'state confirmed' : 'command sent'}.`;
+    status.textContent = `Relay ${relayChannelNumber(channel,driver)} ${result.enabled ? 'ON' : 'OFF'} · ${result.confirmation === 'readback' ? 'state confirmed' : 'command sent'}.`;
   } catch (error) {
     button.setAttribute('aria-pressed', 'mixed');
     button.querySelector('.port-state').textContent = '?';

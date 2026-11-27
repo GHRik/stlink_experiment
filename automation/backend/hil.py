@@ -18,6 +18,6 @@ def hil_configuration(gui, hub_command):
         "upload": {"arduino_cli": "arduino-cli", "timeout_s": 300},
         "timing": {"step_delay_s": 2, "port_timeout_s": 30},
         "connected_boards": [dict(board,
-            name=f"{gui['name'].strip()}_{board['upload_profile']}-relay{board['relay'] + 1}",
+            name=f"{gui['name'].strip()}_{board['upload_profile']}-relay{board['relay'] + (1 if driver == 'lcus2' else 0)}",
             notes=gui["description"]) for board in gui["boards"]],
     }

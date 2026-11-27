@@ -5,6 +5,12 @@ from automation.backend.relays import Relay, NumatoRelay, Lcus2Relay, create_rel
 
 
 class RelayTests(unittest.TestCase):
+    def test_numato_channel_three_is_sent_without_an_offset(self):
+        relay = NumatoRelay('COM19',4)
+        relay.command=Mock(side_effect=['>','relay read 3\r\non\r\n>'])
+        relay.set(3,True)
+        self.assertEqual(relay.command.call_args_list,[call('relay on 3'),call('relay read 3')])
+
     def test_factory_and_invalid_settings(self):
         self.assertIsInstance(create_relay(dict(driver="numato", port="COM1", channels=4)), Relay)
         self.assertIsInstance(create_relay(dict(driver="lcus2", port="COM1", channels=2)), Lcus2Relay)

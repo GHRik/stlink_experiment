@@ -47,10 +47,11 @@ function initializeModes() {
       }
     });
     document.querySelectorAll('.dut').forEach((card, index) => {
+      const relay = relayChannelNumber(relaySwitches[index].dataset.channel);
       card.querySelector('small').textContent = layout === 'standalone' ? 'Firmware uploaded separately'
         : layout === 'one-hub' ? `USB port ${index + 1}`
-        : layout === 'one-relay' ? `Relay ${index + 1} · firmware uploaded separately`
-        : `YKUSH port ${index + 1} · relay ${index + 1}`;
+        : layout === 'one-relay' ? `Relay ${relay} · firmware uploaded separately`
+        : `YKUSH port ${index + 1} · relay ${relay}`;
     });
     updateDeviceCount();
   }
