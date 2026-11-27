@@ -16,8 +16,8 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from automation.HIL.relays import create_relay
-from automation.HIL.hubs import create_hub
+from automation.backend.relays import create_relay
+from automation.backend.hubs import create_hub
 from src.events import emit
 
 
@@ -86,7 +86,7 @@ def load_config(path):
             raise ValueError("Board ykush_usb_port is not in hub.ports")
         if type(board["relay"]) is not int or not 0 <= board["relay"] < count:
             raise ValueError("Board relay must be a zero-based controller channel")
-    from automation.HIL.upload import load_profiles
+    from automation.backend.upload import load_profiles
     profiles = load_profiles()
     for board in boards:
         if board.get("upload_profile") not in profiles:
@@ -168,7 +168,7 @@ class Hardware:
         emit("upload", state="started", name=board["name"])
         self.event("flash", board=board["name"], port=board["com"])
         with (self.directory / f"{board['name']}_upload.log").open("w", encoding="utf-8") as log:
-            run_command([sys.executable, "-u", str(ROOT / "automation/HIL/upload.py"),
+            run_command([sys.executable, "-u", str(ROOT / "automation/backend/upload.py"),
                          board["upload_profile"], board["com"], board["sketch"],
                          "--cli", self.config["arduino_cli"]],
                         self.config["flash_timeout_s"], log)
@@ -274,7 +274,7 @@ def main():
         sequence(config, DryRun(config, None))
         return
     if config["arduino_cli"] == "arduino-cli":
-        from automation.HIL.upload import default_arduino_cli
+        from automation.backend.upload import default_arduino_cli
         config["arduino_cli"] = default_arduino_cli()
     for key, executable in (("hub.cmd", config["hub"]["cmd"]), ("arduino_cli", config["arduino_cli"])):
         if not shutil.which(executable):

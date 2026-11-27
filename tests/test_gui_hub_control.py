@@ -7,7 +7,7 @@ from automation.backend.hub_control import HubControl
 
 class HubControlTests(unittest.TestCase):
     @patch("automation.backend.hub_control.resolve_command", return_value="ykushcmd")
-    @patch("automation.HIL.hubs._run")
+    @patch("automation.backend.hubs._run")
     def test_xs_uses_only_its_single_output(self, run, resolve):
         run.side_effect = ["", "Downstream port is ON"]
         self.assertTrue(HubControl().set_port("ykushxs", "ykushcmd", "XS123", 1, True)["enabled"])
@@ -19,7 +19,7 @@ class HubControlTests(unittest.TestCase):
         run.assert_not_called()
 
     @patch("automation.backend.hub_control.resolve_command", return_value="C:/tools/ykushcmd.exe")
-    @patch("automation.HIL.hubs._run")
+    @patch("automation.backend.hubs._run")
     def test_selected_legacy_hub_and_physical_socket(self, run, resolve):
         run.side_effect = ["", "Downstream port 2 is OFF"]
         result = HubControl().set_port("ykush", "ykushcmd", "YK21493", 2, False)
@@ -30,7 +30,7 @@ class HubControlTests(unittest.TestCase):
                                   "readback": "Downstream port 2 is OFF"})
 
     @patch("automation.backend.hub_control.resolve_command", return_value="ykushcmd")
-    @patch("automation.HIL.hubs._run")
+    @patch("automation.backend.hubs._run")
     def test_selected_ykush3(self, run, resolve):
         run.side_effect = ["", "Downstream port 1 is ON"]
         HubControl().set_port("ykush3", "ykushcmd", "YK00009", 1, True)
@@ -39,7 +39,7 @@ class HubControlTests(unittest.TestCase):
             call(["ykushcmd", "ykush3", "-s", "YK00009", "-g", "1"], 15)])
 
     @patch("automation.backend.hub_control.resolve_command", return_value="ykushcmd")
-    @patch("automation.HIL.hubs._run")
+    @patch("automation.backend.hubs._run")
     def test_wrong_readback_is_not_reported_as_success(self, run, resolve):
         run.side_effect = ["", "Downstream port 1 is OFF"]
         with self.assertRaisesRegex(RuntimeError, "not confirmed"):

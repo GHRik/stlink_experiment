@@ -27,7 +27,7 @@ def default_arduino_cli():
 
 
 def load_profiles():
-    path = Path(__file__).resolve().with_name("board_profiles.json")
+    path = Path(__file__).resolve().parents[1] / 'HIL/board_profiles.json'
     return json.loads(path.read_text(encoding="utf-8-sig"))
 
 

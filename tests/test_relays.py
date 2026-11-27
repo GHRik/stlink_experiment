@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock, call, patch
 
-from automation.HIL.relays import Relay, NumatoRelay, Lcus2Relay, create_relay
+from automation.backend.relays import Relay, NumatoRelay, Lcus2Relay, create_relay
 
 
 class RelayTests(unittest.TestCase):
@@ -63,7 +63,7 @@ class RelayTests(unittest.TestCase):
 
     def test_port_lifecycle_and_channel_bounds(self):
         for relay, baudrate in ((NumatoRelay("COM19", 4), 19200), (Lcus2Relay("COM22"), 9600)):
-            with self.subTest(relay=type(relay).__name__), patch("automation.HIL.relays.serial.Serial") as connection:
+            with self.subTest(relay=type(relay).__name__), patch("automation.backend.relays.serial.Serial") as connection:
                 relay.open()
                 connection.assert_called_once_with(relay.port, baudrate, timeout=2, write_timeout=3)
                 with self.assertRaises(ValueError):

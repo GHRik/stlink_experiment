@@ -1,7 +1,7 @@
 """Manual switching through the existing HIL Hub drivers."""
 from threading import Lock
 
-from automation.HIL.hubs import create_hub
+from automation.backend.hubs import create_hub
 from .hub_discovery import resolve_command
 
 

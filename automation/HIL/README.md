@@ -53,7 +53,7 @@ Three settings need distinguishing:
 
 Each board defines its own `upload_profile` and maps `ykush_usb_port` (**1–3**) to an upload `com` and a physical `relay` channel (**zero-based**). Names, USB ports, board COM ports and relay assignments must be unique. Example: three boards use relays 0, 1, 2 while relay 3 is still disabled at startup and cleanup. Replace example COM ports with actual values; the script cannot infer the physical mapping.
 
-The `nodemcu` profile in [board_profiles.json](board_profiles.json) selects NodeMCU 1.0, 80 MHz, full flash erase and 115200 baud upload. Add profiles to this JSON file; the automation configuration only selects a profile. The file is resolved relative to `upload.py`, independently of the working directory. Install **ESP8266 Core 3.1.2** in Arduino CLI before running; the script does not install packages. `ESP.deepSleep(0)` sleeps indefinitely until reset or a power cycle; no periodic wakeup is configured.
+The `nodemcu` profile in [board_profiles.json](board_profiles.json) selects NodeMCU 1.0, 80 MHz, full flash erase and 115200 baud upload. Add profiles to this JSON file; the automation configuration only selects a profile. Profiles remain in `automation/HIL/board_profiles.json` and are resolved from the package location, independently of the working directory. The shared uploader is [backend/upload.py](../backend/upload.py). Install **ESP8266 Core 3.1.2** in Arduino CLI before running; the script does not install packages. `ESP.deepSleep(0)` sleeps indefinitely until reset or a power cycle; no periodic wakeup is configured.
 
 ## Run
 
@@ -106,7 +106,7 @@ For Numato, use `"driver": "numato"`, the actual channel count and `"channel_dig
 
 LCUS-2 uses 9600 baud and four-byte binary commands. A complete serial write followed by flush counts as completion; no state query is sent. The event log records the requested state, channel and command bytes with `confirmation: write_and_flush`. Numato uses 19200 baud, ASCII commands and state readback.
 
-Both implementations inherit [Relay](relays.py), exposing `open()`, `set(channel, enabled)` and `close()`. Adding another model requires a driver and a factory entry; the measurement sequence stays unchanged.
+Both implementations inherit [Relay](../backend/relays.py), exposing `open()`, `set(channel, enabled)` and `close()`. Adding another model requires a driver and a factory entry; the measurement sequence stays unchanged.
 
 ## Protocol references
 
@@ -139,6 +139,6 @@ For YKUSH3, configure:
 }
 ```
 
-`Ykush3` selects the `ykush3` CLI subcommand automatically; no `model_argument` is needed. Both hub drivers inherit [Hub](hubs.py) with `open()`, `set(port, enabled)` and `close()`. Each switch is followed by a CLI state query; a command error or state mismatch aborts the batch. Port numbers remain 1-based. Existing `ykush` configuration sections are still accepted.
+`Ykush3` selects the `ykush3` CLI subcommand automatically; no `model_argument` is needed. Both hub drivers inherit [Hub](../backend/hubs.py) with `open()`, `set(port, enabled)` and `close()`. Each switch is followed by a CLI state query; a command error or state mismatch aborts the batch. Port numbers remain 1-based. Existing `ykush` configuration sections are still accepted.
 
 [Official YKUSH3 Windows commands](https://www.yepkit.com/learn/setup-guide-ykush3_windows).

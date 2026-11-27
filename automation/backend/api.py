@@ -81,7 +81,7 @@ class DesktopApi:
                 raise RuntimeError("A capture or upload is already running")
             self._meter_power.close()
             return self._capture.start({}, command=[sys.executable, "-u", "-m",
-                "automation.HIL.upload", board, port, sketch])
+                "automation.backend.upload", board, port, sketch])
 
     def start_hil(self, config):
         with self._meter_lock:

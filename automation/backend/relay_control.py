@@ -1,7 +1,7 @@
 """Manual relay switching delegated to the existing HIL drivers."""
 from threading import Lock
 
-from automation.HIL.relays import create_relay
+from automation.backend.relays import create_relay
 
 
 class RelayControl:

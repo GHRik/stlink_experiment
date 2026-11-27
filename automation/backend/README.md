@@ -6,6 +6,8 @@
 | [app.py](app.py) | Desktop window lifecycle and frontend/API wiring |
 | [api.py](api.py) | Public bridge methods delegating to backend services |
 | [file_picker.py](file_picker.py) | Native file dialogs returning full local paths |
+| [hubs.py](hubs.py) / [relays.py](relays.py) | Shared hub and relay drivers used by GUI and HIL |
+| [upload.py](upload.py) | `arduino-upload` entry point shared by GUI and HIL; profiles stay in `automation/HIL/board_profiles.json` |
 | [config.json](config.json) / [config.py](config.py) | Desktop defaults; `hub.cmd` selects the CLI executable, default `ykushcmd` |
 | [serial_ports.py](serial_ports.py) | Serial device enumeration through pyserial; no ports are opened |
 | [hub_discovery.py](hub_discovery.py) | YKUSH serial discovery through the selected model subcommand, e.g. `ykushcmd ykush -l` |

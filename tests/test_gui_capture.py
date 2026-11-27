@@ -25,7 +25,7 @@ class CaptureCommandTests(unittest.TestCase):
         api.start_upload("nodemcu", "COM22", "C:/my sketches/example.ino")
         api._meter_power.close.assert_called_once()
         api._capture.start.assert_called_once_with({}, command=[sys.executable, "-u", "-m",
-            "automation.HIL.upload", "nodemcu", "COM22", "C:/my sketches/example.ino"])
+            "automation.backend.upload", "nodemcu", "COM22", "C:/my sketches/example.ino"])
 
     def test_maps_gui_fields_to_existing_cli_arguments(self):
         command = capture_command(configuration())

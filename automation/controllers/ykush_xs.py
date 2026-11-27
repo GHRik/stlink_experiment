@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import time
 
-from automation.HIL.hubs import YkushXs
+from automation.backend.hubs import YkushXs
 from automation.backend.hub_discovery import available_hubs, resolve_command
 from src.events import emit
 
