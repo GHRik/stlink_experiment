@@ -1,5 +1,7 @@
 # Sequential upload and measurement
 
+[![HIL power measurement testbench: STLINK-V3PWR, Numato relay module, YKUSH3 USB hub and DUTs 1–3](../../docs/hil_testbench/testbench_annotated_landscape_eng.png)](../../docs/hil_testbench/testbench_annotated_landscape_eng.png)
+
 ```mermaid
 flowchart LR
     PC["PC"] -->|USB| HUB1["Hub 1"]
