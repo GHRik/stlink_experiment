@@ -1216,6 +1216,9 @@
       document.querySelector('link[rel="icon"]').href = 'assets/stlink-demo.png';
       document.querySelector('#live-current-demo').hidden = false;
       document.querySelector('#demo-mode').hidden = false;
+      seedDemoResults().catch(error => {
+        document.querySelector('#results-note').textContent = `Demo results failed: ${error.message || error}`;
+      });
       return;
     }
     desktopReady = true;

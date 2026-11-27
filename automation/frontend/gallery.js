@@ -30,7 +30,7 @@ const resultsPreviewObserver = new IntersectionObserver(entries => {
 }, {rootMargin: '400px'});
 
 async function refreshResults() {
-  if (!desktopReady || typeof window.pywebview?.api?.list_results !== 'function') return;
+  if ((!desktopReady && !demoMode) || typeof window.pywebview?.api?.list_results !== 'function') return;
   const note = document.querySelector('#results-note');
   try {
     const sessions = await window.pywebview.api.list_results();
@@ -78,7 +78,7 @@ async function refreshResults() {
     document.querySelector('#results-gallery').replaceChildren(...groups.values());
     filterResults();
     updateComparisonSelection();
-    note.textContent = sessions.length
+    note.textContent = demoMode ? `${sessions.length} demo result sets · synthetic data · removed when Demo closes.` : sessions.length
       ? `${sessions.length} result sets · newest first. Click a preview to open the full plot (SVG when available).`
       : 'No English summary plots in results yet.';
   } catch (error) {

@@ -65,6 +65,7 @@ function renderSketchQueueTime() {
 function finishSketchQueuePreview(stopped=false) {
   const preview=sketchQueuePreview;
   if (!preview?.running) return;
+  if(!stopped && typeof saveDemoQueueStep==='function') saveDemoQueueStep(preview.steps[preview.index],preview.index);
   clearInterval(preview.timer);preview.running=false;preview.stopped=stopped;
   if(typeof showDemoHardware==='function') showDemoHardware(-1,'idle');
   if (!stopped) {preview.index=preview.steps.length-1;preview.elapsed=preview.steps[preview.index].seconds;}
@@ -80,6 +81,7 @@ function tickSketchQueuePreview(seconds) {
   preview.elapsed+=seconds;
   while (preview.elapsed>=preview.steps[preview.index].seconds) {
     if (preview.index===preview.steps.length-1) {finishSketchQueuePreview();return;}
+    if(typeof saveDemoQueueStep==='function') saveDemoQueueStep(preview.steps[preview.index],preview.index);
     preview.elapsed-=preview.steps[preview.index].seconds;
     preview.index++;paintSketchQueuePreview();
   }

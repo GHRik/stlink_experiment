@@ -41,17 +41,20 @@ class DesktopAppTests(unittest.TestCase):
     @patch('automation.backend.api.DesktopApi')
     def test_windows_taskbar_groups_real_and_demo_separately(self, api, native):
         with patch('automation.backend.app.sys.platform', 'win32'):
-            run_desktop(Mock(), demo=False)
-            run_desktop(Mock(), demo=True)
+            run_desktop(MagicMock(), demo=False)
+            run_desktop(MagicMock(), demo=True)
         self.assertEqual([call.args[0] for call in native.windll.shell32.SetCurrentProcessExplicitAppUserModelID.call_args_list],
                          ['GHRik.STLINK.PowerMeasurements', 'GHRik.STLINK.PowerMeasurements.Demo'])
 
     @patch("automation.backend.api.DesktopApi")
-    def test_demo_does_not_create_or_expose_backend(self, api):
-        webview = Mock()
+    def test_demo_exposes_only_temporary_results_without_hardware(self, api):
+        webview = MagicMock()
         run_desktop(webview, demo=True)
         api.assert_not_called()
-        self.assertIsNone(webview.create_window.call_args.kwargs["js_api"])
+        demo = webview.create_window.call_args.kwargs['js_api']
+        self.assertTrue(callable(demo.compare_results))
+        self.assertFalse(any(hasattr(demo, name) for name in ('list_ports','start_capture','start_upload','set_meter_power','set_hub_port','set_relay')))
+        self.assertFalse(demo._root.exists())
         self.assertIn("Demo", webview.create_window.call_args.args[0])
         self.assertEqual(Path(webview.start.call_args.kwargs['icon']).name, 'stlink-demo.ico')
         self.assertTrue(Path(webview.start.call_args.kwargs['icon']).is_file())

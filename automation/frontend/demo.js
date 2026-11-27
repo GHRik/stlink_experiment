@@ -91,7 +91,14 @@ function demoReport(title, traces, seconds, voltage, statistics) {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(svg));
 }
 
-function showDemoReports(name, traces, config) {
+async function showDemoReports(name, traces, config) {
+  if(typeof window.pywebview?.api?.save_demo_result==='function') {
+    const plots=[demoReport(name,traces,Number(config.seconds),Number(config.voltage),false),
+                 demoReport(name,traces,Number(config.seconds),Number(config.voltage),true)];
+    await window.pywebview.api.save_demo_result(name,traces,config,plots);
+    await refreshResults();
+    return;
+  }
   const gallery=document.querySelector('#results-gallery');
   const day=new Date().toLocaleDateString('en-GB').replaceAll('/','.');
   let group=[...gallery.querySelectorAll('.result-day')].find(item=>item.dataset.day===day);
@@ -116,6 +123,28 @@ function showDemoReports(name, traces, config) {
   card.append(heading,plots); group.prepend(card);
   document.querySelector('#results-note').textContent='Demo results only · synthetic data, not measurements. Click a preview to enlarge.';
   filterResults();
+}
+
+async function seedDemoResults() {
+  if(typeof window.pywebview?.api?.save_demo_result!=='function') return;
+  document.querySelector('#results-note').textContent='Preparing synthetic demo results…';
+  const config={seconds:100,voltage:3.3};
+  for(const [name,scale] of [['idle',3],['delay',1],['deep_sleep',.03]]) {
+    const traces=Array.from({length:3},(_,repeat)=>demoTrace(100,repeat+1,0).map(point=>
+      [point[0],point[1]*scale,point[2]*scale,point[3]*scale]));
+    await showDemoReports(name,traces,config);
+  }
+}
+
+function saveDemoQueueStep(step, index) {
+  if(typeof window.pywebview?.api?.save_demo_result!=='function') return;
+  const config=standaloneConfiguration(),cards=[...document.querySelectorAll('.dut')];
+  for(const board of step.active) {
+    const dut=cards.indexOf(board.card);
+    const traces=Array.from({length:Number(config.repeats)},(_,repeat)=>demoTrace(Number(config.seconds),repeat+1,dut));
+    showDemoReports(`${config.name||'queue'}_step${index+1}_DUT${dut+1}`,traces,config)
+      .catch(error=>{document.querySelector('#results-note').textContent=`Demo result failed: ${error.message||error}`;});
+  }
 }
 
 async function startDemoRun() {
@@ -163,7 +192,7 @@ async function startDemoRun() {
       }
       showDemoHardware(board,'report');
       event({type:'report',state:'started'}); await pause(100);
-      showDemoReports(name,traces,config); event({type:'report',state:'completed'});
+      await showDemoReports(name,traces,config); event({type:'report',state:'completed'});
     }
     status.textContent='Demo completed. Generated plots are in Results.';
     finishRunProgress('Completed');

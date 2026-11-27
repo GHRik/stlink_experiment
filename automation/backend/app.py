@@ -8,8 +8,10 @@ def run_desktop(webview, demo=False):
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
             'GHRik.STLINK.PowerMeasurements' + ('.Demo' if demo else ''))
     icon = Path(__file__).resolve().parents[1] / 'frontend/assets' / ('stlink-demo.ico' if demo else 'stlink.ico')
-    api = None
-    if not demo:
+    if demo:
+        from .demo import DemoApi
+        api = DemoApi(webview)
+    else:
         from .api import DesktopApi
         from .config import load_settings
         api = DesktopApi(webview, load_settings())
@@ -26,4 +28,7 @@ def run_desktop(webview, demo=False):
     if api is not None:
         api._bind_window(window)
         window.events.closing += api._on_closing
-    webview.start(icon=str(icon))
+    try:
+        webview.start(icon=str(icon))
+    finally:
+        if demo: api._on_closing()

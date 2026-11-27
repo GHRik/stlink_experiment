@@ -69,6 +69,7 @@ document.querySelector('#run-queue').addEventListener('click', () => {
   else startSketchQueuePreview();
 });
 window.addEventListener('pywebviewready',()=>{
+  if(typeof window.pywebview?.api?.pick_sketches!=='function') return;
   for(const view of sketchQueueViews.values()) {
     view.badge.textContent='Queue';
     view.note.textContent='Run queue uses these sketches in order. Missing steps are skipped.';
