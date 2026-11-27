@@ -1,4 +1,5 @@
 """Manual STLINK OUT control using the existing meter protocol."""
+import re
 from src.stlink_protocol import Device, identify_device
 
 
@@ -6,6 +7,23 @@ class MeterPower:
     def __init__(self):
         self._device = None
         self._port = None
+
+    def get(self, port):
+        # A monitoring connection must never use Device.close(): it powers OUT off.
+        temporary = self._device is None or self._port != port
+        device = Device(port) if temporary else self._device
+        try:
+            identity = device.command("whoami")
+            if "STLINK-V3PWR" not in identity:
+                raise RuntimeError("This is not an STLINK-V3PWR measurement port")
+            response = device.command("pwr vout get")
+            match = re.search(r"\b(on|off)\s*$", response, re.I)
+            if not match:
+                raise RuntimeError(f"Unknown STLINK OUT state: {response}")
+            return {"port": port, "enabled": match[1].lower() == "on"}
+        finally:
+            if temporary:
+                device.serial.close()
 
     def set(self, port, voltage, enabled):
         if enabled:

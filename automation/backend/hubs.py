@@ -52,15 +52,31 @@ class Ykush(Hub):
         response = self.run(self.command + ["-u" if enabled else "-d", str(port)], 15)
         status = self.run(self.command + ["-g", str(port)], 15)
         state = "ON" if enabled else "OFF"
-        if not re.search(rf"(?im)^\s*Downstream port\s+{port}\s+is\s+{state}\s*$", status):
+        if not self._confirmed(status, port, state):
             raise RuntimeError(f"YKUSH port {port} state not confirmed: {status}")
         self.last_status = status.strip()
         self.event("ykush", port=port, enabled=enabled, response=response, status=status)
+
+    def _confirmed(self, status, port, state):
+        return re.search(rf"(?im)^\s*Downstream port\s+{port}\s+is\s+{state}\s*$", status)
+
+    def get(self, port):
+        if port not in self.ports:
+            raise ValueError("USB port is not configured")
+        status = self.run(self.command + ["-g", str(port)], 15)
+        for state in ("ON", "OFF"):
+            if self._confirmed(status, port, state):
+                return state == "ON"
+        raise RuntimeError(f"Unknown YKUSH state: {status}")
 
 
 class Ykush3(Ykush):
     def __init__(self, cmd, serial, ports, command_runner=None, event=None):
         super().__init__(cmd, serial, ports, "ykush3", command_runner, event)
+
+    def _confirmed(self, status, port, state):
+        return (super()._confirmed(status, port, state)
+                or re.search(rf"(?im)^\s*Port\s+{port}\s+{state}\s*$", status))
 
 
 class YkushXs(Hub):
@@ -84,6 +100,15 @@ class YkushXs(Hub):
             raise RuntimeError(f"YKUSH XS port state not confirmed: {status}")
         self.last_status = status.strip()
         self.event("ykush", port=port, enabled=enabled, response=response, status=status)
+
+    def get(self, port):
+        if port != 1:
+            raise ValueError("YKUSH XS has one downstream port")
+        status = self.run(self.command + ["-g"], 15)
+        match = re.search(r"(?im)^\s*Downstream port(?:\s+1)?\s+is\s+(ON|OFF)\s*$", status)
+        if not match:
+            raise RuntimeError(f"Unknown YKUSH XS state: {status}")
+        return match[1].upper() == "ON"
 
 
 def create_hub(config, command_runner=None, event=None):

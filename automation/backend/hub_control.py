@@ -9,6 +9,16 @@ class HubControl:
     def __init__(self):
         self._lock = Lock()
 
+    def read_states(self, driver, command, serial):
+        with self._lock:
+            hub = create_hub({"driver": driver, "cmd": resolve_command(command),
+                              "serial": serial, "ports": [1] if driver == "ykushxs" else [1, 2, 3]})
+            try:
+                hub.open()
+                return {str(port): hub.get(port) for port in hub.ports}
+            finally:
+                hub.close()
+
     def set_port(self, driver, command, serial, port, enabled):
         if not isinstance(serial, str) or not serial.strip():
             raise ValueError("Select a hub serial number first")

@@ -6,6 +6,17 @@ from automation.backend.hubs import Hub, Ykush, Ykush3, YkushXs, create_hub
 
 
 class HubTests(unittest.TestCase):
+    def test_read_states_does_not_switch_ports(self):
+        for cls, status, suffix in ((Ykush, 'Downstream port 1 is ON', ['-g', '1']),
+                                    (Ykush3, 'Port 1 OFF', ['-g', '1']),
+                                    (YkushXs, 'Downstream port is ON', ['-g'])):
+            with self.subTest(driver=cls.__name__):
+                command = Mock(return_value=status)
+                hub = cls('ykushcmd', 'SERIAL', [1], command_runner=command)
+                self.assertEqual(hub.get(1), status.endswith('ON'))
+                self.assertEqual(command.call_args.args[0][-len(suffix):], suffix)
+                self.assertEqual(command.call_count, 1)
+
     def test_xs_commands_have_no_port_argument(self):
         command = Mock(side_effect=["", "Downstream port is OFF", "", "Downstream port is ON"])
         hub = create_hub(dict(driver="ykushxs", cmd="ykushcmd", serial="XS123", ports=[1]), command)
@@ -44,6 +55,21 @@ class HubTests(unittest.TestCase):
         self.assertIsInstance(hub, Ykush)
         hub.set(1, True)
         self.assertEqual(command.call_args_list[0], call(["ykushcmd", "ykush", "-s", "SERIAL", "-u", "1"], 15))
+
+    def test_ykush3_native_readback(self):
+        for enabled, status in ((True, "Port 3 ON\n"), (False, "Port 3 OFF\n")):
+            with self.subTest(enabled=enabled):
+                command = Mock(side_effect=["", status])
+                hub = Ykush3("ykushcmd", "Y3N14729", [3], command)
+                hub.set(3, enabled)
+                self.assertEqual(hub.last_status, status.strip())
+
+    def test_ykush3_rejects_wrong_socket_or_state(self):
+        for status in ("Port 2 OFF", "Port 3 ON", "Port 13 OFF", "OFF"):
+            with self.subTest(status=status):
+                command = Mock(side_effect=["", status])
+                with self.assertRaisesRegex(RuntimeError, "not confirmed"):
+                    Ykush3("ykushcmd", "Y3N14729", [3], command).set(3, False)
 
     def test_readback_for_wrong_port_is_rejected_even_if_state_matches(self):
         for response in ('Downstream port 15 is OFF', 'Downstream port 1 is OFF', 'OFF'):

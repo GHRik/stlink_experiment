@@ -5,6 +5,15 @@ from automation.backend.relays import Relay, NumatoRelay, Lcus2Relay, create_rel
 
 
 class RelayTests(unittest.TestCase):
+    def test_numato_read_state_only(self):
+        relay = NumatoRelay('COM19', 4)
+        relay.command = Mock(return_value='relay read 3\r\non\r\n>')
+        self.assertTrue(relay.get(3))
+        relay.command.assert_called_once_with('relay read 3')
+        relay.command.return_value = 'relay read 3\r\n>'
+        with self.assertRaisesRegex(RuntimeError, 'Unknown Numato'):
+            relay.get(3)
+
     def test_numato_channel_three_is_sent_without_an_offset(self):
         relay = NumatoRelay('COM19',4)
         relay.command=Mock(side_effect=['>','relay read 3\r\non\r\n>'])

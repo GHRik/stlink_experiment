@@ -8,6 +8,17 @@ class RelayControl:
     def __init__(self):
         self._lock = Lock()
 
+    def read_states(self, driver, port):
+        if driver != "numato":
+            return {}  # LCUS-2 has no state readback command.
+        with self._lock:
+            relay = create_relay({"driver": driver, "port": port, "channels": 4})
+            try:
+                relay.open()
+                return {str(channel): relay.get(channel) for channel in range(relay.channels)}
+            finally:
+                relay.close()
+
     def set_channel(self, driver, port, channel, enabled):
         with self._lock:
             relay = create_relay({"driver": driver, "port": port,

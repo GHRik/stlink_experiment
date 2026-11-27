@@ -6,6 +6,20 @@ from automation.backend.relay_control import RelayControl
 
 
 class RelayControlTests(unittest.TestCase):
+    @patch('automation.backend.relay_control.create_relay')
+    def test_read_all_numato_channels_without_switching(self, factory):
+        factory.return_value.channels = 4
+        factory.return_value.get.side_effect = [True, False, True, False]
+        self.assertEqual(RelayControl().read_states('numato', 'COM19'),
+                         {'0': True, '1': False, '2': True, '3': False})
+        factory.return_value.set.assert_not_called()
+        factory.return_value.close.assert_called_once()
+
+    @patch('automation.backend.relay_control.create_relay')
+    def test_lcus2_has_no_readback(self, factory):
+        self.assertEqual(RelayControl().read_states('lcus2', 'COM19'), {})
+        factory.assert_not_called()
+
     @patch("automation.backend.relay_control.create_relay")
     def test_model_port_and_zero_based_channel_are_forwarded(self, factory):
         result = RelayControl().set_channel("lcus2", "COM19", 1, True)

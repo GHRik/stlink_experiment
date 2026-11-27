@@ -32,7 +32,7 @@ class HubControlTests(unittest.TestCase):
     @patch("automation.backend.hub_control.resolve_command", return_value="ykushcmd")
     @patch("automation.backend.hubs._run")
     def test_selected_ykush3(self, run, resolve):
-        run.side_effect = ["", "Downstream port 1 is ON"]
+        run.side_effect = ["", "Port 1 ON"]
         HubControl().set_port("ykush3", "ykushcmd", "YK00009", 1, True)
         self.assertEqual(run.call_args_list, [
             call(["ykushcmd", "ykush3", "-s", "YK00009", "-u", "1"], 15),

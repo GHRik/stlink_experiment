@@ -68,6 +68,15 @@ class NumatoRelay(Relay):
         if not states or states[-1].lower() != state:
             raise RuntimeError(f"Numato relay {channel} did not confirm {state}")
 
+    def get(self, channel):
+        if type(channel) is not int or not 0 <= channel < self.channels:
+            raise ValueError("Relay channel is out of range")
+        response = self.command(f"relay read {channel:0{self.channel_digits}d}")
+        states = re.findall(r"(?im)^\s*(on|off)\s*$", response.replace(">", ""))
+        if not states:
+            raise RuntimeError(f"Unknown Numato relay state: {response}")
+        return states[-1].lower() == "on"
+
 
 class Lcus2Relay(Relay):
     baudrate = 9600

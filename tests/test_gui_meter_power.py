@@ -7,6 +7,34 @@ from automation.backend.meter_power import MeterPower
 
 
 class MeterPowerTests(unittest.TestCase):
+    @patch("automation.backend.meter_power.Device")
+    def test_readback_does_not_change_power_or_stop_acquisition(self, device):
+        for state in ('on', 'off'):
+            device.reset_mock()
+            device.return_value.command.side_effect = ['ack whoami STLINK-V3PWR', f'ack pwr {state}']
+            self.assertEqual(MeterPower().get('COM18')['enabled'], state == 'on')
+            self.assertEqual(device.return_value.command.call_args_list,
+                             [call('whoami'), call('pwr vout get')])
+            device.return_value.close.assert_not_called()
+            device.return_value.serial.close.assert_called_once()
+
+    @patch("automation.backend.meter_power.Device")
+    def test_readback_reuses_manual_connection_without_closing_it(self, device):
+        power = MeterPower()
+        power._device, power._port = device.return_value, 'COM18'
+        device.return_value.command.side_effect = ['ack whoami STLINK-V3PWR', 'ack pwr on']
+        self.assertTrue(power.get('COM18')['enabled'])
+        device.assert_not_called()
+        device.return_value.serial.close.assert_not_called()
+
+    def test_capture_owns_readback(self):
+        api = DesktopApi(Mock())
+        api._capture = Mock()
+        api._capture.status.return_value = {'running': True}
+        api._meter_power = Mock()
+        self.assertIsNone(api.read_meter_power('COM18'))
+        api._meter_power.get.assert_not_called()
+
     @patch("automation.backend.meter_power.identify_device")
     @patch("automation.backend.meter_power.Device")
     def test_on_keeps_control_connection_and_off_closes_it(self, device, identify):
