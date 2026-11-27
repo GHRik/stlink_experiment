@@ -18,13 +18,15 @@ def main(entrypoint=None):
                 _thread.interrupt_main()
                 return
 
-    Thread(target=watch_stop, daemon=True).start()
+    watcher = Thread(target=watch_stop, daemon=True, name="stlink-stop-watcher")
+    watcher.start()
     try:
         return (entrypoint or measure_main)()
     except KeyboardInterrupt:
         return 130
     finally:
         finished.set()
+        watcher.join(timeout=1)
 
 
 if __name__ == "__main__":

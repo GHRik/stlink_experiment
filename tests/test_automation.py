@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from threading import Timer
 import unittest
 from unittest.mock import patch
 
@@ -61,6 +62,48 @@ class FakeHardware:
 
 
 class AutomationTests(unittest.TestCase):
+    def test_gui_stop_waits_for_measurement_cleanup(self):
+        with tempfile.TemporaryDirectory() as folder:
+            stop = Path(folder) / 'stop'
+            cleaned = Path(folder) / 'cleaned'
+            script = """
+import sys, time
+from pathlib import Path
+from src.events import check_stop
+try:
+    while True:
+        check_stop()
+        time.sleep(.05)
+except KeyboardInterrupt:
+    pass
+finally:
+    Path(sys.argv[1]).write_text('OUT off')
+"""
+            timer = Timer(.5, stop.touch)
+            with patch.dict('os.environ', {'STLINK_GUI_STOP_FILE': str(stop)}):
+                timer.start()
+                try:
+                    with self.assertRaises(KeyboardInterrupt):
+                        run.run_command([sys.executable, '-c', script, str(cleaned),
+                                         'automation.backend.capture_worker'], 5, cwd=run.ROOT)
+                finally:
+                    timer.cancel()
+                    timer.join()
+            self.assertEqual(cleaned.read_text(), 'OUT off')
+
+    def test_warmup_stop_turns_out_off(self):
+        from unittest.mock import Mock
+        from src.stlink_protocol import warm_up
+        device = Mock()
+        with tempfile.TemporaryDirectory() as folder:
+            stop = Path(folder) / 'stop'
+            stop.touch()
+            with patch.dict('os.environ', {'STLINK_GUI_STOP_FILE': str(stop)}), \
+                    patch('src.stlink_protocol.read_temperature', return_value=25):
+                with self.assertRaises(KeyboardInterrupt):
+                    warm_up(device, 180)
+        self.assertEqual(device.command.call_args_list[-1].args, ('pwr off',))
+
     def test_board_notes_are_optional(self):
         config = run.read_config(run.ROOT / 'automation/HIL/config.example.jsonc')
         for board in config['connected_boards']:
@@ -182,8 +225,8 @@ class AutomationTests(unittest.TestCase):
             hardware = run.Hardware(config, Path(folder))
             with patch.object(run, "run_command") as command:
                 hardware.measure(config["connected_boards"][0])
-            self.assertEqual(command.call_args.args[0][:4],
-                             [sys.executable, "-m", "src.stlink_measure", "capture"])
+            self.assertEqual(command.call_args.args[0][:5],
+                             [sys.executable, "-u", "-m", "src.stlink_measure", "capture"])
             self.assertEqual(command.call_args.kwargs["cwd"], run.ROOT)
 
     def test_sketch_is_selected_and_resolved_per_board(self):

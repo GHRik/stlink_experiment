@@ -29,6 +29,8 @@ def read_options():
     capture.add_argument("--name", required=True, type=nonempty_text,
                          help=REQUIRED_REASONS["--name"])
     capture.add_argument("--repeats", type=int, default=10)
+    capture.add_argument("--exact-name", action="store_true",
+                         help="Use --name as the session directory without appending another timestamp (HIL).")
     capture.add_argument("--seconds", type=float, default=100)
     capture.add_argument("--hz", type=int, choices=RATES, default=1000)
     capture.add_argument("--voltage", type=float, default=3.3)

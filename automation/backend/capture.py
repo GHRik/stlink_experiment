@@ -68,7 +68,8 @@ class CaptureProcess:
                 stop_directory.cleanup()
                 raise
             self._running = True
-            self._thread = Thread(target=self._read_output, args=(self._process, stop_directory), daemon=True)
+            self._thread = Thread(target=self._read_output, args=(self._process, stop_directory), daemon=True,
+                                  name="stlink-capture-output")
             self._thread.start()
         return {"command": command, "directory": str(self._directory)}
 
@@ -120,4 +121,14 @@ class CaptureProcess:
         self.stop()
         if self._thread is not None:
             self._thread.join(timeout=20)
+            if self._thread.is_alive():
+                process = self._process
+                if process is not None and process.poll() is None:
+                    if os.name == 'nt':
+                        subprocess.run(['taskkill', '/PID', str(process.pid), '/T', '/F'],
+                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+                    else:
+                        process.kill()
+                    process.wait(timeout=10)
+                self._thread.join(timeout=5)
         return not self.status()["running"]

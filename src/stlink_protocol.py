@@ -10,7 +10,7 @@ import time
 import csv
 from .storage import save_json
 from .measurement_controller import MeasurementController
-from .events import emit
+from .events import emit, check_stop
 from .live_current import LiveCurrentPreview
 
 SAMPLE = re.compile(r"^(\d{4})([+-])(\d{1,2})$")
@@ -109,7 +109,10 @@ def warm_up(device, seconds):
             remaining = seconds
             while remaining > 0:
                 step = min(10, remaining)
-                time.sleep(step)
+                deadline = time.monotonic() + step
+                while time.monotonic() < deadline:
+                    check_stop()
+                    time.sleep(min(.1, max(0, deadline - time.monotonic())))
                 remaining -= step
                 emit("warmup", state="progress", seconds=seconds, elapsed=seconds - remaining)
                 print(f"  Warm-up: {seconds - remaining:g}/{seconds:g} s", flush=True)
@@ -300,7 +303,8 @@ def validate_settings(args):
 
 
 def create_session(args):
-    session = Path(args.out) / (args.name + "_" + datetime.now().strftime("%Y%m%d_%H%M%S_%f"))
+    name = args.name if getattr(args, 'exact_name', False) else args.name + "_" + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    session = Path(args.out) / name
     session.mkdir(parents=True)
     return session
 

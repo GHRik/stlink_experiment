@@ -31,4 +31,4 @@ def run_desktop(webview, demo=False):
     try:
         webview.start(icon=str(icon))
     finally:
-        if demo: api._on_closing()
+        api._on_closing()

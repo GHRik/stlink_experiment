@@ -18,7 +18,7 @@ if str(ROOT) not in sys.path:
 
 from automation.backend.relays import create_relay
 from automation.backend.hubs import create_hub
-from src.events import emit
+from src.events import emit, check_stop
 
 
 def read_config(path):
@@ -112,7 +112,25 @@ def run_command(command, timeout, log=None, cwd=None):
                                stderr=subprocess.STDOUT, text=True,
                                start_new_session=os.name != "nt", cwd=cwd)
     try:
-        output, _ = process.communicate(timeout=timeout)
+        deadline = time.monotonic() + timeout
+        stopping_since = None
+        while True:
+            try:
+                output, _ = process.communicate(timeout=min(.2, max(.001, deadline - time.monotonic())))
+                break
+            except subprocess.TimeoutExpired:
+                if time.monotonic() >= deadline:
+                    raise
+                try:
+                    if command[0] == sys.executable:
+                        check_stop()
+                except KeyboardInterrupt:
+                    if 'automation.backend.capture_worker' not in command:
+                        raise
+                    # Let the measurement subprocess power OUT off before relay cleanup.
+                    stopping_since = stopping_since or time.monotonic()
+                    if time.monotonic() - stopping_since > 20:
+                        raise
     except BaseException:
         if os.name == "nt":
             subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
@@ -121,6 +139,8 @@ def run_command(command, timeout, log=None, cwd=None):
             os.killpg(process.pid, signal.SIGKILL)
         process.wait(timeout=10)
         raise
+    if command[0] == sys.executable:
+        check_stop()
     if process.returncode:
         raise RuntimeError(f"Command failed ({process.returncode}): {command!r}\n{output or 'See operation log.'}")
     return output or ""
@@ -140,7 +160,10 @@ class Hardware:
                                        monotonic_s=time.monotonic(), action=action, **details)) + "\n")
 
     def pause(self):
-        time.sleep(self.config["step_delay_s"])
+        deadline = time.monotonic() + self.config["step_delay_s"]
+        while time.monotonic() < deadline:
+            check_stop()
+            time.sleep(min(.1, max(0, deadline - time.monotonic())))
 
     def open(self):
         self.hub.open()
@@ -159,6 +182,7 @@ class Hardware:
         from serial.tools.list_ports import comports
         deadline = time.monotonic() + self.config["port_timeout_s"]
         while time.monotonic() < deadline:
+            check_stop()
             if port.upper() in {p.device.upper() for p in comports()}:
                 return
             time.sleep(.2)
@@ -176,10 +200,13 @@ class Hardware:
 
     def measure(self, board):
         self.event("measure", board=board["name"])
-        command = [sys.executable, "-m", "src.stlink_measure", "capture",
+        module = "automation.backend.capture_worker" if os.environ.get("STLINK_GUI_STOP_FILE") else "src.stlink_measure"
+        command = [sys.executable, "-u", "-m", module, "capture",
                    "--port", self.config["stlink_com"], "--name", board["name"],
                    "--notes", board["notes"], "--out", str(self.directory / "measurements")]
         m = self.config["measurement"]
+        if board.get('exact_name'):
+            command += ['--exact-name']
         for key in ("repeats", "seconds", "hz", "voltage", "warmup_seconds", "off_seconds"):
             command += ["--" + key.replace("_", "-"), str(m[key])]
         if m.get("controller"):

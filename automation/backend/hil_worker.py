@@ -5,7 +5,6 @@ import sys
 from tempfile import TemporaryDirectory
 
 from automation.HIL.run import cli
-from .capture_worker import main as watched_main
 
 
 def main():
@@ -15,7 +14,10 @@ def main():
         path = Path(directory) / "config.json"
         path.write_text(json.dumps(config, indent=2), encoding="utf-8")
         sys.argv = ["stlink-hil", "--config", str(path), *extra]
-        return watched_main(cli)
+        try:
+            return cli()
+        except KeyboardInterrupt:
+            return 130
 
 
 if __name__ == "__main__":

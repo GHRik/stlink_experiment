@@ -2,6 +2,13 @@
 import json
 import os
 import time
+from pathlib import Path
+
+
+def check_stop():
+    path = os.environ.get("STLINK_GUI_STOP_FILE")
+    if path and Path(path).exists():
+        raise KeyboardInterrupt
 
 
 def emit(kind, **details):

@@ -3,6 +3,7 @@ import io
 from pathlib import Path
 import sys
 import time
+import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
@@ -110,3 +111,60 @@ sys.exit(capture_worker.main())
             self.assertIn("CLEANED", runner.status()["lines"])
         finally:
             runner.close()
+
+    def test_window_close_stops_capture_and_its_controller(self):
+        code = '''import sys,time,os
+from pathlib import Path
+from automation.backend import capture_worker
+from src.measurement_controller import MeasurementController
+def measure():
+    root=Path(os.environ['STLINK_GUI_STOP_FILE']).parent
+    script=root/'controller.py'
+    script.write_text("import os,time\\nfrom pathlib import Path\\np=Path(os.environ['STLINK_STOP_FILE'])\\nwhile not p.exists(): time.sleep(.05)\\nprint('controller cleaned',flush=True)\\n")
+    controller=MeasurementController(script,root,60)
+    controller.start()
+    print('READY',flush=True)
+    try:
+        while True: time.sleep(.05)
+    finally:
+        outcome=controller.close()
+        print('CONTROLLER_CLOSED',outcome['returncode'],outcome['forced_stop'],flush=True)
+sys.exit(capture_worker.main(measure))
+'''
+        runner=CaptureProcess()
+        runner.start({},command=[sys.executable,'-u','-c',code])
+        try:
+            deadline=time.monotonic()+15
+            while 'READY' not in runner.status()['lines'] and time.monotonic()<deadline:
+                time.sleep(.05)
+            self.assertIn('READY',runner.status()['lines'])
+            self.assertTrue(runner.close())
+            self.assertFalse(runner._thread.is_alive())
+            self.assertIsNotNone(runner._process.poll())
+            self.assertIn('CONTROLLER_CLOSED 0 False',runner.status()['lines'])
+        finally:
+            runner.close()
+
+    def test_close_escalates_when_worker_ignores_stop(self):
+        from unittest.mock import Mock
+        runner = CaptureProcess()
+        runner._running = True
+        runner._process = Mock()
+        runner._process.pid = 12345
+        runner._process.poll.return_value = None
+        runner._thread = Mock()
+        runner._thread.is_alive.return_value = True
+        with tempfile.TemporaryDirectory() as directory:
+            runner._stop_file = Path(directory) / 'stop'
+            def joined(timeout):
+                if timeout == 5:
+                    runner._running = False
+            runner._thread.join.side_effect = joined
+            with patch('automation.backend.capture.subprocess.run') as terminate:
+                self.assertTrue(runner.close())
+            if sys.platform == 'win32':
+                self.assertEqual(terminate.call_args.args[0],
+                                 ['taskkill', '/PID', '12345', '/T', '/F'])
+            else:
+                runner._process.kill.assert_called_once()
+            runner._process.wait.assert_called_once_with(timeout=10)

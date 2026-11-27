@@ -25,6 +25,15 @@ def gui_configuration():
 
 
 class HilGuiTests(unittest.TestCase):
+    @patch('automation.backend.hil.resolve_command', return_value='ykushcmd')
+    def test_empty_name_uses_profile_and_sketch_stem(self, resolve):
+        gui = gui_configuration()
+        gui['name'] = ' '
+        gui['boards'][0].update(sketch=r'C:\firmware\Blink.ino', dut=3)
+        config = hil_configuration(gui, 'ykushcmd')
+        self.assertRegex(config['connected_boards'][0]['name'],
+                         r'^HIL_\d{8}_\d{6}_nodemcu_Blink_DUT3$')
+
     @patch("automation.backend.hil.resolve_command", return_value="ykushcmd")
     def test_generated_configuration_runs_through_actual_cli_dry_run(self, resolve):
         config = hil_configuration(gui_configuration(), "ykushcmd")
@@ -37,8 +46,8 @@ class HilGuiTests(unittest.TestCase):
             output = "\n".join(result["lines"])
             self.assertFalse(result["running"], output)
             self.assertEqual(result["returncode"], 0, output)
-            self.assertIn("energy_test_nodemcu-relay3", output)
-            self.assertIn("energy_test_nodemcu-relay0", output)
+            self.assertRegex(output, r"energy_test_\d{8}_\d{6}_DUT1")
+            self.assertRegex(output, r"energy_test_\d{8}_\d{6}_DUT2")
             self.assertIn("'port': 3", output)
             self.assertIn("'controller': 'C:/scripts/control.py'", output)
             self.assertEqual(config["connected_boards"][0]["relay"], 3)
@@ -49,6 +58,7 @@ class HilGuiTests(unittest.TestCase):
     def test_api_releases_manual_meter_and_starts_hil_worker(self, resolve):
         api = DesktopApi(Mock())
         api._capture = Mock()
+        api._capture.start.return_value = {}
         api._capture.status.return_value = {"running": False}
         api._meter_power = Mock()
         api.start_hil(gui_configuration())

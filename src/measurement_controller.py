@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 import time
+import signal
 
 
 class MeasurementController:
@@ -15,9 +16,11 @@ class MeasurementController:
         self.process = None
         self.log = None
         self.started = None
+        self.outcome = None
 
     def start(self):
         self.stop_file.unlink(missing_ok=True)
+        self.outcome = None
         self.started = time.monotonic()
         env = dict(os.environ, STLINK_RUN_DIR=str(self.directory),
                    STLINK_DURATION_S=str(self.seconds), STLINK_STOP_FILE=str(self.stop_file),
@@ -26,7 +29,9 @@ class MeasurementController:
         try:
             self.process = subprocess.Popen([sys.executable, "-u", str(self.script)],
                                             env=env, stdin=subprocess.DEVNULL,
-                                            stdout=self.log, stderr=subprocess.STDOUT)
+                                            stdout=self.log, stderr=subprocess.STDOUT,
+                                            start_new_session=os.name != 'nt',
+                                            creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
         except BaseException:
             self.log.close()
             raise
@@ -41,6 +46,8 @@ class MeasurementController:
             self.stop_file.touch()
 
     def close(self):
+        if self.outcome is not None:
+            return self.outcome
         if self.process is None:
             return None
         forced = False
@@ -58,9 +65,10 @@ class MeasurementController:
                     if result.returncode and self.process.poll() is None:
                         raise RuntimeError("Could not terminate the controller process tree")
                 else:
-                    self.process.kill()
+                    os.killpg(self.process.pid, signal.SIGKILL)
                 self.process.wait(timeout=10)
-            return {"script": str(self.script), "start_monotonic": self.started,
-                    "returncode": self.process.returncode, "forced_stop": forced}
+            self.outcome = {"script": str(self.script), "start_monotonic": self.started,
+                            "returncode": self.process.returncode, "forced_stop": forced}
+            return self.outcome
         finally:
             self.log.close()
