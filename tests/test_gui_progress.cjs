@@ -78,3 +78,11 @@ test('Warm-up shows running badge and stage countdown independently of total', (
   assert.match(fields['#run-done'].items[0].textContent,/Warm-up RUNNING/);
   assert.match(fields['#run-done'].items[0].textContent,/Report PENDING/);
 });
+
+test('Published repeat reports refresh Results while capture is still running', () => {
+  const {context} = setup();
+  let refreshes = 0;
+  context.refreshResults = () => { refreshes++; };
+  vm.runInContext("applyRunEvents({events:[{type:'results_ready',repeat:1},{type:'results_ready',repeat:2}]})",context);
+  assert.equal(refreshes,1);
+});

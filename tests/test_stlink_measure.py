@@ -60,7 +60,10 @@ class Tests(unittest.TestCase):
             folders = list(Path(temporary).iterdir())
             self.assertEqual(len(folders), 1)
             self.assertRegex(folders[0].name, r"^modem_\d{8}_\d{6}_\d{6}$")
-            report.assert_called_once_with(folders[0], begin=0, end=None)
+            self.assertEqual(report.call_count, 2)
+            for report_call in report.call_args_list:
+                self.assertEqual(report_call.args, (folders[0],))
+                self.assertEqual(report_call.kwargs, dict(begin=0, end=None))
             self.assertEqual([call.args[1].name for call in capture.call_args_list],
                              ["repeat_001", "repeat_002"])
 

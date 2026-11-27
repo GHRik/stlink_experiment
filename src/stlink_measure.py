@@ -44,6 +44,13 @@ def run_experiment(settings):
 
             # Analyze and plot this repeat.
             analyze_run(run_folder, begin=0, end=None)
+            # Publish a cumulative report before starting the next repeat or DUT.
+            if number == settings.repeats:
+                emit("report", state="started")
+            report(session, begin=0, end=None)
+            emit("results_ready", name=settings.name, repeat=number, session=str(session.resolve()))
+            if number == settings.repeats:
+                emit("report", state="completed")
 
     finally:
         # Preserve the log and attempt to disable OUT, including after errors or Ctrl+C.
@@ -52,10 +59,6 @@ def run_experiment(settings):
         finally:
             meter.close()
 
-    # Generate comparison plots and statistics across repeats.
-    emit("report", state="started")
-    report(session, begin=0, end=None)
-    emit("report", state="completed")
     print(f"Saved to: {session.resolve()}")
 
 

@@ -14,7 +14,9 @@ function beginRunProgress(config, names = [config.name], uploads = false) {
 }
 
 function applyRunEvents(result) {
+  let resultsReady = false;
   for (const event of result.events || []) {
+    if (event.type === 'results_ready') resultsReady = true;
     if (typeof updateLiveCurrent === 'function') updateLiveCurrent(event);
     if (event.type === 'meter_power') displayMeterPower(event.enabled);
     if (event.type === 'hub' || event.type === 'relay') {
@@ -65,6 +67,7 @@ function applyRunEvents(result) {
     }
   }
   renderRunProgress();
+  if (resultsReady && typeof refreshResults === 'function') refreshResults();
 }
 
 function finishRunProgress(label) {

@@ -34,6 +34,8 @@ async function refreshResults() {
   const note = document.querySelector('#results-note');
   try {
     const sessions = await window.pywebview.api.list_results();
+    const expanded = new Set([...document.querySelectorAll('#results-gallery .result-session[open]')]
+      .map(card => card.dataset.sessionName));
     const available = new Set(sessions.map(session => session.name));
     for (const name of comparisonSelection) if (!available.has(name)) comparisonSelection.delete(name);
     resultsPreviewObserver.disconnect();
@@ -49,9 +51,13 @@ async function refreshResults() {
       }
       const card = document.createElement('details');
       card.className = 'result-session';
+      card.dataset.sessionName = session.name;
+      card.open = expanded.has(session.name);
       card.dataset.name = `${session.name} ${session.date}`.toLowerCase();
       const title = document.createElement('summary');
-      title.append(comparisonCheckbox(session.name), document.createTextNode(session.name === '.' ? 'results' : session.name));
+      title.title = session.name;
+      const sessionLabel = session.name.split('/').filter(Boolean).at(-1);
+      title.append(comparisonCheckbox(session.name), document.createTextNode(session.name === '.' ? 'results' : sessionLabel));
       const plots = document.createElement('div');
       plots.className = 'result-plots';
       for (const plot of session.plots) {
