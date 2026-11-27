@@ -1,3 +1,11 @@
 {
-  "nodemcu": "esp8266:esp8266:nodemcuv2:xtal=80,wipe=all,baud=115200"
+  "_help": [
+    "FQBN = Fully Qualified Board Name. Copy the FQBN column from: arduino-cli board listall",
+    "Filter in PowerShell: arduino-cli board listall | Select-String 'pico'",
+    "Installed core packages: arduino-cli core list",
+    "Connected boards and COM ports: arduino-cli board list",
+    "Add entries as: profile_name: FQBN. The COM port is selected separately. This _help section is ignored by the uploader."
+  ],
+  "nodemcu": "esp8266:esp8266:nodemcuv2:xtal=80,wipe=all,baud=115200",
+  "raspberrypico2W": "rp2040:rp2040:rpipico2w"
 }

@@ -28,7 +28,8 @@ def default_arduino_cli():
 
 def load_profiles():
     path = Path(__file__).resolve().parents[1] / 'HIL/board_profiles.json'
-    return json.loads(path.read_text(encoding="utf-8-sig"))
+    return {name: fqbn for name, fqbn in json.loads(path.read_text(encoding="utf-8-sig")).items()
+            if not name.startswith('_')}
 
 
 def main(argv=None):

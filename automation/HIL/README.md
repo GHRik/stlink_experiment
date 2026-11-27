@@ -55,6 +55,28 @@ Each board defines its own `upload_profile` and maps `ykush_usb_port` (**1–3**
 
 The `nodemcu` profile in [board_profiles.json](board_profiles.json) selects NodeMCU 1.0, 80 MHz, full flash erase and 115200 baud upload. Add profiles to this JSON file; the automation configuration only selects a profile. Profiles remain in `automation/HIL/board_profiles.json` and are resolved from the package location, independently of the working directory. The shared uploader is [backend/upload.py](../backend/upload.py). Install **ESP8266 Core 3.1.2** in Arduino CLI before running; the script does not install packages. `ESP.deepSleep(0)` sleeps indefinitely until reset or a power cycle; no periodic wakeup is configured.
 
+### Find board profiles
+
+List installed core packages:
+
+```powershell
+arduino-cli core list
+```
+
+List connected boards and their COM ports:
+
+```powershell
+arduino-cli board list
+```
+
+Find the FQBN for a profile among boards supported by installed packages:
+
+```powershell
+arduino-cli board listall | Select-String "pico"
+```
+
+Use the FQBN as the value in `board_profiles.json`; configure the COM port separately for each board.
+
 ## Run
 
 From the repository root:
