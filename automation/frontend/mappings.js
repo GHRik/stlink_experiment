@@ -30,6 +30,7 @@ function initializeChannelMappings() {
       button.querySelector('.port-state').textContent = desktopReady ? '?' : 'OFF';
       updateChannelMappings();
       updateConnectionFlows();
+      refreshHardwareStates();
     });
   });
   updateChannelMappings();

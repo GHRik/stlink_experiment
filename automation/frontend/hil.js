@@ -11,6 +11,7 @@ function hilConfiguration() {
       com: value(`dut${index + 1}-port`),
       ykush_usb_port: Number(hub2Switches[index].dataset.port),
       relay: Number(button.dataset.channel),
+      dut: index + 1,
     }]),
   };
 }

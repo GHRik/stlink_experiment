@@ -26,7 +26,11 @@ async function startStandaloneCapture(preserveLog = false, config = standaloneCo
   status.classList.remove('error');
   status.textContent = 'Starting measurement…';
   try {
-    await window.pywebview.api[startMethod](config);
+    const started = await window.pywebview.api[startMethod](config);
+    if (started?.board_names && runProgress) {
+      runProgress.boards.forEach((board, index) => { board.name = started.board_names[index]; });
+      renderRunProgress();
+    }
     displayMeterPower(null);
     captureInProgress = true;
     stopButton.disabled = false;

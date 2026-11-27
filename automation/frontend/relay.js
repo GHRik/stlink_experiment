@@ -1,5 +1,46 @@
 // Numato hardware labels start at 0; LCUS-2 labels start at 1. Driver indices start at 0.
 let relayBusy = false;
+let readingHardwareStates = false;
+
+async function refreshHardwareStates() {
+  if (!desktopReady || relayBusy || switchingHub || readingHardwareStates) return;
+  readingHardwareStates = true;
+  const api = window.pywebview.api;
+  const show = (buttons, states, key) => buttons.forEach(button => {
+    const enabled = states[button.dataset[key]];
+    button.setAttribute('aria-pressed', typeof enabled === 'boolean' ? String(enabled) : 'mixed');
+    button.querySelector('.port-state').textContent = typeof enabled === 'boolean' ? (enabled ? 'ON' : 'OFF') : '?';
+    button.title = typeof enabled === 'boolean' ? 'State read from device' : 'State unavailable';
+  });
+  try {
+    const model = document.querySelector('#relay-model');
+    const port = document.querySelector('#relay-port');
+    const driver = model.value, address = port.value;
+    // HIL owns the relay COM connection; its confirmed switch events update the diagram.
+    const hilOwnsRelay = isRunning && currentLayout === 'hil';
+    if (!hilOwnsRelay && address && !port.selectedOptions[0]?.disabled && !document.querySelector('.relay').hidden) {
+      let states = {};
+      try { states = await api.read_relay_states(driver, address); }
+      catch (error) { status.textContent = `Relay readback failed: ${error.message || error}`; }
+      if (!relayBusy && !(isRunning && currentLayout === 'hil') && driver === model.value && address === port.value) show(relaySwitches, states, 'channel');
+    }
+    for (const card of document.querySelectorAll('.primary-hub, .upload-hub')) {
+      if (switchingHub || card.hidden || !hubConfigured(card)) continue;
+      const model = card.querySelector('select[id$="model"]');
+      const serial = card.querySelector('select[id$="serial"]');
+      const driver = model.value, address = serial.value;
+      let states = {};
+      try { states = await api.read_hub_states(driver, address); }
+      catch (error) { status.textContent = `Hub readback failed: ${error.message || error}`; }
+      if (!switchingHub && driver === model.value && address === serial.value) {
+        show(card.querySelectorAll('.hub-port'), states, 'port');
+      }
+    }
+  } finally {
+    readingHardwareStates = false;
+    updateConnectionFlows();
+  }
+}
 
 function relayChannelNumber(channel, driver = document.querySelector('#relay-model').value) {
   return Number(channel) + (driver === 'lcus2' ? 1 : 0);

@@ -445,6 +445,15 @@
     .capture-log h2 { margin: 0 0 12px; font-size: 14px; }
     #run-time { margin: 12px 0; font-size: clamp(22px, 2.5vw, 32px); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.3; color: #172538; }
     [data-theme="dark"] #run-time { color: #e4eaf2; }
+    #run-stage { font-size: 20px; font-weight: 700; }
+    #run-stage-time { font-size: 24px; font-weight: 700; color: #e09b32; font-variant-numeric: tabular-nums; }
+    #run-done { list-style: none; padding: 0; }
+    #run-done li { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 14px 0; }
+    #run-done li > strong { flex-basis: 100%; }
+    .stage-badge { padding: 8px 12px; border: 1px solid; border-radius: 4px; font-weight: 700; }
+    .stage-done { color: #167545; background: #d8f5e4; }
+    .stage-running { color: #523500; background: #ffda78; box-shadow: 0 0 10px #ffbd4266; }
+    .stage-pending { color: #67778a; background: #e9edf3; }
     #capture-log > summary { cursor: pointer; font-weight: 700; }
     #capture-log[open] > summary { margin-bottom: 12px; }
     .capture-log pre {
@@ -979,6 +988,7 @@
             </div>
 
           </div>
+          <small id="measurement-estimate" aria-live="polite">Estimate measurement time: 0min 0sec</small>
         </section>
         <div class="meter-stack">
           <section class="device-card controller-card" aria-label="Controller script">
@@ -1060,21 +1070,21 @@
               </select>
             </div>
           </div>
-          <button class="relay-channel state-toggle" data-channel="0" type="button" aria-pressed="false">
+          <button class="relay-channel state-toggle" data-channel="3" type="button" aria-pressed="false">
             <span>1 → DUT 1</span>
             <span class="port-indicator">
               <span class="port-state">OFF</span>
               <span class="port-led" aria-hidden="true"></span>
             </span>
           </button>
-          <button class="relay-channel state-toggle" data-channel="1" type="button" aria-pressed="false">
+          <button class="relay-channel state-toggle" data-channel="2" type="button" aria-pressed="false">
             <span>2 → DUT 2</span>
             <span class="port-indicator">
               <span class="port-state">OFF</span>
               <span class="port-led" aria-hidden="true"></span>
             </span>
           </button>
-          <button class="relay-channel state-toggle" data-channel="2" type="button" aria-pressed="false">
+          <button class="relay-channel state-toggle" data-channel="1" type="button" aria-pressed="false">
             <span>3 → DUT 3</span>
             <span class="port-indicator">
               <span class="port-state">OFF</span>
@@ -1094,9 +1104,10 @@
             <label class="sketch-label" for="dut1-profile">Board profile</label>
             <select id="dut1-profile" class="board-profile">
               <option value="nodemcu">nodemcu</option>
+              <option value="raspberrypico2W">raspberrypico2W</option>
             </select>
           </div>
-          <a class="add-profile" href="../HIL/board_profiles.json" target="_blank" rel="noopener">Add profile ↗</a>
+          <button type="button" class="add-profile">Add profile ↗</button>
           <div class="device-field">
             <label class="sketch-label" for="dut1-sketch">Arduino sketch</label>
             <input class="sketch" id="dut1-sketch" type="file" accept=".ino">
@@ -1114,9 +1125,10 @@
             <label class="sketch-label" for="dut2-profile">Board profile</label>
             <select id="dut2-profile" class="board-profile">
               <option value="nodemcu">nodemcu</option>
+              <option value="raspberrypico2W">raspberrypico2W</option>
             </select>
           </div>
-          <a class="add-profile" href="../HIL/board_profiles.json" target="_blank" rel="noopener">Add profile ↗</a>
+          <button type="button" class="add-profile">Add profile ↗</button>
           <div class="device-field">
             <label class="sketch-label" for="dut2-sketch">Arduino sketch</label>
             <input class="sketch" id="dut2-sketch" type="file" accept=".ino">
@@ -1134,9 +1146,10 @@
             <label class="sketch-label" for="dut3-profile">Board profile</label>
             <select id="dut3-profile" class="board-profile">
               <option value="nodemcu">nodemcu</option>
+              <option value="raspberrypico2W">raspberrypico2W</option>
             </select>
           </div>
-          <a class="add-profile" href="../HIL/board_profiles.json" target="_blank" rel="noopener">Add profile ↗</a>
+          <button type="button" class="add-profile">Add profile ↗</button>
           <div class="device-field">
             <label class="sketch-label" for="dut3-sketch">Arduino sketch</label>
             <input class="sketch" id="dut3-sketch" type="file" accept=".ino">
@@ -1166,6 +1179,7 @@
     <section class="capture-log" id="run-progress" aria-label="Run progress" hidden>
       <h2>Run progress</h2>
       <p id="run-stage" role="status"></p>
+      <p id="run-stage-time" role="timer"></p>
       <progress id="run-bar" value="0" max="1" style="width:100%"></progress>
       <p id="run-count"></p>
       <p id="run-time"></p>
@@ -1209,6 +1223,15 @@
 <script src="relay.js"></script>
 <script src="mappings.js"></script>
 <script>
+  document.querySelectorAll('.add-profile').forEach(button => button.addEventListener('click', async () => {
+    if (isRunning) return;
+    if (!desktopReady) {
+      status.textContent = 'Open automation/HIL/board_profiles.json in a text editor. Desktop mode opens it automatically.';
+      return;
+    }
+    try { await window.pywebview.api.edit_board_profiles(); }
+    catch (error) { status.textContent = `Could not open board profiles: ${error.message || error}`; }
+  }));
   // Desktop mode replaces browser uploads with native dialogs returning full paths.
   window.addEventListener('pywebviewready', () => {
     if (typeof window.pywebview?.api?.list_ports !== 'function') {
@@ -1652,8 +1675,21 @@
   }
 
   // Synchronize relay rows, DUT cards and their SVG connections.
+  function updateMeasurementEstimate() {
+    const seconds = Number(document.querySelector('#measurement-seconds').value);
+    const repeats = Number(document.querySelector('#measurement-repeats').value);
+    const warmup = Number(document.querySelector('#measurement-warmup').value);
+    const total = Math.max(0, Math.ceil(modeDutCount() * (repeats * seconds + warmup)));
+    document.querySelector('#measurement-estimate').textContent =
+      `Estimate measurement time: ${Math.floor(total / 60)}min ${total % 60}sec`;
+  }
+  ['#measurement-seconds', '#measurement-repeats', '#measurement-warmup'].forEach(selector => {
+    document.querySelector(selector).addEventListener('input', updateMeasurementEstimate);
+  });
+
   function updateDeviceCount() {
     const count = modeDutCount();
+    updateMeasurementEstimate();
     document.querySelectorAll('.dut').forEach((dut, index) => { dut.hidden = index >= count; });
     document.querySelectorAll('.relay-channel').forEach((contact, index) => { contact.hidden = index >= count; });
     document.querySelectorAll('[data-dut]').forEach(group => {
@@ -1732,10 +1768,13 @@
   document.querySelector('#meter-port').addEventListener('change', () => {
     if (desktopReady) displayMeterPower(null);
     updateMeterControls();
+    refreshMeterPower();
   });
+  setInterval(refreshMeterPower, 5000);
   document.querySelector('#relay-port').addEventListener('change', () => {
     resetRelayStates();
     updateRelayControls();
+    refreshHardwareStates();
   });
   hubSelectors.forEach(select => {
     fillDemoHubs(select);
@@ -1765,11 +1804,14 @@
     updateHubControls();
   }
   document.querySelector('#hub1-serial').addEventListener('change', resetHubOneStates);
+  document.querySelector('#hub1-serial').addEventListener('change', refreshHardwareStates);
   document.querySelector('#hub-model').addEventListener('change', resetHubSelection);
   document.querySelector('#hub-serial').addEventListener('change', () => {
     resetHubPortStates();
     updateHubControls();
+    refreshHardwareStates();
   });
+  setInterval(refreshHardwareStates, 5000);
   const controllerScript = document.querySelector('#measurement-controller');
   function updateControllerConnection() {
     document.querySelector('.meter-stack').classList.toggle('has-controller', Boolean(controllerScript.dataset.path) || controllerScript.files.length > 0);
@@ -1833,10 +1875,19 @@
     if (Number(relayCount.value) > limit) relayCount.value = String(limit);
     updateDeviceCount();
   }
-  document.querySelector('#relay-model').addEventListener('change', updateRelayCapacity);
+  document.querySelector('#relay-model').addEventListener('change', () => {
+    const lcus = document.querySelector('#relay-model').value === 'lcus2';
+    relaySwitches.forEach((button, index) => {
+      const channel = lcus ? index % 2 : 3 - index;
+      button.dataset.channel = String(channel);
+      button.parentElement.querySelector('select').value = String(relayChannelNumber(channel));
+    });
+    updateRelayCapacity();
+  });
   document.querySelector('#relay-model').addEventListener('change', () => {
     resetRelayStates();
     updateRelayControls();
+    refreshHardwareStates();
   });
   updateRelayCapacity();
   updateDeviceCount();

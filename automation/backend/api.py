@@ -9,6 +9,9 @@ from .relay_control import RelayControl
 from threading import Lock
 import sys
 import json
+import subprocess
+import os
+from pathlib import Path
 from .hil import hil_configuration
 from .results_gallery import ResultsGallery
 from .comparison import ComparisonService
@@ -31,6 +34,14 @@ class DesktopApi:
 
     def pick_file(self, kind):
         return self._picker.pick_file(kind)
+
+    def edit_board_profiles(self):
+        path = Path(__file__).resolve().parents[1] / 'HIL/board_profiles.json'
+        if os.name == 'nt':
+            subprocess.Popen(['notepad.exe', str(path)])
+        else:
+            subprocess.Popen(['open' if sys.platform == 'darwin' else 'xdg-open', str(path)])
+        return str(path)
 
     def pick_sketches(self):
         return self._picker.pick_sketches()
@@ -59,6 +70,12 @@ class DesktopApi:
     def set_hub_port(self, driver, serial, port, enabled):
         return self._hub_control.set_port(driver, self._hub_command, serial, port, enabled)
 
+    def read_hub_states(self, driver, serial):
+        return self._hub_control.read_states(driver, self._hub_command, serial)
+
+    def read_relay_states(self, driver, port):
+        return self._relay_control.read_states(driver, port)
+
     def set_relay(self, driver, port, channel, enabled):
         return self._relay_control.set_channel(driver, port, channel, enabled)
 
@@ -75,6 +92,12 @@ class DesktopApi:
                 raise RuntimeError("Manual OUT control is unavailable during capture")
             return self._meter_power.set(port, voltage, enabled)
 
+    def read_meter_power(self, port):
+        with self._meter_lock:
+            if self._capture.status()["running"]:
+                return None  # Capture owns the port and publishes meter_power events.
+            return self._meter_power.get(port)
+
     def start_upload(self, board, port, sketch):
         with self._meter_lock:
             if self._capture.status()["running"]:
@@ -89,9 +112,10 @@ class DesktopApi:
                 raise RuntimeError("A capture or upload is already running")
             configuration = hil_configuration(config, self._hub_command)
             self._meter_power.close()
-            return self._capture.start({}, command=[sys.executable, "-u", "-m",
+            result = self._capture.start({}, command=[sys.executable, "-u", "-m",
                 "automation.backend.hil_worker", json.dumps(configuration),
                 *(['--out', config['out']] if config.get('out') else [])])
+            return dict(result, board_names=[board['name'] for board in configuration['connected_boards']])
 
     def confirm_connection(self, message):
         return self._picker._window.create_confirmation_dialog("One hub setup", message)
@@ -104,8 +128,7 @@ class DesktopApi:
 
     def _on_closing(self):
         stopped = self._capture.close()
-        if stopped:
-            self._comparisons.close()
+        self._comparisons.close()
         with self._meter_lock:
             self._meter_power.close()
         return stopped

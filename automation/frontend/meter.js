@@ -1,6 +1,27 @@
 // Manual OUT control uses the selected SMU port and configured voltage.
 let meterBusy = false;
 
+async function refreshMeterPower() {
+  if (!desktopReady || isRunning || meterBusy) return;
+  const select = document.querySelector('#meter-port');
+  const port = select.value;
+  if (!port || select.selectedOptions[0]?.disabled) return;
+  meterBusy = true;
+  updateMeterControls();
+  try {
+    const result = await window.pywebview.api.read_meter_power(port);
+    if (!isRunning && select.value === port && result) displayMeterPower(result.enabled);
+  } catch (error) {
+    if (!isRunning && select.value === port) {
+      displayMeterPower(null);
+      status.textContent = `STLINK readback failed: ${error.message || error}`;
+    }
+  } finally {
+    meterBusy = false;
+    updateMeterControls();
+  }
+}
+
 function displayMeterPower(enabled) {
   const button = document.querySelector('#meter-output');
   button.setAttribute('aria-pressed', enabled === null ? 'mixed' : String(enabled));

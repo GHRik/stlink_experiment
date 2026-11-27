@@ -13,7 +13,7 @@ function setup() {
   const hub = button({port: '2'}, 'HUB123');
   const meter = [];
   const context = vm.createContext({
-    document: {querySelector(selector) {return fields[selector] ||= {replaceChildren(...items) {this.items = items;}};}, createElement() {return {}; }},
+    document: {querySelector(selector) {return fields[selector] ||= {replaceChildren(...items) {this.items = items;}};}, createElement() {return {replaceChildren(...items) {this.items=items; this.textContent=items.map(item=>item.textContent).join(' ');}}; }},
     relaySwitches: [relay], hub1Switches: [], hub2Switches: [hub],
     displayMeterPower(value) {meter.push(value);}, updateConnectionFlows() {}, setInterval() {},
   });
@@ -66,5 +66,15 @@ test('HIL retains done stages across boards and hardware events do not reset its
   vm.runInContext(`applyRunEvents({events:[{type:'meter_power', enabled:true}]})`, context);
   assert.equal(vm.runInContext('runProgress.clock', context), timer);
   assert.equal(fields['#run-count'].textContent, '5/10 stages done · 5 remaining');
-  assert.match(fields['#run-done'].items[0].textContent, /Report done/);
+  assert.match(fields['#run-done'].items[0].textContent, /Report DONE/);
+});
+
+test('Warm-up shows running badge and stage countdown independently of total', () => {
+  const {context, fields} = setup();
+  vm.runInContext(`beginRunProgress({name:'test',repeats:2,seconds:100,warmup_seconds:180});
+    applyRunEvents({events:[{type:'capture_plan',name:'test'},
+      {type:'warmup',state:'started',elapsed:0}]});`,context);
+  assert.match(fields['#run-stage-time'].textContent,/Stage remaining: 3min 0sec/);
+  assert.match(fields['#run-done'].items[0].textContent,/Warm-up RUNNING/);
+  assert.match(fields['#run-done'].items[0].textContent,/Report PENDING/);
 });

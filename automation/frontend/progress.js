@@ -8,7 +8,7 @@ function beginRunProgress(config, names = [config.name], uploads = false) {
   runProgress = {finished: false, current: '', phase: 'Preparing', clock: null,
     boards: names.map(name => ({name: name.trim(), repeats: Number(config.repeats), seconds: Number(config.seconds),
       warmup: Number(config.warmup_seconds), warmElapsed: 0, elapsed: 0, calibration: 0,
-      completed: 0, repeat: 0, warmed: false, report: false, upload: uploads ? false : null}))};
+      completed: 0, repeat: 0, warmed: false, report: false, active: '', stageSince: Date.now(), upload: uploads ? false : null}))};
   document.querySelector('#run-progress').hidden = false;
   renderRunProgress();
 }
@@ -32,6 +32,10 @@ function applyRunEvents(result) {
     if (event.type === 'capture_plan' || event.type === 'upload') runProgress.current = event.name;
     const board = runProgress.boards.find(board => board.name === runProgress.current);
     if (!board) continue;
+    if (['warmup', 'calibration', 'repeat', 'report', 'upload'].includes(event.type)) {
+      if (board.active !== event.type || event.state === 'started') board.stageSince = Date.now();
+      board.active = event.state === 'completed' ? '' : event.type;
+    }
     if (event.type === 'capture_plan') {
       runProgress.phase = 'Preparing measurement';
     } else if (event.type === 'warmup') {
@@ -87,6 +91,19 @@ function renderRunProgress() {
   const seconds = Math.max(0, Math.ceil(remaining));
   if (typeof updateSketchQueueRemaining === 'function') updateSketchQueueRemaining(remaining);
   const current = boards.find(board => board.name === runProgress.current);
+  const formatTime = value => `${Math.floor(value / 60)}min ${value % 60}sec`;
+  let stageText = 'Preparing next stage';
+  if (runProgress.finished) stageText = runProgress.phase;
+  else if (current?.active) {
+    if (clock) {
+      const available = clock.type === 'warmup' ? current.warmup - current.warmElapsed : current.seconds - current.elapsed;
+      const left = Math.max(0, Math.ceil(available - (Date.now() - clock.since) / 1000));
+      stageText = `Stage remaining: ${formatTime(left)}`;
+    } else {
+      stageText = `Stage elapsed: ${formatTime(Math.floor((Date.now() - current.stageSince) / 1000))} · completion time unknown`;
+    }
+  }
+  document.querySelector('#run-stage-time').textContent = stageText;
   document.querySelector('#run-stage').textContent = `${runProgress.current || 'Setup'} · ${runProgress.phase}${current?.repeat ? ` · Repeat ${current.repeat}/${current.repeats}` : ''}`;
   document.querySelector('#run-count').textContent = `${done}/${total} stages done · ${total - done} remaining`;
   document.querySelector('#run-time').textContent = `${runProgress.finished && runProgress.phase !== 'Completed' ? 'Unfinished' : 'Remaining'} programmed time: ${Math.floor(seconds / 60)}m ${seconds % 60}s`;
@@ -94,7 +111,22 @@ function renderRunProgress() {
   document.querySelector('#run-bar').value = done;
   document.querySelector('#run-done').replaceChildren(...boards.map(board => {
     const item = document.createElement('li');
-    item.textContent = `${board.name}: ${board.upload === null ? '' : `Upload ${board.upload ? 'done' : 'pending'} · `}Warm-up ${board.warmed ? 'done' : 'pending'} · Calibration ${board.calibration}/${board.repeats} · Repeats ${board.completed}/${board.repeats} · Report ${board.report ? 'done' : 'pending'}`;
+    const name = document.createElement('strong');
+    name.textContent = board.name;
+    const stages = [
+      ...(board.upload === null ? [] : [['upload', 'Upload', board.upload]]),
+      ['warmup', 'Warm-up', board.warmed],
+      ['calibration', `Calibration ${board.calibration}/${board.repeats}`, board.calibration === board.repeats],
+      ['repeat', `Repeats ${board.completed}/${board.repeats}`, board.completed === board.repeats],
+      ['report', 'Report', board.report]
+    ];
+    item.replaceChildren(name, ...stages.map(([key, label, done]) => {
+      const badge = document.createElement('span');
+      const state = done ? 'done' : !runProgress.finished && board.name === runProgress.current && board.active === key ? 'running' : 'pending';
+      badge.className = `stage-badge stage-${state}`;
+      badge.textContent = `${label} ${state.toUpperCase()}`;
+      return badge;
+    }));
     return item;
   }));
 }

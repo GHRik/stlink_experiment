@@ -33,3 +33,26 @@ test('Numato dropdown 3 sends channel 3; LCUS-2 keeps physical labels 1 and 2',a
   assert.deepEqual(buttons[0].parentElement.querySelector().options.map(option=>option.value),['1','2']);
   assert.equal(vm.runInContext("relayChannelNumber(1,'lcus2')",context),2);
 });
+
+test('hardware readback stays active during capture but leaves HIL relay COM to its worker',async()=>{
+  const state={};
+  const button={dataset:{channel:'3'},setAttribute:(key,value)=>state[key]=value,
+    querySelector:()=>state};
+  const calls=[];
+  const context=vm.createContext({desktopReady:true,isRunning:false,currentLayout:'standalone',switchingHub:false,relaySwitches:[button],
+    status:{},updateConnectionFlows(){},
+    document:{querySelector:selector=>selector==='#relay-model'?{value:'numato'}:
+      selector==='#relay-port'?{value:'COM19',selectedOptions:[{}]}:{hidden:false},querySelectorAll:()=>[]},
+    window:{pywebview:{api:{read_relay_states:async(...args)=>{calls.push(args);return {'3':true};}}}}});
+  vm.runInContext(fs.readFileSync('automation/frontend/relay.js','utf8'),context);
+  await vm.runInContext('refreshHardwareStates()',context);
+  assert.equal(state['aria-pressed'],'true');
+  assert.equal(state.textContent,'ON');
+  assert.deepEqual(calls,[['numato','COM19']]);
+  vm.runInContext('isRunning=true',context);
+  await vm.runInContext('refreshHardwareStates()',context);
+  assert.equal(calls.length,2);
+  vm.runInContext("currentLayout='hil'",context);
+  await vm.runInContext('refreshHardwareStates()',context);
+  assert.equal(calls.length,2);
+});

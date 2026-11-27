@@ -6,7 +6,7 @@ async function startSketchQueueCapture() {
   const boards=new Map([...sketchQueues.keys()].filter(card=>!card.hidden).map((card,index)=>[card,shared.boards[index]]));
   const fail=message=>{status.classList.add('error');status.textContent=message;};
   if(!steps.length) {fail('No sketches selected for active DUTs.');return;}
-  if(!shared.name.trim()) {fail('Enter a test name.');return;}
+  if(mode !== 'hil' && !shared.name.trim()) {fail('Enter a test name.');return;}
   if(!hubConfigured(document.querySelector('.upload-hub'))) {fail('Select the DUT hub model and serial number.');return;}
   // A single-sketch selection uses the same native path as ordinary Run.
   steps.forEach(step=>step.active.forEach(board=>{
@@ -24,7 +24,7 @@ async function startSketchQueueCapture() {
     for(let index=0;index<steps.length;index++) {
       if(queue.cancelled) {outcome='stopped';break;}
       queue.index=index;queue.elapsed=0;queue.currentStepDone=false;
-      const config={...shared,name:`${shared.name.trim()}_step${String(index+1).padStart(3,'0')}`,
+      const config={...shared,name:shared.name.trim() ? `${shared.name.trim()}_step${String(index+1).padStart(3,'0')}` : '',
         out:`${output}/step_${String(index+1).padStart(3,'0')}`,hub,relay,
         boards:steps[index].active.map(board=>({...boards.get(board.card),sketch:board.file.path}))};
       const result=await new Promise(resolve=>{
